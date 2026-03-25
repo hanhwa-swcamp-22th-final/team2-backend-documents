@@ -1,0 +1,38 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Spring Boot
+spring.log
+
+# Environment
+.env
+.env.*
+
+# Application config secrets
+application-local.yml
+application-prod.yml
+
+# Generated files
+bin/
