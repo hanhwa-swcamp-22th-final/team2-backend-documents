@@ -7,7 +7,7 @@
 --   - po_items: PO 품목
 --   - commercial_invoices: 상업송장 (CI)     — PK: CI2025001
 --   - packing_lists: 포장명세서 (PL)         — PK: PL2025001
---   - production_orders: 생산지시서          — PK: PRD2025001, PO 기준 선택 생성
+--   - production_orders: 생산지시서(선택 생성) — PK: PRD2025001
 --   - shipment_orders: 출하지시서            — PK: SH2025001
 --   - approval_requests: 결재 요청
 --   - collections: 매출·수금 현황
@@ -227,7 +227,7 @@ CREATE TABLE packing_lists (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- 7. production_orders (생산지시서, PO 기준 선택 생성)
+-- 7. production_orders (생산지시서, 선택 생성)
 -- ------------------------------------------------------------
 CREATE TABLE production_orders (
     production_order_id      VARCHAR(30)     NOT NULL,                  -- 문서번호: PRD2025001

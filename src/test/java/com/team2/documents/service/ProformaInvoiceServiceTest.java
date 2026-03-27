@@ -56,8 +56,8 @@ class ProformaInvoiceServiceTest {
     }
 
     @Test
-    @DisplayName("팀장이 PI 등록 요청을 하면 결재 요청이 생성되지 않는다")
-    void requestRegistration_whenManagerRequests_thenDoesNotCreateApprovalRequest() {
+    @DisplayName("팀장이 PI 등록 요청을 하면 즉시 확정되고 결재 요청이 생성되지 않는다")
+    void requestRegistration_whenManagerRequests_thenConfirmsImmediatelyAndDoesNotCreateApprovalRequest() {
         // given
         String piId = "PI2025-0001";
         Long userId = 1L;
@@ -71,7 +71,7 @@ class ProformaInvoiceServiceTest {
         proformaInvoiceService.requestRegistration(piId, userId);
 
         // then
-        assertEquals(ProformaInvoiceStatus.APPROVAL_PENDING, proformaInvoice.getStatus());
+        assertEquals(ProformaInvoiceStatus.CONFIRMED, proformaInvoice.getStatus());
         org.mockito.Mockito.verify(approvalRequestRepository, org.mockito.Mockito.never())
                 .createForProformaInvoice(piId, userId);
     }

@@ -30,8 +30,12 @@ public class ProformaInvoiceService {
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));
 
-        proformaInvoice.requestRegistration();
+        if (PositionLevel.MANAGER.equals(positionLevel)) {
+            proformaInvoice.confirmRegistration();
+            return;
+        }
 
+        proformaInvoice.requestRegistration();
         if (PositionLevel.STAFF.equals(positionLevel)) {
             approvalRequestRepository.createForProformaInvoice(piId, userId);
         }

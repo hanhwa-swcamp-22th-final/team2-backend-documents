@@ -7,8 +7,8 @@
 | **Auth** | 5 | positions, departments, users, company, refresh_tokens |
 | **Master** | 8 | countries, incoterms, currencies, ports, payment_terms, clients, items, buyers |
 | **Document** | 11 | proforma_invoices, pi_items, purchase_orders, po_items, commercial_invoices, packing_lists, production_orders, shipment_orders, approval_requests, collections, shipments |
-| **Activity** | 5 | activities, contacts, email_logs, email_log_types, email_log_attachments |
-| **합계** | **29** | |
+| **Activity** | 8 | activities, contacts, email_logs, email_log_types, email_log_attachments, activity_packages, activity_package_viewers, activity_package_items |
+| **합계** | **32** | |
 
 ## Cross-Service 참조 요약
 
@@ -37,12 +37,16 @@
 | Document → Master | pi_items.item_id | items.item_id | PI 품목 참조 |
 | Document → Master | po_items.item_id | items.item_id | PO 품목 참조 |
 | Activity → Auth | activities.activity_author_id | users.user_id | 활동 작성자 |
+| Activity → Auth | contacts.writer_id | users.user_id | 연락처 작성자 |
 | Activity → Auth | email_logs.email_sender_id | users.user_id | 메일 발송자 |
 | Activity → Master | activities.client_id | clients.client_id | 활동 거래처 |
 | Activity → Master | contacts.client_id | clients.client_id | 연락처 거래처 |
 | Activity → Master | email_logs.client_id | clients.client_id | 메일 거래처 |
+| Activity → Auth | activity_packages.creator_id | users.user_id | 패키지 작성자 |
+| Activity → Auth | activity_package_viewers.user_id | users.user_id | 패키지 열람자 |
 | Activity → Document | activities.po_id | purchase_orders.po_id | 활동 연결 PO |
 | Activity → Document | email_logs.po_id | purchase_orders.po_id | 메일 연결 PO |
+| Activity → Document | activity_packages.po_id | purchase_orders.po_id | 패키지 연결 PO |
 
 ## ERD
 
@@ -449,7 +453,7 @@ erDiagram
     users ||--o{ collections : "수금담당자"
 
     %% ============================================================
-    %% ACTIVITY SERVICE (5 tables)
+    %% ACTIVITY SERVICE (8 tables)
     %% ============================================================
 
     activities {
@@ -471,6 +475,7 @@ erDiagram
     contacts {
         INT contact_id PK
         INT client_id FK "cross: master.clients"
+        INT writer_id FK "cross: auth.users"
         VARCHAR contact_name
         VARCHAR contact_position
         VARCHAR contact_email
@@ -504,9 +509,34 @@ erDiagram
         VARCHAR email_attachment_filename
     }
 
+    activity_packages {
+        INT package_id PK
+        VARCHAR package_title
+        TEXT package_description
+        VARCHAR po_id FK "cross: document.purchase_orders"
+        INT creator_id FK "cross: auth.users"
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    activity_package_viewers {
+        INT package_viewer_id PK
+        INT package_id FK
+        INT user_id FK "cross: auth.users"
+    }
+
+    activity_package_items {
+        INT package_item_id PK
+        INT package_id FK
+        INT activity_id FK
+    }
+
     %% Activity 내부 관계
     email_logs ||--o{ email_log_types : "문서유형"
     email_logs ||--o{ email_log_attachments : "첨부파일"
+    activity_packages ||--o{ activity_package_viewers : "열람권한"
+    activity_packages ||--o{ activity_package_items : "포함활동"
+    activities ||--o{ activity_package_items : "패키지포함"
 
     %% cross-service: Activity -> Master
     clients ||--o{ activities : "활동거래처"
@@ -517,7 +547,13 @@ erDiagram
     purchase_orders ||--o{ activities : "활동연결PO"
     purchase_orders ||--o{ email_logs : "메일연결PO"
 
+    %% cross-service: Activity -> Document
+    purchase_orders ||--o{ activity_packages : "패키지연결PO"
+
     %% cross-service: Activity -> Auth
     users ||--o{ activities : "활동작성자"
+    users ||--o{ contacts : "연락처작성자"
     users ||--o{ email_logs : "메일발송자"
+    users ||--o{ activity_packages : "패키지작성자"
+    users ||--o{ activity_package_viewers : "패키지열람자"
 ```

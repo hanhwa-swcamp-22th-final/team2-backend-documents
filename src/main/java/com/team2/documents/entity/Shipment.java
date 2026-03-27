@@ -42,4 +42,8 @@ public class Shipment {
     public ShipmentStatus getShipmentStatus() {
         return shipmentStatus;
     }
+
+    public void changeStatus(ShipmentStatus shipmentStatus) {
+        this.shipmentStatus = shipmentStatus;
+    }
 }

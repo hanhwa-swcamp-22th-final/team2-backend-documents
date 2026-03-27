@@ -186,3 +186,5 @@ company (독립, FK 없음)
 | Activity | activities.activity_author_id → users.user_id | Activity → Auth |
 | Activity | email_logs.email_sender_id → users.user_id | Activity → Auth |
 | Activity | collections.manager_id → users.user_id | Activity → Auth |
+| Activity | activity_packages.creator_id → users.user_id | Activity → Auth |
+| Activity | activity_package_viewers.user_id → users.user_id | Activity → Auth |

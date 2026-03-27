@@ -6,10 +6,16 @@
 --   - email_logs: 메일 발송 이력
 --   - email_log_types: 메일 첨부 문서 유형
 --   - email_log_attachments: 메일 첨부파일
+--   - activity_packages: 활동기록 패키지
+--   - activity_package_viewers: 패키지 열람 권한
+--   - activity_package_items: 패키지 포함 활동기록
 -- Engine: InnoDB | Charset: utf8mb4_unicode_ci
 -- ============================================================
 
 -- 의존성 역순으로 DROP
+DROP TABLE IF EXISTS activity_package_items;
+DROP TABLE IF EXISTS activity_package_viewers;
+DROP TABLE IF EXISTS activity_packages;
 DROP TABLE IF EXISTS email_log_attachments;
 DROP TABLE IF EXISTS email_log_types;
 DROP TABLE IF EXISTS email_logs;
@@ -100,4 +106,48 @@ CREATE TABLE email_log_attachments (
     PRIMARY KEY (email_log_attachment_id),
     INDEX idx_email_log_attachments_email_log_id (email_log_id),
     CONSTRAINT fk_email_log_attachments_email_log FOREIGN KEY (email_log_id) REFERENCES email_logs (email_log_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 6. activity_packages (활동기록 패키지)
+-- ------------------------------------------------------------
+CREATE TABLE activity_packages (
+    package_id          INT            NOT NULL AUTO_INCREMENT,
+    package_title       VARCHAR(100)   NOT NULL,
+    package_description TEXT           NULL,
+    po_id               VARCHAR(30)    NULL     COMMENT 'FK→document.purchase_orders',
+    creator_id          INT            NOT NULL COMMENT 'FK→auth.users',
+    created_at          TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (package_id),
+    INDEX idx_activity_packages_creator_id (creator_id),
+    INDEX idx_activity_packages_po_id (po_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 7. activity_package_viewers (패키지 열람 권한)
+-- ------------------------------------------------------------
+CREATE TABLE activity_package_viewers (
+    package_viewer_id INT NOT NULL AUTO_INCREMENT,
+    package_id        INT NOT NULL,
+    user_id           INT NOT NULL COMMENT 'FK→auth.users',
+    PRIMARY KEY (package_viewer_id),
+    UNIQUE KEY uk_package_viewer (package_id, user_id),
+    INDEX idx_package_viewers_user_id (user_id),
+    CONSTRAINT fk_package_viewers_package FOREIGN KEY (package_id) REFERENCES activity_packages (package_id) ON DELETE CASCADE,
+    CONSTRAINT fk_package_viewers_user FOREIGN KEY (user_id) REFERENCES users (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- 8. activity_package_items (패키지 포함 활동기록)
+-- ------------------------------------------------------------
+CREATE TABLE activity_package_items (
+    package_item_id INT NOT NULL AUTO_INCREMENT,
+    package_id      INT NOT NULL,
+    activity_id     INT NOT NULL,
+    PRIMARY KEY (package_item_id),
+    UNIQUE KEY uk_package_activity (package_id, activity_id),
+    INDEX idx_package_items_activity_id (activity_id),
+    CONSTRAINT fk_package_items_package FOREIGN KEY (package_id) REFERENCES activity_packages (package_id) ON DELETE CASCADE,
+    CONSTRAINT fk_package_items_activity FOREIGN KEY (activity_id) REFERENCES activities (activity_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
