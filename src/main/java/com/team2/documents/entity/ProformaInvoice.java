@@ -1,9 +1,28 @@
 package com.team2.documents.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import com.team2.documents.entity.enums.ProformaInvoiceStatus;
+
+@Entity
+@Table(name = "proforma_invoices")
 public class ProformaInvoice {
 
-    private final String piId;
+    @Id
+    @Column(name = "pi_id", nullable = false, length = 30)
+    private String piId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pi_status", nullable = false)
     private ProformaInvoiceStatus status;
+
+    protected ProformaInvoice() {
+    }
 
     public ProformaInvoice(String piId, ProformaInvoiceStatus status) {
         this.piId = piId;
@@ -18,31 +37,7 @@ public class ProformaInvoice {
         return status;
     }
 
-    public void requestRegistration() {
-        if (!ProformaInvoiceStatus.DRAFT.equals(status)) {
-            throw new IllegalStateException("초안 상태의 PI만 등록 요청할 수 있습니다.");
-        }
-        this.status = ProformaInvoiceStatus.APPROVAL_PENDING;
-    }
-
-    public void confirmRegistration() {
-        if (!ProformaInvoiceStatus.DRAFT.equals(status)) {
-            throw new IllegalStateException("초안 상태의 PI만 즉시 확정할 수 있습니다.");
-        }
-        this.status = ProformaInvoiceStatus.CONFIRMED;
-    }
-
-    public void approve() {
-        if (!ProformaInvoiceStatus.APPROVAL_PENDING.equals(status)) {
-            throw new IllegalStateException("결재대기 상태의 PI만 승인할 수 있습니다.");
-        }
-        this.status = ProformaInvoiceStatus.CONFIRMED;
-    }
-
-    public void reject() {
-        if (!ProformaInvoiceStatus.APPROVAL_PENDING.equals(status)) {
-            throw new IllegalStateException("결재대기 상태의 PI만 반려할 수 있습니다.");
-        }
-        this.status = ProformaInvoiceStatus.REJECTED;
+    public void setStatus(ProformaInvoiceStatus status) {
+        this.status = status;
     }
 }

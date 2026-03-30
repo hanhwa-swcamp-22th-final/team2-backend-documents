@@ -1,13 +1,11 @@
 package com.team2.documents.repository;
 
-import java.util.List;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ProductionOrderRepository {
+import com.team2.documents.entity.ProductionOrder;
 
-    void createFromPurchaseOrder(String poId);
+public interface ProductionOrderRepository extends JpaRepository<ProductionOrder, String> {
 
-    List<com.team2.documents.entity.ProductionOrder> findAll();
-
-    Optional<com.team2.documents.entity.ProductionOrder> findById(Long id);
+    default void createFromPurchaseOrder(String poId) {
+    }
 }

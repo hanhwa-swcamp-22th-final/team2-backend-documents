@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.team2.documents.entity.PurchaseOrder;
-import com.team2.documents.entity.PurchaseOrderStatus;
+import com.team2.documents.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.repository.PurchaseOrderRepository;
 
 @ExtendWith(MockitoExtension.class)

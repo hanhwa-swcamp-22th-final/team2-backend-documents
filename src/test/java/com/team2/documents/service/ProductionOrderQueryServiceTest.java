@@ -31,7 +31,6 @@ class ProductionOrderQueryServiceTest {
     void findAll_whenProductionOrdersExist_thenReturnsAllProductionOrders() {
         // given
         ProductionOrder productionOrder = new ProductionOrder(
-                1L,
                 "PRD-2026-001",
                 "PO2025001",
                 "PO-2026-001",
@@ -57,7 +56,6 @@ class ProductionOrderQueryServiceTest {
     void findById_whenProductionOrderExists_thenReturnsProductionOrder() {
         // given
         ProductionOrder productionOrder = new ProductionOrder(
-                1L,
                 "PRD-2026-001",
                 "PO2025001",
                 "PO-2026-001",
@@ -68,10 +66,10 @@ class ProductionOrderQueryServiceTest {
                 LocalDateTime.of(2026, 3, 10, 9, 0),
                 LocalDateTime.of(2026, 3, 15, 14, 0)
         );
-        when(productionOrderRepository.findById(1L)).thenReturn(java.util.Optional.of(productionOrder));
+        when(productionOrderRepository.findById("PRD-2026-001")).thenReturn(java.util.Optional.of(productionOrder));
 
         // when
-        ProductionOrder result = productionOrderQueryService.findById(1L);
+        ProductionOrder result = productionOrderQueryService.findById("PRD-2026-001");
 
         // then
         assertEquals("PRD-2026-001", result.getProductionOrderNo());

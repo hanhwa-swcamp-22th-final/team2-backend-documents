@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.team2.documents.entity.enums.ShipmentStatus;
+
 @Entity
 @Table(name = "shipments")
 public class Shipment {
@@ -43,7 +45,7 @@ public class Shipment {
         return shipmentStatus;
     }
 
-    public void changeStatus(ShipmentStatus shipmentStatus) {
+    public void setShipmentStatus(ShipmentStatus shipmentStatus) {
         this.shipmentStatus = shipmentStatus;
     }
 }

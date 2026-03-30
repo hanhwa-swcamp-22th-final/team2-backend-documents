@@ -3,9 +3,9 @@ package com.team2.documents.service;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.dto.ApprovalRequestCreateRequest;
-import com.team2.documents.entity.ApprovalDocumentType;
+import com.team2.documents.entity.enums.ApprovalDocumentType;
 import com.team2.documents.entity.ApprovalRequest;
-import com.team2.documents.entity.ApprovalStatus;
+import com.team2.documents.entity.enums.ApprovalStatus;
 import com.team2.documents.repository.ApprovalRequestRepository;
 
 @Service

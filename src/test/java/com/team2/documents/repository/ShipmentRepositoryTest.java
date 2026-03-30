@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.team2.documents.entity.Shipment;
-import com.team2.documents.entity.ShipmentStatus;
+import com.team2.documents.entity.enums.ShipmentStatus;
 
 @DataJpaTest
 class ShipmentRepositoryTest {

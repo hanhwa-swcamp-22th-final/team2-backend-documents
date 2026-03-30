@@ -1,6 +1,7 @@
 package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,9 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.entity.PositionLevel;
+import com.team2.documents.entity.enums.PositionLevel;
 import com.team2.documents.entity.ProformaInvoice;
-import com.team2.documents.entity.ProformaInvoiceStatus;
+import com.team2.documents.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.repository.ApprovalRequestRepository;
 import com.team2.documents.repository.ProformaInvoiceRepository;
 import com.team2.documents.repository.UserPositionRepository;
@@ -52,7 +53,7 @@ class ProformaInvoiceServiceTest {
 
         // then
         assertEquals(ProformaInvoiceStatus.APPROVAL_PENDING, proformaInvoice.getStatus());
-        verify(approvalRequestRepository).createForProformaInvoice(piId, userId);
+        verify(approvalRequestRepository).save(any(com.team2.documents.entity.ApprovalRequest.class));
     }
 
     @Test
@@ -73,7 +74,7 @@ class ProformaInvoiceServiceTest {
         // then
         assertEquals(ProformaInvoiceStatus.CONFIRMED, proformaInvoice.getStatus());
         org.mockito.Mockito.verify(approvalRequestRepository, org.mockito.Mockito.never())
-                .createForProformaInvoice(piId, userId);
+                .save(any(com.team2.documents.entity.ApprovalRequest.class));
     }
 
     @Test

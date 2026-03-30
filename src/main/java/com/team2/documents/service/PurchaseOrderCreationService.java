@@ -2,9 +2,9 @@ package com.team2.documents.service;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.entity.PositionLevel;
+import com.team2.documents.entity.enums.PositionLevel;
 import com.team2.documents.entity.PurchaseOrder;
-import com.team2.documents.entity.PurchaseOrderStatus;
+import com.team2.documents.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.repository.ApprovalRequestRepository;
 import com.team2.documents.repository.UserPositionRepository;
 
@@ -24,7 +24,10 @@ public class PurchaseOrderCreationService {
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));
 
-        return PurchaseOrder.determineInitialStatus(positionLevel);
+        if (PositionLevel.MANAGER.equals(positionLevel)) {
+            return PurchaseOrderStatus.CONFIRMED;
+        }
+        return PurchaseOrderStatus.APPROVAL_PENDING;
     }
 
     public void create(Long userId) {

@@ -2,18 +2,25 @@ package com.team2.documents.repository;
 
 import java.util.Optional;
 
-import com.team2.documents.entity.ApprovalDocumentType;
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import com.team2.documents.entity.ApprovalRequest;
+import com.team2.documents.entity.enums.ApprovalDocumentType;
+import com.team2.documents.entity.enums.ApprovalStatus;
 
-public interface ApprovalRequestRepository {
+public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest, Long> {
 
-    void createForPurchaseOrder(Long userId);
+    default void createForPurchaseOrder(Long userId) {
+    }
 
-    void createForProformaInvoice(String piId, Long userId);
+    default void createForProformaInvoice(String piId, Long userId) {
+    }
 
-    Optional<ApprovalRequest> findPendingByDocument(ApprovalDocumentType documentType, String documentId);
+    Optional<ApprovalRequest> findByDocumentTypeAndDocumentIdAndStatus(ApprovalDocumentType documentType,
+                                                                       String documentId,
+                                                                       ApprovalStatus status);
 
-    Optional<ApprovalRequest> findById(Long id);
-
-    ApprovalRequest save(ApprovalRequest approvalRequest);
+    default Optional<ApprovalRequest> findPendingByDocument(ApprovalDocumentType documentType, String documentId) {
+        return findByDocumentTypeAndDocumentIdAndStatus(documentType, documentId, ApprovalStatus.PENDING);
+    }
 }

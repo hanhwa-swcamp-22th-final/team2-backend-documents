@@ -6,22 +6,61 @@ import java.time.LocalDateTime;
 
 import org.apache.ibatis.type.Alias;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
 @Alias("CollectionView")
+@Entity
+@Table(name = "collections")
 public class Collection {
 
-    private final Long id;
-    private final String poId;
-    private final String poNo;
-    private final Long clientId;
-    private final String clientName;
-    private final BigDecimal totalAmount;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "collection_id")
+    private Long id;
+
+    @Column(name = "po_id", nullable = false)
+    private String poId;
+
+    @Transient
+    private String poNo;
+
+    @Column(name = "client_id", nullable = false)
+    private Long clientId;
+
+    @Transient
+    private String clientName;
+
+    @Column(name = "collection_sales_amount", nullable = false)
+    private BigDecimal totalAmount;
+
+    @Transient
     private BigDecimal collectedAmount;
+
+    @Transient
     private BigDecimal remainingAmount;
-    private final String currencyCode;
+
+    @Transient
+    private String currencyCode;
+
     private String status;
+
+    @Column(name = "collection_completed_date")
     private LocalDate collectionDate;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
+    protected Collection() {
+    }
 
     public Collection(Long id,
                       String poId,
@@ -103,11 +142,11 @@ public class Collection {
         return updatedAt;
     }
 
-    public void completeCollection(LocalDate collectionCompletedDate) {
-        if (!"미수금".equals(status)) {
-            throw new IllegalStateException("미수금 상태의 현황만 수금완료 처리할 수 있습니다.");
-        }
-        this.status = "수금완료";
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setCollectionDate(LocalDate collectionCompletedDate) {
         this.collectionDate = collectionCompletedDate;
     }
 }

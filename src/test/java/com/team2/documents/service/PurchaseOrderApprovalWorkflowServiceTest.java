@@ -13,12 +13,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.entity.ApprovalDocumentType;
+import com.team2.documents.entity.enums.ApprovalDocumentType;
 import com.team2.documents.entity.ApprovalRequest;
-import com.team2.documents.entity.ApprovalRequestType;
-import com.team2.documents.entity.ApprovalStatus;
+import com.team2.documents.entity.enums.ApprovalRequestType;
+import com.team2.documents.entity.enums.ApprovalStatus;
 import com.team2.documents.entity.PurchaseOrder;
-import com.team2.documents.entity.PurchaseOrderStatus;
+import com.team2.documents.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.repository.ApprovalRequestRepository;
 import com.team2.documents.repository.PurchaseOrderRepository;
 

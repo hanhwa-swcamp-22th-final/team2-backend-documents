@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.team2.documents.entity.ProformaInvoice;
-import com.team2.documents.entity.ProformaInvoiceStatus;
+import com.team2.documents.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.repository.ProformaInvoiceRepository;
 
 @ExtendWith(MockitoExtension.class)

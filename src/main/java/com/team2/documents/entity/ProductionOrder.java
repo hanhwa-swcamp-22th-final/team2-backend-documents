@@ -4,21 +4,48 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+@Entity
+@Table(name = "production_orders")
 public class ProductionOrder {
 
-    private final Long id;
-    private final String productionOrderNo;
-    private final String poId;
-    private final String poNo;
-    private final LocalDate orderDate;
-    private final LocalDate dueDate;
-    private final String status;
-    private final List<String> items;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
+    @Id
+    @Column(name = "production_order_id", nullable = false, length = 30)
+    private String productionOrderId;
 
-    public ProductionOrder(Long id,
-                           String productionOrderNo,
+    @Column(name = "po_id", nullable = false, length = 30)
+    private String poId;
+
+    @Transient
+    private String poNo;
+
+    @Column(name = "production_issue_date", nullable = false)
+    private LocalDate orderDate;
+
+    @Column(name = "production_due_date")
+    private LocalDate dueDate;
+
+    @Column(name = "production_status", nullable = false)
+    private String status;
+
+    @Transient
+    private List<String> items;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updatedAt;
+
+    protected ProductionOrder() {
+    }
+
+    public ProductionOrder(String productionOrderId,
                            String poId,
                            String poNo,
                            LocalDate orderDate,
@@ -27,8 +54,7 @@ public class ProductionOrder {
                            List<String> items,
                            LocalDateTime createdAt,
                            LocalDateTime updatedAt) {
-        this.id = id;
-        this.productionOrderNo = productionOrderNo;
+        this.productionOrderId = productionOrderId;
         this.poId = poId;
         this.poNo = poNo;
         this.orderDate = orderDate;
@@ -39,12 +65,8 @@ public class ProductionOrder {
         this.updatedAt = updatedAt;
     }
 
-    public Long getId() {
-        return id;
-    }
-
     public String getProductionOrderNo() {
-        return productionOrderNo;
+        return productionOrderId;
     }
 
     public String getPoId() {

@@ -1,10 +1,7 @@
 package com.team2.documents.repository;
 
-import java.util.Optional;
-
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.team2.documents.entity.PurchaseOrder;
 
-public interface PurchaseOrderRepository {
-
-    Optional<PurchaseOrder> findById(String poId);
+public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, String> {
 }

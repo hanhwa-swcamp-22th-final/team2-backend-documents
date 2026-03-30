@@ -1,10 +1,7 @@
 package com.team2.documents.repository;
 
-import java.util.Optional;
-
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.team2.documents.entity.ProformaInvoice;
 
-public interface ProformaInvoiceRepository {
-
-    Optional<ProformaInvoice> findById(String piId);
+public interface ProformaInvoiceRepository extends JpaRepository<ProformaInvoice, String> {
 }

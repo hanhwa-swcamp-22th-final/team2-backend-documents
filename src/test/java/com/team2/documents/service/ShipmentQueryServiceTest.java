@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.team2.documents.entity.Shipment;
-import com.team2.documents.entity.ShipmentStatus;
+import com.team2.documents.entity.enums.ShipmentStatus;
 import com.team2.documents.repository.ShipmentRepository;
 
 @ExtendWith(MockitoExtension.class)

@@ -1,6 +1,7 @@
 package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,9 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.entity.PositionLevel;
+import com.team2.documents.entity.enums.PositionLevel;
 import com.team2.documents.entity.PurchaseOrder;
-import com.team2.documents.entity.PurchaseOrderStatus;
+import com.team2.documents.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.repository.ApprovalRequestRepository;
 import com.team2.documents.repository.PurchaseOrderRepository;
 import com.team2.documents.repository.UserPositionRepository;
@@ -52,7 +53,7 @@ class PurchaseOrderDeletionRequestServiceTest {
 
         // then
         assertEquals(PurchaseOrderStatus.APPROVAL_PENDING, purchaseOrder.getStatus());
-        verify(approvalRequestRepository).createForPurchaseOrder(userId);
+        verify(approvalRequestRepository).save(any(com.team2.documents.entity.ApprovalRequest.class));
     }
 
     @Test
@@ -73,7 +74,7 @@ class PurchaseOrderDeletionRequestServiceTest {
         // then
         assertEquals(PurchaseOrderStatus.APPROVAL_PENDING, purchaseOrder.getStatus());
         org.mockito.Mockito.verify(approvalRequestRepository, org.mockito.Mockito.never())
-                .createForPurchaseOrder(userId);
+                .save(any(com.team2.documents.entity.ApprovalRequest.class));
     }
 
     @Test

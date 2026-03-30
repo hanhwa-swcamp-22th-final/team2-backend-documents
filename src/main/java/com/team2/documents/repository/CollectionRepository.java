@@ -1,13 +1,7 @@
 package com.team2.documents.repository;
 
-import java.util.List;
-import java.util.Optional;
-
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.team2.documents.entity.Collection;
 
-public interface CollectionRepository {
-
-    List<Collection> findAll();
-
-    Optional<Collection> findById(Long id);
+public interface CollectionRepository extends JpaRepository<Collection, Long> {
 }

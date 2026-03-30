@@ -28,13 +28,13 @@ import com.team2.documents.dto.PurchaseOrderRegistrationRequest;
 import com.team2.documents.dto.CollectionUpdateRequest;
 import com.team2.documents.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.entity.Collection;
-import com.team2.documents.entity.ApprovalDocumentType;
+import com.team2.documents.entity.enums.ApprovalDocumentType;
 import com.team2.documents.entity.ApprovalRequest;
-import com.team2.documents.entity.ApprovalRequestType;
-import com.team2.documents.entity.ApprovalStatus;
+import com.team2.documents.entity.enums.ApprovalRequestType;
+import com.team2.documents.entity.enums.ApprovalStatus;
 import com.team2.documents.entity.ProductionOrder;
-import com.team2.documents.entity.PurchaseOrderStatus;
-import com.team2.documents.entity.ShipmentStatus;
+import com.team2.documents.entity.enums.PurchaseOrderStatus;
+import com.team2.documents.entity.enums.ShipmentStatus;
 import com.team2.documents.service.ApprovalRequestCommandService;
 import com.team2.documents.service.CollectionQueryService;
 import com.team2.documents.service.CollectionCommandService;
@@ -233,7 +233,6 @@ class DocumentControllerTest {
     void getProductionOrdersApi_whenProductionOrdersExist_thenReturnsOkAndList() throws Exception {
         // given
         ProductionOrder productionOrder = new ProductionOrder(
-                1L,
                 "PRD-2026-001",
                 "PO2025001",
                 "PO-2026-001",
@@ -261,7 +260,6 @@ class DocumentControllerTest {
     void getProductionOrderApi_whenProductionOrderExists_thenReturnsOkAndProductionOrder() throws Exception {
         // given
         ProductionOrder productionOrder = new ProductionOrder(
-                1L,
                 "PRD-2026-001",
                 "PO2025001",
                 "PO-2026-001",
@@ -272,16 +270,16 @@ class DocumentControllerTest {
                 java.time.LocalDateTime.of(2026, 3, 10, 9, 0),
                 java.time.LocalDateTime.of(2026, 3, 15, 14, 0)
         );
-        when(productionOrderQueryService.findById(1L)).thenReturn(productionOrder);
+        when(productionOrderQueryService.findById("PRD-2026-001")).thenReturn(productionOrder);
 
         // when & then
-        mockMvc.perform(get("/api/production-orders/{id}", 1L))
+        mockMvc.perform(get("/api/production-orders/{id}", "PRD-2026-001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.productionOrderNo").value("PRD-2026-001"))
                 .andExpect(jsonPath("$.poId").value("PO2025001"))
                 .andExpect(jsonPath("$.status").value("진행중"));
 
-        verify(productionOrderQueryService).findById(1L);
+        verify(productionOrderQueryService).findById("PRD-2026-001");
     }
 
     @Test
@@ -289,7 +287,7 @@ class DocumentControllerTest {
     void getShipmentsApi_whenShipmentsExist_thenReturnsOkAndList() throws Exception {
         // given
         com.team2.documents.entity.Shipment shipment =
-                new com.team2.documents.entity.Shipment(1L, "PO2025-0001", com.team2.documents.entity.ShipmentStatus.READY);
+                new com.team2.documents.entity.Shipment(1L, "PO2025-0001", com.team2.documents.entity.enums.ShipmentStatus.READY);
         when(shipmentQueryService.findAll()).thenReturn(java.util.List.of(shipment));
 
         // when & then
@@ -307,7 +305,7 @@ class DocumentControllerTest {
     void getShipmentApi_whenShipmentExists_thenReturnsOkAndShipment() throws Exception {
         // given
         com.team2.documents.entity.Shipment shipment =
-                new com.team2.documents.entity.Shipment(1L, "PO2025-0001", com.team2.documents.entity.ShipmentStatus.READY);
+                new com.team2.documents.entity.Shipment(1L, "PO2025-0001", com.team2.documents.entity.enums.ShipmentStatus.READY);
         when(shipmentQueryService.findById(1L)).thenReturn(shipment);
 
         // when & then
@@ -492,7 +490,7 @@ class DocumentControllerTest {
                 "결재 요청드립니다.",
                 null
         );
-        approvalRequest.approve();
+        approvalRequest.setStatus(ApprovalStatus.APPROVED);
         when(approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED)).thenReturn(approvalRequest);
 
         // when & then

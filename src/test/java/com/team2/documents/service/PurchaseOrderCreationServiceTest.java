@@ -12,8 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.entity.PositionLevel;
-import com.team2.documents.entity.PurchaseOrderStatus;
+import com.team2.documents.entity.enums.PositionLevel;
+import com.team2.documents.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.repository.ApprovalRequestRepository;
 import com.team2.documents.repository.UserPositionRepository;
 

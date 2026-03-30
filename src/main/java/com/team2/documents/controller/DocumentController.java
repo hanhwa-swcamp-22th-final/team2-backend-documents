@@ -150,7 +150,7 @@ public class DocumentController {
     }
 
     @GetMapping("/production-orders/{id}")
-    public ResponseEntity<com.team2.documents.entity.ProductionOrder> getProductionOrder(@PathVariable Long id) {
+    public ResponseEntity<com.team2.documents.entity.ProductionOrder> getProductionOrder(@PathVariable String id) {
         return ResponseEntity.ok(productionOrderQueryService.findById(id));
     }
 

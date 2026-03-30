@@ -14,8 +14,11 @@ public class ProformaInvoiceApprovalService {
     }
 
     public void approve(String piId) {
-        proformaInvoiceRepository.findById(piId)
-                .orElseThrow(() -> new IllegalArgumentException("PI 정보를 찾을 수 없습니다."))
-                .approve();
+        com.team2.documents.entity.ProformaInvoice proformaInvoice = proformaInvoiceRepository.findById(piId)
+                .orElseThrow(() -> new IllegalArgumentException("PI 정보를 찾을 수 없습니다."));
+        if (!com.team2.documents.entity.enums.ProformaInvoiceStatus.APPROVAL_PENDING.equals(proformaInvoice.getStatus())) {
+            throw new IllegalStateException("결재대기 상태의 PI만 승인할 수 있습니다.");
+        }
+        proformaInvoice.setStatus(com.team2.documents.entity.enums.ProformaInvoiceStatus.CONFIRMED);
     }
 }

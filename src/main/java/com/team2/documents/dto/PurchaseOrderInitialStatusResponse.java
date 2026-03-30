@@ -1,6 +1,6 @@
 package com.team2.documents.dto;
 
-import com.team2.documents.entity.PurchaseOrderStatus;
+import com.team2.documents.entity.enums.PurchaseOrderStatus;
 
 public record PurchaseOrderInitialStatusResponse(PurchaseOrderStatus status) {
 }
