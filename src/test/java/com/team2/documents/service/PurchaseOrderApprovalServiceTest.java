@@ -58,4 +58,17 @@ class PurchaseOrderApprovalServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> purchaseOrderApprovalService.approve(poId));
     }
+
+    @Test
+    @DisplayName("결재대기 상태가 아닌 PO를 승인하면 예외가 발생한다")
+    void approve_whenPurchaseOrderIsNotApprovalPending_thenThrowsException() {
+        // given
+        String poId = "PO2025-0002";
+        PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.CONFIRMED);
+        when(purchaseOrderRepository.findById(poId)).thenReturn(Optional.of(purchaseOrder));
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> purchaseOrderApprovalService.approve(poId));
+    }
 }

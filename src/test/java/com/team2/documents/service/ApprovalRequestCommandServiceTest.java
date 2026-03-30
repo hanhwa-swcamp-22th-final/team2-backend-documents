@@ -124,4 +124,86 @@ class ApprovalRequestCommandServiceTest {
         assertEquals("PI2025-0001", result.getDocumentId());
         verify(proformaInvoiceRejectionWorkflowService).reject("PI2025-0001");
     }
+
+    @Test
+    @DisplayName("PI 결재 요청 승인 시 PI 승인 워크플로우를 호출한다")
+    void update_whenPiApprovalRequestIsApproved_thenCallsProformaInvoiceApprovalWorkflow() {
+        // given
+        ApprovalRequest approvalRequest = new ApprovalRequest(
+                1L,
+                ApprovalDocumentType.PI,
+                "PI2025-0002",
+                ApprovalRequestType.REGISTRATION,
+                2L,
+                1L,
+                "결재 요청드립니다.",
+                null
+        );
+        when(approvalRequestRepository.findById(1L)).thenReturn(Optional.of(approvalRequest));
+        doNothing().when(proformaInvoiceApprovalWorkflowService).approve("PI2025-0002");
+
+        // when
+        ApprovalRequest result = approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED);
+
+        // then
+        assertEquals("PI2025-0002", result.getDocumentId());
+        verify(proformaInvoiceApprovalWorkflowService).approve("PI2025-0002");
+    }
+
+    @Test
+    @DisplayName("PO 결재 요청 반려 시 PO 반려 워크플로우를 호출한다")
+    void update_whenPoApprovalRequestIsRejected_thenCallsPurchaseOrderRejectionWorkflow() {
+        // given
+        ApprovalRequest approvalRequest = new ApprovalRequest(
+                1L,
+                ApprovalDocumentType.PO,
+                "PO2025-0002",
+                ApprovalRequestType.REGISTRATION,
+                2L,
+                1L,
+                "결재 요청드립니다.",
+                null
+        );
+        when(approvalRequestRepository.findById(1L)).thenReturn(Optional.of(approvalRequest));
+        doNothing().when(purchaseOrderRejectionWorkflowService).reject("PO2025-0002");
+
+        // when
+        ApprovalRequest result = approvalRequestCommandService.update(1L, ApprovalStatus.REJECTED);
+
+        // then
+        assertEquals("PO2025-0002", result.getDocumentId());
+        verify(purchaseOrderRejectionWorkflowService).reject("PO2025-0002");
+    }
+
+    @Test
+    @DisplayName("결재 요청 정보가 없으면 처리 시 예외가 발생한다")
+    void update_whenApprovalRequestDoesNotExist_thenThrowsException() {
+        // given
+        when(approvalRequestRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // when & then
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED));
+    }
+
+    @Test
+    @DisplayName("승인 또는 반려가 아닌 상태값으로 결재 요청을 처리하면 예외가 발생한다")
+    void update_whenStatusIsNotApprovedOrRejected_thenThrowsException() {
+        // given
+        ApprovalRequest approvalRequest = new ApprovalRequest(
+                1L,
+                ApprovalDocumentType.PO,
+                "PO2025-0003",
+                ApprovalRequestType.REGISTRATION,
+                2L,
+                1L,
+                "결재 요청드립니다.",
+                null
+        );
+        when(approvalRequestRepository.findById(1L)).thenReturn(Optional.of(approvalRequest));
+
+        // when & then
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> approvalRequestCommandService.update(1L, ApprovalStatus.PENDING));
+    }
 }

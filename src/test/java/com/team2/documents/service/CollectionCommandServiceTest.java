@@ -2,6 +2,7 @@ package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -47,6 +48,7 @@ class CollectionCommandServiceTest {
                 LocalDateTime.of(2026, 5, 15, 14, 0)
         );
         when(collectionRepository.findById(1L)).thenReturn(Optional.of(collection));
+        when(collectionRepository.save(any(Collection.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
         Collection result = collectionCommandService.complete(1L, "수금완료", LocalDate.of(2026, 6, 1));
@@ -91,5 +93,31 @@ class CollectionCommandServiceTest {
         // when & then
         assertThrows(IllegalArgumentException.class,
                 () -> collectionCommandService.complete(1L, "수금완료", LocalDate.of(2026, 6, 1)));
+    }
+
+    @Test
+    @DisplayName("이미 수금완료 상태인 현황을 다시 수금 처리하면 예외가 발생한다")
+    void complete_whenCollectionAlreadyCompleted_thenThrowsException() {
+        // given
+        Collection collection = new Collection(
+                1L,
+                "PO2025001",
+                "PO-2026-001",
+                1L,
+                "ABC Trading",
+                java.math.BigDecimal.ZERO,
+                java.math.BigDecimal.ZERO,
+                java.math.BigDecimal.ZERO,
+                "USD",
+                "수금완료",
+                LocalDate.of(2026, 6, 1),
+                LocalDateTime.of(2026, 3, 5, 9, 0),
+                LocalDateTime.of(2026, 5, 15, 14, 0)
+        );
+        when(collectionRepository.findById(1L)).thenReturn(Optional.of(collection));
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> collectionCommandService.complete(1L, "수금완료", LocalDate.of(2026, 6, 2)));
     }
 }

@@ -2,8 +2,10 @@ package com.team2.documents.service;
 
 import org.springframework.stereotype.Service;
 
+import com.team2.documents.entity.ApprovalRequest;
+import com.team2.documents.entity.enums.ApprovalDocumentType;
+import com.team2.documents.entity.enums.ApprovalRequestType;
 import com.team2.documents.entity.enums.PositionLevel;
-import com.team2.documents.entity.PurchaseOrder;
 import com.team2.documents.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.repository.ApprovalRequestRepository;
 import com.team2.documents.repository.UserPositionRepository;
@@ -33,7 +35,13 @@ public class PurchaseOrderCreationService {
     public void create(Long userId) {
         PurchaseOrderStatus initialStatus = determineInitialStatus(userId);
         if (PurchaseOrderStatus.APPROVAL_PENDING.equals(initialStatus)) {
-            approvalRequestRepository.createForPurchaseOrder(userId);
+            approvalRequestRepository.save(new ApprovalRequest(
+                    ApprovalDocumentType.PO,
+                    "TEMP-PO",
+                    ApprovalRequestType.REGISTRATION,
+                    userId,
+                    1L
+            ));
         }
     }
 }

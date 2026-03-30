@@ -10,12 +10,6 @@ import com.team2.documents.entity.enums.ApprovalStatus;
 
 public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest, Long> {
 
-    default void createForPurchaseOrder(Long userId) {
-    }
-
-    default void createForProformaInvoice(String piId, Long userId) {
-    }
-
     Optional<ApprovalRequest> findByDocumentTypeAndDocumentIdAndStatus(ApprovalDocumentType documentType,
                                                                        String documentId,
                                                                        ApprovalStatus status);

@@ -27,6 +27,6 @@ public class CollectionCommandService {
         }
         collection.setStatus("수금완료");
         collection.setCollectionDate(collectionCompletedDate);
-        return collection;
+        return collectionRepository.save(collection);
     }
 }

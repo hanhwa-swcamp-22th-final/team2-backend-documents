@@ -1,6 +1,7 @@
 package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,7 +44,7 @@ class PurchaseOrderProductionOrderGenerationServiceTest {
         purchaseOrderProductionOrderGenerationService.generate(poId);
 
         // then
-        verify(productionOrderRepository).createFromPurchaseOrder(poId);
+        verify(productionOrderRepository).save(any(com.team2.documents.entity.ProductionOrder.class));
     }
 
     @Test

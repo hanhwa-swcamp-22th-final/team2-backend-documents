@@ -1,8 +1,14 @@
 package com.team2.documents;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.team2.documents.repository.ApprovalRequestRepository;
@@ -20,37 +26,50 @@ import com.team2.documents.repository.UserPositionRepository;
 @ActiveProfiles("test")
 class DocumentsApplicationTests {
 
-    @MockBean
+    @MockitoBean
     private ApprovalRequestRepository approvalRequestRepository;
 
-    @MockBean
+    @MockitoBean
     private CollectionRepository collectionRepository;
 
-    @MockBean
+    @MockitoBean
     private CommercialInvoiceRepository commercialInvoiceRepository;
 
-    @MockBean
+    @MockitoBean
     private PackingListRepository packingListRepository;
 
-    @MockBean
+    @MockitoBean
     private ProductionOrderRepository productionOrderRepository;
 
-    @MockBean
+    @MockitoBean
     private ProformaInvoiceRepository proformaInvoiceRepository;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderRepository purchaseOrderRepository;
 
-    @MockBean
+    @MockitoBean
     private ShipmentRepository shipmentRepository;
 
-    @MockBean
+    @MockitoBean
     private ShipmentOrderRepository shipmentOrderRepository;
 
-    @MockBean
+    @MockitoBean
     private UserPositionRepository userPositionRepository;
 
     @Test
     void contextLoads() {
+    }
+
+    @Test
+    void mainRunsSpringApplication() {
+        ConfigurableApplicationContext context = mock(ConfigurableApplicationContext.class);
+        try (MockedStatic<SpringApplication> springApplication = mockStatic(SpringApplication.class)) {
+            springApplication.when(() -> SpringApplication.run(DocumentsApplication.class, new String[]{}))
+                    .thenReturn(context);
+
+            DocumentsApplication.main(new String[]{});
+
+            springApplication.verify(() -> SpringApplication.run(DocumentsApplication.class, new String[]{}));
+        }
     }
 }

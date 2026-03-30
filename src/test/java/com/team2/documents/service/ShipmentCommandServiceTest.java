@@ -2,6 +2,7 @@ package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -32,6 +33,7 @@ class ShipmentCommandServiceTest {
         // given
         Shipment shipment = new Shipment(1L, "PO2025-0001", ShipmentStatus.READY);
         when(shipmentRepository.findById(1L)).thenReturn(Optional.of(shipment));
+        when(shipmentRepository.save(any(Shipment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
         Shipment result = shipmentCommandService.updateStatus(1L, ShipmentStatus.COMPLETED);

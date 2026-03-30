@@ -1,6 +1,7 @@
 package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -57,5 +58,18 @@ class ProformaInvoiceApprovalWorkflowServiceTest {
         // then
         assertEquals(ProformaInvoiceStatus.CONFIRMED, proformaInvoice.getStatus());
         assertEquals(ApprovalStatus.APPROVED, approvalRequest.getStatus());
+    }
+
+    @Test
+    @DisplayName("결재대기 상태가 아닌 PI를 워크플로우 승인하면 예외가 발생한다")
+    void approve_whenProformaInvoiceIsNotApprovalPending_thenThrowsException() {
+        // given
+        String piId = "PI2025-0002";
+        ProformaInvoice proformaInvoice = new ProformaInvoice(piId, ProformaInvoiceStatus.CONFIRMED);
+        when(proformaInvoiceRepository.findById(piId)).thenReturn(Optional.of(proformaInvoice));
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> proformaInvoiceApprovalWorkflowService.approve(piId));
     }
 }

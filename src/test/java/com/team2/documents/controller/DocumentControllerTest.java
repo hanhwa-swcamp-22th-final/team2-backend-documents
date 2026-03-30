@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,58 +64,58 @@ class DocumentControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderModificationService purchaseOrderModificationService;
 
-    @MockBean
+    @MockitoBean
     private ProformaInvoiceApprovalWorkflowService proformaInvoiceApprovalWorkflowService;
 
-    @MockBean
+    @MockitoBean
     private ProformaInvoiceRejectionWorkflowService proformaInvoiceRejectionWorkflowService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderApprovalWorkflowService purchaseOrderApprovalWorkflowService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderRejectionWorkflowService purchaseOrderRejectionWorkflowService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderModificationRequestService purchaseOrderModificationRequestService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderDeletionRequestService purchaseOrderDeletionRequestService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderCreationService purchaseOrderCreationService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService;
 
-    @MockBean
+    @MockitoBean
     private PurchaseOrderRegistrationService purchaseOrderRegistrationService;
 
-    @MockBean
+    @MockitoBean
     private ProformaInvoiceService proformaInvoiceService;
 
-    @MockBean
+    @MockitoBean
     private ProductionOrderQueryService productionOrderQueryService;
 
-    @MockBean
+    @MockitoBean
     private ShipmentQueryService shipmentQueryService;
 
-    @MockBean
+    @MockitoBean
     private CollectionQueryService collectionQueryService;
 
-    @MockBean
+    @MockitoBean
     private ShipmentCommandService shipmentCommandService;
 
-    @MockBean
+    @MockitoBean
     private CollectionCommandService collectionCommandService;
 
-    @MockBean
+    @MockitoBean
     private ApprovalRequestCommandService approvalRequestCommandService;
 
     @Test

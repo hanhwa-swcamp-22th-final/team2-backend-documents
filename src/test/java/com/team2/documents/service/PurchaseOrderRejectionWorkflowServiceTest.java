@@ -1,6 +1,7 @@
 package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -57,5 +58,18 @@ class PurchaseOrderRejectionWorkflowServiceTest {
         // then
         assertEquals(PurchaseOrderStatus.REJECTED, purchaseOrder.getStatus());
         assertEquals(ApprovalStatus.REJECTED, approvalRequest.getStatus());
+    }
+
+    @Test
+    @DisplayName("결재대기 상태가 아닌 PO를 워크플로우 반려하면 예외가 발생한다")
+    void reject_whenPurchaseOrderIsNotApprovalPending_thenThrowsException() {
+        // given
+        String poId = "PO2025-0002";
+        PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.CONFIRMED);
+        when(purchaseOrderRepository.findById(poId)).thenReturn(Optional.of(purchaseOrder));
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> purchaseOrderRejectionWorkflowService.reject(poId));
     }
 }

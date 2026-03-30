@@ -1,6 +1,7 @@
 package com.team2.documents.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,5 +63,33 @@ class PurchaseOrderApprovalWorkflowServiceTest {
         assertEquals(PurchaseOrderStatus.CONFIRMED, purchaseOrder.getStatus());
         assertEquals(ApprovalStatus.APPROVED, approvalRequest.getStatus());
         verify(purchaseOrderDocumentGenerationService).generateOnConfirmation(poId);
+    }
+
+    @Test
+    @DisplayName("결재대기 상태가 아닌 PO를 워크플로우 승인하면 예외가 발생한다")
+    void approve_whenPurchaseOrderIsNotApprovalPending_thenThrowsException() {
+        // given
+        String poId = "PO2025-0002";
+        PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.CONFIRMED);
+        when(purchaseOrderRepository.findById(poId)).thenReturn(Optional.of(purchaseOrder));
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> purchaseOrderApprovalWorkflowService.approve(poId));
+    }
+
+    @Test
+    @DisplayName("대기 중인 결재 요청이 없으면 워크플로우 승인 시 예외가 발생한다")
+    void approve_whenApprovalRequestDoesNotExist_thenThrowsException() {
+        // given
+        String poId = "PO2025-0003";
+        PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.APPROVAL_PENDING);
+        when(purchaseOrderRepository.findById(poId)).thenReturn(Optional.of(purchaseOrder));
+        when(approvalRequestRepository.findPendingByDocument(ApprovalDocumentType.PO, poId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(IllegalArgumentException.class,
+                () -> purchaseOrderApprovalWorkflowService.approve(poId));
     }
 }

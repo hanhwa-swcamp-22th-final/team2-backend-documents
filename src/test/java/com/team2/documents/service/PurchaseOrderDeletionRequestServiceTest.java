@@ -107,4 +107,21 @@ class PurchaseOrderDeletionRequestServiceTest {
         org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
                 () -> purchaseOrderDeletionRequestService.requestDeletion(poId, userId));
     }
+
+    @Test
+    @DisplayName("확정 상태가 아닌 PO는 삭제 요청할 수 없다")
+    void requestDeletion_whenPurchaseOrderIsNotConfirmed_thenThrowsException() {
+        // given
+        String poId = "PO2025-0002";
+        Long userId = 2L;
+        PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.APPROVAL_PENDING);
+
+        when(purchaseOrderRepository.findById(poId)).thenReturn(Optional.of(purchaseOrder));
+        when(userPositionRepository.findPositionLevelByUserId(userId))
+                .thenReturn(Optional.of(PositionLevel.STAFF));
+
+        // when & then
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> purchaseOrderDeletionRequestService.requestDeletion(poId, userId));
+    }
 }

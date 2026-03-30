@@ -19,6 +19,6 @@ public class ShipmentCommandService {
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("출하현황 정보를 찾을 수 없습니다."));
         shipment.setShipmentStatus(status);
-        return shipment;
+        return shipmentRepository.save(shipment);
     }
 }

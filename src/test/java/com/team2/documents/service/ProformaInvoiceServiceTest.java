@@ -106,4 +106,21 @@ class ProformaInvoiceServiceTest {
         org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
                 () -> proformaInvoiceService.requestRegistration(piId, userId));
     }
+
+    @Test
+    @DisplayName("초안 상태가 아닌 PI는 등록 요청할 수 없다")
+    void requestRegistration_whenProformaInvoiceIsNotDraft_thenThrowsException() {
+        // given
+        String piId = "PI2025-0002";
+        Long userId = 2L;
+        ProformaInvoice proformaInvoice = new ProformaInvoice(piId, ProformaInvoiceStatus.CONFIRMED);
+
+        when(proformaInvoiceRepository.findById(piId)).thenReturn(Optional.of(proformaInvoice));
+        when(userPositionRepository.findPositionLevelByUserId(userId))
+                .thenReturn(Optional.of(PositionLevel.STAFF));
+
+        // when & then
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> proformaInvoiceService.requestRegistration(piId, userId));
+    }
 }

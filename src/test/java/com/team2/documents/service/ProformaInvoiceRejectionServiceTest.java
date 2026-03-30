@@ -53,4 +53,17 @@ class ProformaInvoiceRejectionServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> proformaInvoiceRejectionService.reject(piId));
     }
+
+    @Test
+    @DisplayName("결재대기 상태가 아닌 PI를 반려하면 예외가 발생한다")
+    void reject_whenProformaInvoiceIsNotApprovalPending_thenThrowsException() {
+        // given
+        String piId = "PI2025-0002";
+        ProformaInvoice proformaInvoice = new ProformaInvoice(piId, ProformaInvoiceStatus.CONFIRMED);
+        when(proformaInvoiceRepository.findById(piId)).thenReturn(Optional.of(proformaInvoice));
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+                () -> proformaInvoiceRejectionService.reject(piId));
+    }
 }
