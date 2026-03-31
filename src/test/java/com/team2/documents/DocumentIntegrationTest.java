@@ -111,15 +111,16 @@ class DocumentIntegrationTest {
                 null
         ));
 
-        mockMvc.perform(put("/api/collections/{id}", collection.getId())
+        mockMvc.perform(put("/api/collections/{collectionId}", collection.getCollectionId())
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new CollectionUpdateRequest("수금완료", LocalDate.of(2026, 3, 30), "completed"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("수금완료"))
+
                 .andExpect(jsonPath("$.collectionDate").value("2026-03-30"));
 
-        Collection updatedCollection = collectionRepository.findById(collection.getId()).orElseThrow();
+        Collection updatedCollection = collectionRepository.findById(collection.getCollectionId()).orElseThrow();
         assertThat(updatedCollection.getStatus()).isEqualTo("수금완료");
         assertThat(updatedCollection.getCollectionDate()).isEqualTo(LocalDate.of(2026, 3, 30));
     }

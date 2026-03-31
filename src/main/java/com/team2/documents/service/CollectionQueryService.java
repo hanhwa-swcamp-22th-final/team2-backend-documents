@@ -20,8 +20,8 @@ public class CollectionQueryService {
         return collectionRepository.findAll();
     }
 
-    public Collection findById(Long id) {
-        return collectionRepository.findById(id)
+    public Collection findById(Long collectionId) {
+        return collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new IllegalArgumentException("매출·수금 현황 정보를 찾을 수 없습니다."));
     }
 }

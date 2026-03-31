@@ -22,7 +22,7 @@ public class Collection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "collection_id")
-    private Long id;
+    private Long collectionId;
 
     @Column(name = "po_id", nullable = false)
     private String poId;
@@ -62,7 +62,7 @@ public class Collection {
     protected Collection() {
     }
 
-    public Collection(Long id,
+    public Collection(Long collectionId,
                       String poId,
                       String poNo,
                       Long clientId,
@@ -75,7 +75,7 @@ public class Collection {
                       LocalDate collectionDate,
                       LocalDateTime createdAt,
                       LocalDateTime updatedAt) {
-        this.id = id;
+        this.collectionId = collectionId;
         this.poId = poId;
         this.poNo = poNo;
         this.clientId = clientId;
@@ -90,8 +90,8 @@ public class Collection {
         this.updatedAt = updatedAt;
     }
 
-    public Long getId() {
-        return id;
+    public Long getCollectionId() {
+        return collectionId;
     }
 
     public String getPoId() {

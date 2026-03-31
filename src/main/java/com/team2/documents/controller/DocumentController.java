@@ -149,9 +149,10 @@ public class DocumentController {
         return ResponseEntity.ok(productionOrderQueryService.findAll());
     }
 
-    @GetMapping("/production-orders/{id}")
-    public ResponseEntity<com.team2.documents.entity.ProductionOrder> getProductionOrder(@PathVariable String id) {
-        return ResponseEntity.ok(productionOrderQueryService.findById(id));
+    @GetMapping("/production-orders/{productionOrderId}")
+    public ResponseEntity<com.team2.documents.entity.ProductionOrder> getProductionOrder(
+            @PathVariable String productionOrderId) {
+        return ResponseEntity.ok(productionOrderQueryService.findById(productionOrderId));
     }
 
     @GetMapping("/shipments")
@@ -159,15 +160,15 @@ public class DocumentController {
         return ResponseEntity.ok(shipmentQueryService.findAll());
     }
 
-    @GetMapping("/shipments/{id}")
-    public ResponseEntity<com.team2.documents.entity.Shipment> getShipment(@PathVariable Long id) {
-        return ResponseEntity.ok(shipmentQueryService.findById(id));
+    @GetMapping("/shipments/{shipmentId}")
+    public ResponseEntity<com.team2.documents.entity.Shipment> getShipment(@PathVariable Long shipmentId) {
+        return ResponseEntity.ok(shipmentQueryService.findById(shipmentId));
     }
 
-    @PutMapping("/shipments/{id}")
-    public ResponseEntity<com.team2.documents.entity.Shipment> updateShipmentStatus(@PathVariable Long id,
+    @PutMapping("/shipments/{shipmentId}")
+    public ResponseEntity<com.team2.documents.entity.Shipment> updateShipmentStatus(@PathVariable Long shipmentId,
                                                                                      @RequestBody ShipmentStatusUpdateRequest request) {
-        return ResponseEntity.ok(shipmentCommandService.updateStatus(id, request.status()));
+        return ResponseEntity.ok(shipmentCommandService.updateStatus(shipmentId, request.status()));
     }
 
     @GetMapping("/collections")
@@ -175,15 +176,19 @@ public class DocumentController {
         return ResponseEntity.ok(collectionQueryService.findAll());
     }
 
-    @GetMapping("/collections/{id}")
-    public ResponseEntity<com.team2.documents.entity.Collection> getCollection(@PathVariable Long id) {
-        return ResponseEntity.ok(collectionQueryService.findById(id));
+    @GetMapping("/collections/{collectionId}")
+    public ResponseEntity<com.team2.documents.entity.Collection> getCollection(@PathVariable Long collectionId) {
+        return ResponseEntity.ok(collectionQueryService.findById(collectionId));
     }
 
-    @PutMapping("/collections/{id}")
-    public ResponseEntity<com.team2.documents.entity.Collection> updateCollection(@PathVariable Long id,
+    @PutMapping("/collections/{collectionId}")
+    public ResponseEntity<com.team2.documents.entity.Collection> updateCollection(@PathVariable Long collectionId,
                                                                                   @RequestBody CollectionUpdateRequest request) {
-        return ResponseEntity.ok(collectionCommandService.complete(id, request.status(), request.collectionCompletedDate()));
+        return ResponseEntity.ok(collectionCommandService.complete(
+                collectionId,
+                request.status(),
+                request.collectionCompletedDate()
+        ));
     }
 
     @PostMapping("/approval-requests")
@@ -192,10 +197,11 @@ public class DocumentController {
         return ResponseEntity.ok(approvalRequestCommandService.create(request));
     }
 
-    @PutMapping("/approval-requests/{id}")
-    public ResponseEntity<com.team2.documents.entity.ApprovalRequest> updateApprovalRequest(@PathVariable Long id,
-                                                                                             @RequestBody ApprovalRequestUpdateRequest request) {
-        return ResponseEntity.ok(approvalRequestCommandService.update(id, request.status()));
+    @PutMapping("/approval-requests/{approvalRequestId}")
+    public ResponseEntity<com.team2.documents.entity.ApprovalRequest> updateApprovalRequest(
+            @PathVariable Long approvalRequestId,
+            @RequestBody ApprovalRequestUpdateRequest request) {
+        return ResponseEntity.ok(approvalRequestCommandService.update(approvalRequestId, request.status()));
     }
 
     @PostMapping("/purchase-orders/{poId}/validate-modifiable")

@@ -20,8 +20,8 @@ public class ShipmentQueryService {
         return shipmentRepository.findAll();
     }
 
-    public Shipment findById(Long id) {
-        return shipmentRepository.findById(id)
+    public Shipment findById(Long shipmentId) {
+        return shipmentRepository.findById(shipmentId)
                 .orElseThrow(() -> new IllegalArgumentException("출하현황 정보를 찾을 수 없습니다."));
     }
 }

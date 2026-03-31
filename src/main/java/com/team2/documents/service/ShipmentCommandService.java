@@ -15,10 +15,10 @@ public class ShipmentCommandService {
         this.shipmentRepository = shipmentRepository;
     }
 
-    public Shipment updateStatus(Long id, ShipmentStatus status) {
-        Shipment shipment = shipmentRepository.findById(id)
+    public Shipment updateStatus(Long shipmentId, ShipmentStatus targetShipmentStatus) {
+        Shipment shipment = shipmentRepository.findById(shipmentId)
                 .orElseThrow(() -> new IllegalArgumentException("출하현황 정보를 찾을 수 없습니다."));
-        shipment.setShipmentStatus(status);
+        shipment.setShipmentStatus(targetShipmentStatus);
         return shipmentRepository.save(shipment);
     }
 }

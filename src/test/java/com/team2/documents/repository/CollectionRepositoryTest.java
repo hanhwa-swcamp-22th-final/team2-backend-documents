@@ -40,7 +40,7 @@ class CollectionRepositoryTest {
                 LocalDateTime.now()
         ));
 
-        Collection result = collectionRepository.findById(saved.getId()).orElseThrow();
+        Collection result = collectionRepository.findById(saved.getCollectionId()).orElseThrow();
 
         assertEquals("PO2025001", result.getPoId());
         assertEquals("미수금", result.getStatus());
@@ -69,7 +69,7 @@ class CollectionRepositoryTest {
         collection.setCollectionDate(LocalDate.of(2026, 3, 30));
         collectionRepository.save(collection);
 
-        Collection result = collectionRepository.findById(collection.getId()).orElseThrow();
+        Collection result = collectionRepository.findById(collection.getCollectionId()).orElseThrow();
         assertEquals("수금완료", result.getStatus());
         assertEquals(LocalDate.of(2026, 3, 30), result.getCollectionDate());
     }
@@ -95,7 +95,7 @@ class CollectionRepositoryTest {
 
         collectionRepository.delete(collection);
 
-        assertFalse(collectionRepository.findById(collection.getId()).isPresent());
+        assertFalse(collectionRepository.findById(collection.getCollectionId()).isPresent());
     }
 
     @Test

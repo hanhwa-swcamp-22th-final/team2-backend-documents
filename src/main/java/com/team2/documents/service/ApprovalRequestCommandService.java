@@ -41,16 +41,16 @@ public class ApprovalRequestCommandService {
         return approvalRequestRepository.save(approvalRequest);
     }
 
-    public ApprovalRequest update(Long id, ApprovalStatus status) {
-        ApprovalRequest approvalRequest = approvalRequestRepository.findById(id)
+    public ApprovalRequest update(Long approvalRequestId, ApprovalStatus targetApprovalStatus) {
+        ApprovalRequest approvalRequest = approvalRequestRepository.findById(approvalRequestId)
                 .orElseThrow(() -> new IllegalArgumentException("결재 요청 정보를 찾을 수 없습니다."));
 
-        if (ApprovalStatus.APPROVED.equals(status)) {
+        if (ApprovalStatus.APPROVED.equals(targetApprovalStatus)) {
             approveDocument(approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             return approvalRequest;
         }
 
-        if (ApprovalStatus.REJECTED.equals(status)) {
+        if (ApprovalStatus.REJECTED.equals(targetApprovalStatus)) {
             rejectDocument(approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             return approvalRequest;
         }

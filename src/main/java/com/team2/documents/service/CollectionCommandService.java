@@ -16,10 +16,10 @@ public class CollectionCommandService {
         this.collectionRepository = collectionRepository;
     }
 
-    public Collection complete(Long id, String status, LocalDate collectionCompletedDate) {
-        Collection collection = collectionRepository.findById(id)
+    public Collection complete(Long collectionId, String targetStatus, LocalDate collectionCompletedDate) {
+        Collection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new IllegalArgumentException("매출·수금 현황 정보를 찾을 수 없습니다."));
-        if (!"수금완료".equals(status)) {
+        if (!"수금완료".equals(targetStatus)) {
             throw new IllegalArgumentException("수금완료 상태만 처리할 수 있습니다.");
         }
         if (!"미수금".equals(collection.getStatus())) {
