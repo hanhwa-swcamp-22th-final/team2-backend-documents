@@ -1,9 +1,0 @@
-package com.team2.documents.repository;
-
-import org.apache.ibatis.annotations.Mapper;
-
-@Mapper
-public interface PackingListRepository {
-
-    void createFromPurchaseOrder(String poId);
-}

@@ -32,14 +32,14 @@ import com.team2.documents.entity.enums.ApprovalDocumentType;
 import com.team2.documents.entity.enums.ApprovalRequestType;
 import com.team2.documents.entity.enums.ApprovalStatus;
 import com.team2.documents.entity.enums.ShipmentStatus;
-import com.team2.documents.repository.ApprovalRequestRepository;
-import com.team2.documents.repository.CollectionRepository;
-import com.team2.documents.repository.CommercialInvoiceRepository;
-import com.team2.documents.repository.PackingListRepository;
-import com.team2.documents.repository.ProductionOrderRepository;
-import com.team2.documents.repository.ShipmentOrderRepository;
-import com.team2.documents.repository.ShipmentRepository;
-import com.team2.documents.repository.UserPositionRepository;
+import com.team2.documents.command.repository.ApprovalRequestRepository;
+import com.team2.documents.command.repository.CollectionRepository;
+import com.team2.documents.command.repository.CommercialInvoiceRepository;
+import com.team2.documents.command.repository.PackingListRepository;
+import com.team2.documents.command.repository.ProductionOrderRepository;
+import com.team2.documents.command.repository.ShipmentOrderRepository;
+import com.team2.documents.command.repository.ShipmentRepository;
+import com.team2.documents.command.repository.UserPositionRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.team2.documents.mapper.CollectionQueryMapper">
+<mapper namespace="com.team2.documents.query.mapper.CollectionQueryMapper">
 
     <resultMap id="collectionResultMap" type="com.team2.documents.entity.Collection">
-        <id property="id" column="collection_id"/>
+        <id property="collectionId" column="collection_id"/>
         <result property="poId" column="po_id"/>
         <result property="clientId" column="client_id"/>
         <result property="totalAmount" column="collection_sales_amount"/>

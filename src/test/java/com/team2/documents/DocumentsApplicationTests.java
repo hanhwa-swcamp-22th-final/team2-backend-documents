@@ -11,16 +11,22 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.team2.documents.repository.ApprovalRequestRepository;
-import com.team2.documents.repository.CollectionRepository;
-import com.team2.documents.repository.CommercialInvoiceRepository;
-import com.team2.documents.repository.PackingListRepository;
-import com.team2.documents.repository.ProductionOrderRepository;
-import com.team2.documents.repository.ProformaInvoiceRepository;
-import com.team2.documents.repository.PurchaseOrderRepository;
-import com.team2.documents.repository.ShipmentRepository;
-import com.team2.documents.repository.ShipmentOrderRepository;
-import com.team2.documents.repository.UserPositionRepository;
+import com.team2.documents.query.mapper.ApprovalRequestQueryMapper;
+import com.team2.documents.query.mapper.CollectionQueryMapper;
+import com.team2.documents.query.mapper.ProductionOrderQueryMapper;
+import com.team2.documents.query.mapper.ProformaInvoiceQueryMapper;
+import com.team2.documents.query.mapper.PurchaseOrderQueryMapper;
+import com.team2.documents.query.mapper.ShipmentQueryMapper;
+import com.team2.documents.command.repository.ApprovalRequestRepository;
+import com.team2.documents.command.repository.CollectionRepository;
+import com.team2.documents.command.repository.CommercialInvoiceRepository;
+import com.team2.documents.command.repository.PackingListRepository;
+import com.team2.documents.command.repository.ProductionOrderRepository;
+import com.team2.documents.command.repository.ProformaInvoiceRepository;
+import com.team2.documents.command.repository.PurchaseOrderRepository;
+import com.team2.documents.command.repository.ShipmentRepository;
+import com.team2.documents.command.repository.ShipmentOrderRepository;
+import com.team2.documents.command.repository.UserPositionRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -55,6 +61,24 @@ class DocumentsApplicationTests {
 
     @MockitoBean
     private UserPositionRepository userPositionRepository;
+
+    @MockitoBean
+    private ApprovalRequestQueryMapper approvalRequestQueryMapper;
+
+    @MockitoBean
+    private CollectionQueryMapper collectionQueryMapper;
+
+    @MockitoBean
+    private ProductionOrderQueryMapper productionOrderQueryMapper;
+
+    @MockitoBean
+    private ProformaInvoiceQueryMapper proformaInvoiceQueryMapper;
+
+    @MockitoBean
+    private PurchaseOrderQueryMapper purchaseOrderQueryMapper;
+
+    @MockitoBean
+    private ShipmentQueryMapper shipmentQueryMapper;
 
     @Test
     void contextLoads() {
