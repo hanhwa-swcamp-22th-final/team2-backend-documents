@@ -5,23 +5,26 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.entity.Collection;
-import com.team2.documents.repository.CollectionRepository;
+import com.team2.documents.mapper.CollectionQueryMapper;
 
 @Service
 public class CollectionQueryService {
 
-    private final CollectionRepository collectionRepository;
+    private final CollectionQueryMapper collectionQueryMapper;
 
-    public CollectionQueryService(CollectionRepository collectionRepository) {
-        this.collectionRepository = collectionRepository;
+    public CollectionQueryService(CollectionQueryMapper collectionQueryMapper) {
+        this.collectionQueryMapper = collectionQueryMapper;
     }
 
     public List<Collection> findAll() {
-        return collectionRepository.findAll();
+        return collectionQueryMapper.findAll();
     }
 
-    public Collection findById(Long collectionId) {
-        return collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new IllegalArgumentException("매출·수금 현황 정보를 찾을 수 없습니다."));
+    public Collection findById(Long id) {
+        Collection collection = collectionQueryMapper.findById(id);
+        if (collection == null) {
+            throw new IllegalArgumentException("매출·수금 현황 정보를 찾을 수 없습니다.");
+        }
+        return collection;
     }
 }

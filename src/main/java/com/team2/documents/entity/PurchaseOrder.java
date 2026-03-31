@@ -8,7 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import com.team2.documents.entity.enums.PurchaseOrderStatus;
+import lombok.Setter;
 
+@Setter
 @Entity
 @Table(name = "purchase_orders")
 public class PurchaseOrder {

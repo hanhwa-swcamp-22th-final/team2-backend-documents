@@ -8,7 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import com.team2.documents.entity.enums.ShipmentStatus;
+import lombok.Setter;
 
+@Setter
 @Entity
 @Table(name = "shipments")
 public class Shipment {

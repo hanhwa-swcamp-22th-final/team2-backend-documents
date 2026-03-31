@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team2.documents.repository.CommercialInvoiceRepository">
+
+    <insert id="createFromPurchaseOrder">
+        INSERT INTO commercial_invoices (ci_id, po_id, ci_invoice_date, client_id, currency_id)
+        SELECT
+            CONCAT('CI', REPLACE(po_id, 'PO', '')),
+            po_id,
+            CURDATE(),
+            client_id,
+            currency_id
+        FROM purchase_orders
+        WHERE po_id = #{poId}
+    </insert>
+
+</mapper>

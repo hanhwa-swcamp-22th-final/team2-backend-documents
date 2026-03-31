@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team2.documents.mapper.ApprovalRequestQueryMapper">
+
+    <resultMap id="approvalRequestResultMap" type="com.team2.documents.entity.ApprovalRequest">
+        <id property="approvalRequestId" column="approval_request_id"/>
+        <result property="documentType"  column="document_type"/>
+        <result property="documentId"    column="document_id"/>
+        <result property="requestType"   column="request_type"/>
+        <result property="requesterId"   column="requester_id"/>
+        <result property="approverId"    column="approver_id"/>
+        <result property="comment"       column="comment"/>
+        <result property="reviewSnapshot" column="review_snapshot"/>
+        <result property="requestedAt"   column="requested_at"/>
+        <result property="reviewedAt"    column="reviewed_at"/>
+        <result property="status"        column="status"/>
+    </resultMap>
+
+    <select id="findById" resultMap="approvalRequestResultMap">
+        SELECT approval_request_id, document_type, document_id,
+               request_type, requester_id, approver_id,
+               comment, review_snapshot, requested_at,
+               reviewed_at, status
+        FROM approval_requests
+        WHERE approval_request_id = #{approvalRequestId}
+    </select>
+
+    <select id="findByDocumentTypeAndDocumentIdAndStatus" resultMap="approvalRequestResultMap">
+        SELECT approval_request_id, document_type, document_id,
+               request_type, requester_id, approver_id,
+               comment, review_snapshot, requested_at,
+               reviewed_at, status
+        FROM approval_requests
+        WHERE document_type = #{documentType}
+          AND document_id = #{documentId}
+          AND status = #{status}
+    </select>
+
+    <select id="findAll" resultMap="approvalRequestResultMap">
+        SELECT approval_request_id, document_type, document_id,
+               request_type, requester_id, approver_id,
+               comment, review_snapshot, requested_at,
+               reviewed_at, status
+        FROM approval_requests
+    </select>
+
+</mapper>

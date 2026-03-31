@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team2.documents.mapper.ShipmentQueryMapper">
+
+    <resultMap id="shipmentResultMap" type="com.team2.documents.entity.Shipment">
+        <id property="shipmentId" column="shipment_id"/>
+        <result property="poId" column="po_id"/>
+        <result property="shipmentStatus" column="shipment_status"/>
+    </resultMap>
+
+    <select id="findById" resultMap="shipmentResultMap">
+        SELECT shipment_id, po_id, shipment_status
+        FROM shipments
+        WHERE shipment_id = #{shipmentId}
+    </select>
+
+    <select id="findAll" resultMap="shipmentResultMap">
+        SELECT shipment_id, po_id, shipment_status
+        FROM shipments
+    </select>
+
+    <select id="findByPoId" resultMap="shipmentResultMap">
+        SELECT shipment_id, po_id, shipment_status
+        FROM shipments
+        WHERE po_id = #{poId}
+    </select>
+
+</mapper>

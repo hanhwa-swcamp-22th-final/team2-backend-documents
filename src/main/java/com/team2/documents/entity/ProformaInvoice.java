@@ -8,7 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import com.team2.documents.entity.enums.ProformaInvoiceStatus;
+import lombok.Setter;
 
+@Setter
 @Entity
 @Table(name = "proforma_invoices")
 public class ProformaInvoice {

@@ -5,23 +5,26 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.entity.ProductionOrder;
-import com.team2.documents.repository.ProductionOrderRepository;
+import com.team2.documents.mapper.ProductionOrderQueryMapper;
 
 @Service
 public class ProductionOrderQueryService {
 
-    private final ProductionOrderRepository productionOrderRepository;
+    private final ProductionOrderQueryMapper productionOrderQueryMapper;
 
-    public ProductionOrderQueryService(ProductionOrderRepository productionOrderRepository) {
-        this.productionOrderRepository = productionOrderRepository;
+    public ProductionOrderQueryService(ProductionOrderQueryMapper productionOrderQueryMapper) {
+        this.productionOrderQueryMapper = productionOrderQueryMapper;
     }
 
     public List<ProductionOrder> findAll() {
-        return productionOrderRepository.findAll();
+        return productionOrderQueryMapper.findAll();
     }
 
-    public ProductionOrder findById(String productionOrderId) {
-        return productionOrderRepository.findById(productionOrderId)
-                .orElseThrow(() -> new IllegalArgumentException("생산지시서 정보를 찾을 수 없습니다."));
+    public ProductionOrder findById(String id) {
+        ProductionOrder productionOrder = productionOrderQueryMapper.findById(id);
+        if (productionOrder == null) {
+            throw new IllegalArgumentException("생산지시서 정보를 찾을 수 없습니다.");
+        }
+        return productionOrder;
     }
 }

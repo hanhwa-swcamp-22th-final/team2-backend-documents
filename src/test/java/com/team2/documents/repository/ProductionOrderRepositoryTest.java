@@ -38,7 +38,7 @@ class ProductionOrderRepositoryTest {
 
         ProductionOrder result = productionOrderRepository.findById("PRD2025001").orElseThrow();
 
-        assertEquals("PRD2025001", result.getProductionOrderNo());
+        assertEquals("PRD2025001", result.getProductionOrderId());
         assertEquals("PO2025001", result.getPoId());
     }
 

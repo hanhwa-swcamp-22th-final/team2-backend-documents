@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team2.documents.mapper.PurchaseOrderQueryMapper">
+
+    <resultMap id="purchaseOrderResultMap" type="com.team2.documents.entity.PurchaseOrder">
+        <id property="poId" column="po_id"/>
+        <result property="status" column="po_status"/>
+    </resultMap>
+
+    <select id="findById" resultMap="purchaseOrderResultMap">
+        SELECT po_id, po_status
+        FROM purchase_orders
+        WHERE po_id = #{poId}
+    </select>
+
+    <select id="findAll" resultMap="purchaseOrderResultMap">
+        SELECT po_id, po_status
+        FROM purchase_orders
+    </select>
+
+</mapper>

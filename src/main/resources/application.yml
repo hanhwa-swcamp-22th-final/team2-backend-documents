@@ -30,9 +30,13 @@ spring:
           starttls:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
 
+auth:
+  service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8011}
+
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
-  type-aliases-package: com.team2.documents.entity,com.team2.documents.dto
+  type-aliases-package: com.team2.documents.entity,com.team2.documents.entity.enums,com.team2.documents.dto
 
 management:
   endpoints:

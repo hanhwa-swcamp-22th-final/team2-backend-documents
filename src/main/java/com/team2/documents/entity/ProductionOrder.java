@@ -9,7 +9,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import lombok.Setter;
 
+@Setter
 @Entity
 @Table(name = "production_orders")
 public class ProductionOrder {
@@ -65,7 +67,7 @@ public class ProductionOrder {
         this.updatedAt = updatedAt;
     }
 
-    public String getProductionOrderNo() {
+    public String getProductionOrderId() {
         return productionOrderId;
     }
 

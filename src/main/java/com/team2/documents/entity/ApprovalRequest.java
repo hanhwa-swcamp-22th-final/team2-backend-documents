@@ -15,7 +15,9 @@ import jakarta.persistence.Table;
 import com.team2.documents.entity.enums.ApprovalDocumentType;
 import com.team2.documents.entity.enums.ApprovalRequestType;
 import com.team2.documents.entity.enums.ApprovalStatus;
+import lombok.Setter;
 
+@Setter
 @Entity
 @Table(name = "approval_requests")
 public class ApprovalRequest {
