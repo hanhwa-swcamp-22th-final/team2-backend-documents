@@ -30,6 +30,7 @@ import com.team2.documents.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.entity.Collection;
 import com.team2.documents.entity.enums.ApprovalDocumentType;
 import com.team2.documents.entity.ApprovalRequest;
+import com.team2.documents.entity.PurchaseOrder;
 import com.team2.documents.entity.enums.ApprovalRequestType;
 import com.team2.documents.entity.enums.ApprovalStatus;
 import com.team2.documents.entity.ProductionOrder;
@@ -130,7 +131,9 @@ class DocumentControllerTest {
     void createApi_whenRequestIsValid_thenReturnsOkAndCallsService() throws Exception {
         // given
         Long userId = 2L;
-        doNothing().when(purchaseOrderCreationService).create(userId);
+        when(purchaseOrderCreationService.create(org.mockito.ArgumentMatchers.any(
+                com.team2.documents.dto.PurchaseOrderCreateRequest.class)))
+                .thenReturn(new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.APPROVAL_PENDING));
 
         // when & then
         mockMvc.perform(post("/api/purchase-orders")
@@ -140,7 +143,8 @@ class DocumentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("PO 생성 요청이 처리되었습니다."));
 
-        verify(purchaseOrderCreationService).create(userId);
+        verify(purchaseOrderCreationService).create(org.mockito.ArgumentMatchers.any(
+                com.team2.documents.dto.PurchaseOrderCreateRequest.class));
     }
 
     @Test

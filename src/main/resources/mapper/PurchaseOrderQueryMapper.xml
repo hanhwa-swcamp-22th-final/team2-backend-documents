@@ -5,18 +5,77 @@
 
     <resultMap id="purchaseOrderResultMap" type="com.team2.documents.entity.PurchaseOrder">
         <id property="poId" column="po_id"/>
+        <result property="piId" column="pi_id"/>
+        <result property="issueDate" column="po_issue_date"/>
+        <result property="clientId" column="client_id"/>
+        <result property="currencyId" column="currency_id"/>
+        <result property="managerId" column="manager_id"/>
         <result property="status" column="po_status"/>
+        <result property="deliveryDate" column="po_delivery_date"/>
+        <result property="incotermsCode" column="po_incoterms_code"/>
+        <result property="namedPlace" column="po_named_place"/>
+        <result property="sourceDeliveryDate" column="po_source_delivery_date"/>
+        <result property="deliveryDateOverride" column="po_delivery_date_override"/>
+        <result property="totalAmount" column="po_total_amount"/>
+        <result property="clientName" column="po_client_name"/>
+        <result property="clientAddress" column="po_client_address"/>
+        <result property="country" column="po_country"/>
+        <result property="currencyCode" column="po_currency_code"/>
+        <result property="managerName" column="po_manager_name"/>
+        <result property="approvalStatus" column="po_approval_status"/>
+        <result property="requestStatus" column="po_request_status"/>
+        <result property="approvalAction" column="po_approval_action"/>
+        <result property="approvalRequestedBy" column="po_approval_requested_by"/>
+        <result property="approvalRequestedAt" column="po_approval_requested_at"/>
+        <result property="approvalReview" column="po_approval_review"/>
+        <result property="itemsSnapshot" column="po_items_snapshot"/>
+        <result property="linkedDocuments" column="po_linked_documents"/>
+        <result property="revisionHistory" column="po_revision_history"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <collection property="items" ofType="com.team2.documents.entity.PurchaseOrderItem"
+                    column="po_id" select="findItemsByPoId"/>
+    </resultMap>
+
+    <resultMap id="purchaseOrderItemResultMap" type="com.team2.documents.entity.PurchaseOrderItem">
+        <id property="poItemId" column="po_item_id"/>
+        <result property="poId" column="po_id"/>
+        <result property="itemId" column="item_id"/>
+        <result property="itemName" column="po_item_name"/>
+        <result property="quantity" column="po_item_qty"/>
+        <result property="unit" column="po_item_unit"/>
+        <result property="unitPrice" column="po_item_unit_price"/>
+        <result property="amount" column="po_item_amount"/>
+        <result property="remark" column="po_item_remark"/>
     </resultMap>
 
     <select id="findById" resultMap="purchaseOrderResultMap">
-        SELECT po_id, po_status
+        SELECT po_id, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
+               po_delivery_date, po_incoterms_code, po_named_place, po_source_delivery_date,
+               po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
+               po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,
+               po_approval_action, po_approval_requested_by, po_approval_requested_at, po_approval_review,
+               po_items_snapshot, po_linked_documents, po_revision_history, created_at, updated_at
         FROM purchase_orders
         WHERE po_id = #{poId}
     </select>
 
     <select id="findAll" resultMap="purchaseOrderResultMap">
-        SELECT po_id, po_status
+        SELECT po_id, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
+               po_delivery_date, po_incoterms_code, po_named_place, po_source_delivery_date,
+               po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
+               po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,
+               po_approval_action, po_approval_requested_by, po_approval_requested_at, po_approval_review,
+               po_items_snapshot, po_linked_documents, po_revision_history, created_at, updated_at
         FROM purchase_orders
+    </select>
+
+    <select id="findItemsByPoId" resultMap="purchaseOrderItemResultMap">
+        SELECT po_item_id, po_id, item_id, po_item_name, po_item_qty, po_item_unit,
+               po_item_unit_price, po_item_amount, po_item_remark
+        FROM po_items
+        WHERE po_id = #{poId}
+        ORDER BY po_item_id
     </select>
 
 </mapper>

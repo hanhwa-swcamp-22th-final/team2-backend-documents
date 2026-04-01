@@ -92,8 +92,8 @@ public class DocumentCommandController {
 
     @PostMapping("/purchase-orders")
     public ResponseEntity<PurchaseOrderCreateResponse> create(@RequestBody PurchaseOrderCreateRequest request) {
-        purchaseOrderCreationService.create(request.userId());
-        return ResponseEntity.ok(new PurchaseOrderCreateResponse("PO 생성 요청이 처리되었습니다."));
+        com.team2.documents.entity.PurchaseOrder purchaseOrder = purchaseOrderCreationService.create(request);
+        return ResponseEntity.ok(new PurchaseOrderCreateResponse("PO 생성 요청이 처리되었습니다.", purchaseOrder.getPoId()));
     }
 
     @PostMapping("/proforma-invoices/request-registration")
