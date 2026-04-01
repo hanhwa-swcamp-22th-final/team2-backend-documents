@@ -18,13 +18,16 @@ public class PurchaseOrderModificationRequestService {
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
+    private final DocumentRevisionHistoryService documentRevisionHistoryService;
 
     public PurchaseOrderModificationRequestService(PurchaseOrderCommandService purchaseOrderCommandService,
                                                    UserPositionRepository userPositionRepository,
-                                                   ApprovalRequestCommandService approvalRequestCommandService) {
+                                                   ApprovalRequestCommandService approvalRequestCommandService,
+                                                   DocumentRevisionHistoryService documentRevisionHistoryService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
+        this.documentRevisionHistoryService = documentRevisionHistoryService;
     }
 
     public void requestModification(String poId, Long userId) {
@@ -36,6 +39,8 @@ public class PurchaseOrderModificationRequestService {
         if (!PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())) {
             throw new IllegalStateException("확정 상태의 PO만 수정 요청할 수 있습니다.");
         }
+        java.util.Map<String, Object> beforeSnapshot =
+                documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
         purchaseOrderCommandService.save(purchaseOrder);
 
@@ -47,6 +52,16 @@ public class PurchaseOrderModificationRequestService {
                     userId,
                     1L
             ));
+            return;
         }
+
+        documentRevisionHistoryService.recordPurchaseOrderEvent(
+                poId,
+                "REQUEST_MODIFICATION",
+                userId,
+                PurchaseOrderStatus.APPROVAL_PENDING.name(),
+                "관리자가 PO 수정을 요청했습니다.",
+                beforeSnapshot
+        );
     }
 }

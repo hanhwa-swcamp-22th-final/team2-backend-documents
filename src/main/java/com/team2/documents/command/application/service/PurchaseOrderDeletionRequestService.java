@@ -18,13 +18,16 @@ public class PurchaseOrderDeletionRequestService {
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
+    private final DocumentRevisionHistoryService documentRevisionHistoryService;
 
     public PurchaseOrderDeletionRequestService(PurchaseOrderCommandService purchaseOrderCommandService,
                                                UserPositionRepository userPositionRepository,
-                                               ApprovalRequestCommandService approvalRequestCommandService) {
+                                               ApprovalRequestCommandService approvalRequestCommandService,
+                                               DocumentRevisionHistoryService documentRevisionHistoryService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
+        this.documentRevisionHistoryService = documentRevisionHistoryService;
     }
 
     public void requestDeletion(String poId, Long userId) {
@@ -36,6 +39,8 @@ public class PurchaseOrderDeletionRequestService {
         if (!PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())) {
             throw new IllegalStateException("확정 상태의 PO만 삭제 요청할 수 있습니다.");
         }
+        java.util.Map<String, Object> beforeSnapshot =
+                documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
         purchaseOrderCommandService.save(purchaseOrder);
 
@@ -47,6 +52,16 @@ public class PurchaseOrderDeletionRequestService {
                     userId,
                     1L
             ));
+            return;
         }
+
+        documentRevisionHistoryService.recordPurchaseOrderEvent(
+                poId,
+                "REQUEST_DELETION",
+                userId,
+                PurchaseOrderStatus.APPROVAL_PENDING.name(),
+                "관리자가 PO 삭제를 요청했습니다.",
+                beforeSnapshot
+        );
     }
 }

@@ -31,11 +31,14 @@ import com.team2.documents.command.application.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.command.domain.entity.Collection;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.ApprovalRequest;
+import com.team2.documents.command.domain.entity.CommercialInvoice;
+import com.team2.documents.command.domain.entity.PackingList;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
 import com.team2.documents.command.domain.entity.ProductionOrder;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
+import com.team2.documents.command.domain.entity.ShipmentOrder;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.application.service.ApprovalRequestCommandService;
@@ -43,9 +46,12 @@ import com.team2.documents.command.application.service.CollectionCommandService;
 import com.team2.documents.command.application.service.ProductionOrderCommandService;
 import com.team2.documents.command.application.service.ShipmentCommandService;
 import com.team2.documents.query.service.ApprovalRequestQueryService;
+import com.team2.documents.query.service.CommercialInvoiceQueryService;
 import com.team2.documents.query.service.CollectionQueryService;
+import com.team2.documents.query.service.PackingListQueryService;
 import com.team2.documents.query.service.ProductionOrderQueryService;
 import com.team2.documents.query.service.ProformaInvoiceQueryService;
+import com.team2.documents.query.service.ShipmentOrderQueryService;
 import com.team2.documents.query.service.ShipmentQueryService;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
@@ -133,6 +139,15 @@ class DocumentControllerTest {
 
     @MockitoBean
     private ProformaInvoiceQueryService proformaInvoiceQueryService;
+
+    @MockitoBean
+    private CommercialInvoiceQueryService commercialInvoiceQueryService;
+
+    @MockitoBean
+    private PackingListQueryService packingListQueryService;
+
+    @MockitoBean
+    private ShipmentOrderQueryService shipmentOrderQueryService;
 
     @MockitoBean
     private ApprovalRequestQueryService approvalRequestQueryService;

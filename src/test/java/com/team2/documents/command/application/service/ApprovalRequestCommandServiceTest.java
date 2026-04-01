@@ -17,8 +17,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.team2.documents.command.application.dto.ApprovalRequestCreateRequest;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.ApprovalRequest;
+import com.team2.documents.command.domain.entity.ProformaInvoice;
+import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
+import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
+import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.ApprovalRequestRepository;
 import com.team2.documents.command.application.service.PurchaseOrderApprovalWorkflowService;
 import com.team2.documents.command.application.service.PurchaseOrderRejectionWorkflowService;
@@ -32,6 +36,12 @@ class ApprovalRequestCommandServiceTest {
     private ApprovalRequestRepository approvalRequestRepository;
 
     @Mock
+    private PurchaseOrderCommandService purchaseOrderCommandService;
+
+    @Mock
+    private ProformaInvoiceCommandService proformaInvoiceCommandService;
+
+    @Mock
     private PurchaseOrderApprovalWorkflowService purchaseOrderApprovalWorkflowService;
 
     @Mock
@@ -42,6 +52,12 @@ class ApprovalRequestCommandServiceTest {
 
     @Mock
     private ProformaInvoiceRejectionWorkflowService proformaInvoiceRejectionWorkflowService;
+
+    @Mock
+    private ApprovalDocumentMetadataService approvalDocumentMetadataService;
+
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
 
     @InjectMocks
     private ApprovalRequestCommandService approvalRequestCommandService;
@@ -70,6 +86,8 @@ class ApprovalRequestCommandServiceTest {
         );
         when(approvalRequestRepository.save(org.mockito.ArgumentMatchers.any(ApprovalRequest.class)))
                 .thenReturn(approvalRequest);
+        when(purchaseOrderCommandService.findById("PO2025-0001"))
+                .thenReturn(new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.APPROVAL_PENDING));
 
         // when
         ApprovalRequest saved = approvalRequestCommandService.create(request);
@@ -95,6 +113,8 @@ class ApprovalRequestCommandServiceTest {
         );
         when(approvalRequestRepository.findById(1L)).thenReturn(Optional.of(approvalRequest));
         doNothing().when(purchaseOrderApprovalWorkflowService).approve("PO2025-0001");
+        when(purchaseOrderCommandService.findById("PO2025-0001"))
+                .thenReturn(new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.CONFIRMED));
 
         // when
         ApprovalRequest result = approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED);
@@ -120,6 +140,8 @@ class ApprovalRequestCommandServiceTest {
         );
         when(approvalRequestRepository.findById(1L)).thenReturn(Optional.of(approvalRequest));
         doNothing().when(proformaInvoiceRejectionWorkflowService).reject("PI2025-0001");
+        when(proformaInvoiceCommandService.findById("PI2025-0001"))
+                .thenReturn(new ProformaInvoice("PI2025-0001", ProformaInvoiceStatus.REJECTED));
 
         // when
         ApprovalRequest result = approvalRequestCommandService.update(1L, ApprovalStatus.REJECTED);
@@ -145,6 +167,8 @@ class ApprovalRequestCommandServiceTest {
         );
         when(approvalRequestRepository.findById(1L)).thenReturn(Optional.of(approvalRequest));
         doNothing().when(proformaInvoiceApprovalWorkflowService).approve("PI2025-0002");
+        when(proformaInvoiceCommandService.findById("PI2025-0002"))
+                .thenReturn(new ProformaInvoice("PI2025-0002", ProformaInvoiceStatus.CONFIRMED));
 
         // when
         ApprovalRequest result = approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED);
@@ -170,6 +194,8 @@ class ApprovalRequestCommandServiceTest {
         );
         when(approvalRequestRepository.findById(1L)).thenReturn(Optional.of(approvalRequest));
         doNothing().when(purchaseOrderRejectionWorkflowService).reject("PO2025-0002");
+        when(purchaseOrderCommandService.findById("PO2025-0002"))
+                .thenReturn(new PurchaseOrder("PO2025-0002", PurchaseOrderStatus.REJECTED));
 
         // when
         ApprovalRequest result = approvalRequestCommandService.update(1L, ApprovalStatus.REJECTED);
@@ -256,6 +282,8 @@ class ApprovalRequestCommandServiceTest {
                 ApprovalRequestType.REGISTRATION, 2L, 1L, "결재 요청", null);
         when(approvalRequestRepository.save(org.mockito.ArgumentMatchers.any(ApprovalRequest.class)))
                 .thenReturn(approvalRequest);
+        when(purchaseOrderCommandService.findById("PO2025-0001"))
+                .thenReturn(new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.APPROVAL_PENDING));
 
         // when
         ApprovalRequest result = approvalRequestCommandService.save(approvalRequest);

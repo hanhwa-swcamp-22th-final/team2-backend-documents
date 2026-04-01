@@ -18,13 +18,19 @@ public class PurchaseOrderRegistrationService {
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
+    private final DocumentRevisionHistoryService documentRevisionHistoryService;
+    private final PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService;
 
     public PurchaseOrderRegistrationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                             UserPositionRepository userPositionRepository,
-                                            ApprovalRequestCommandService approvalRequestCommandService) {
+                                            ApprovalRequestCommandService approvalRequestCommandService,
+                                            DocumentRevisionHistoryService documentRevisionHistoryService,
+                                            PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
+        this.documentRevisionHistoryService = documentRevisionHistoryService;
+        this.purchaseOrderDocumentGenerationService = purchaseOrderDocumentGenerationService;
     }
 
     public void requestRegistration(String poId, Long userId) {
@@ -37,9 +43,19 @@ public class PurchaseOrderRegistrationService {
             throw new IllegalStateException("초안 상태의 PO만 등록 요청할 수 있습니다.");
         }
 
+        java.util.Map<String, Object> beforeSnapshot = documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
         if (PositionLevel.MANAGER.equals(positionLevel)) {
             purchaseOrder.setStatus(PurchaseOrderStatus.CONFIRMED);
             purchaseOrderCommandService.save(purchaseOrder);
+            purchaseOrderDocumentGenerationService.generateOnConfirmation(poId);
+            documentRevisionHistoryService.recordPurchaseOrderEvent(
+                    poId,
+                    "REQUEST_REGISTRATION",
+                    userId,
+                    PurchaseOrderStatus.CONFIRMED.name(),
+                    "관리자가 PO를 즉시 확정했습니다.",
+                    beforeSnapshot
+            );
             return;
         }
 

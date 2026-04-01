@@ -27,16 +27,19 @@ import com.team2.documents.command.application.dto.CollectionUpdateRequest;
 import com.team2.documents.command.application.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.command.domain.entity.Collection;
 import com.team2.documents.command.domain.entity.ProductionOrder;
+import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.Shipment;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
+import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.domain.repository.ApprovalRequestRepository;
 import com.team2.documents.command.domain.repository.CollectionRepository;
 import com.team2.documents.command.domain.repository.CommercialInvoiceRepository;
 import com.team2.documents.command.domain.repository.PackingListRepository;
 import com.team2.documents.command.domain.repository.ProductionOrderRepository;
+import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentRepository;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
@@ -63,6 +66,9 @@ class DocumentIntegrationTest {
 
     @Autowired
     private ApprovalRequestRepository approvalRequestRepository;
+
+    @Autowired
+    private ProformaInvoiceRepository proformaInvoiceRepository;
 
     @MockitoBean
     private CommercialInvoiceRepository commercialInvoiceRepository;
@@ -150,6 +156,8 @@ class DocumentIntegrationTest {
     @Test
     @DisplayName("결재 요청 생성 API는 H2에 approval request를 저장한다")
     void createApprovalRequest_persistsApprovalRequestInH2() throws Exception {
+        proformaInvoiceRepository.save(new ProformaInvoice("PI2025-0001", ProformaInvoiceStatus.DRAFT));
+
         mockMvc.perform(post("/api/approval-requests")
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(

@@ -20,6 +20,9 @@ class PurchaseOrderRejectionWorkflowServiceTest {
     @Mock
     private PurchaseOrderCommandService purchaseOrderCommandService;
 
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
+
     @InjectMocks
     private PurchaseOrderRejectionWorkflowService purchaseOrderRejectionWorkflowService;
 

@@ -33,6 +33,12 @@ class PurchaseOrderRegistrationServiceTest {
     @Mock
     private ApprovalRequestCommandService approvalRequestCommandService;
 
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
+
+    @Mock
+    private PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService;
+
     @InjectMocks
     private PurchaseOrderRegistrationService purchaseOrderRegistrationService;
 
@@ -75,6 +81,7 @@ class PurchaseOrderRegistrationServiceTest {
         assertEquals(PurchaseOrderStatus.CONFIRMED, purchaseOrder.getStatus());
         org.mockito.Mockito.verify(approvalRequestCommandService, org.mockito.Mockito.never())
                 .save(any(com.team2.documents.command.domain.entity.ApprovalRequest.class));
+        verify(purchaseOrderDocumentGenerationService).generateOnConfirmation(poId);
     }
 
     @Test

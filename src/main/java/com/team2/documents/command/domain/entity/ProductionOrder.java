@@ -23,17 +23,38 @@ public class ProductionOrder {
     @Column(name = "po_id", nullable = false, length = 30)
     private String poId;
 
-    @Transient
-    private String poNo;
-
     @Column(name = "production_issue_date", nullable = false)
     private LocalDate orderDate;
+
+    @Column(name = "client_id", nullable = false)
+    private Integer clientId;
+
+    @Column(name = "manager_id")
+    private Long managerId;
 
     @Column(name = "production_due_date")
     private LocalDate dueDate;
 
     @Column(name = "production_status", nullable = false)
     private String status;
+
+    @Column(name = "production_client_name")
+    private String clientName;
+
+    @Column(name = "production_country")
+    private String country;
+
+    @Column(name = "production_manager_name")
+    private String managerName;
+
+    @Column(name = "production_item_name")
+    private String itemName;
+
+    @Column(name = "production_linked_documents", columnDefinition = "TEXT")
+    private String linkedDocuments;
+
+    @Transient
+    private String poNo;
 
     @Transient
     private List<String> items;
@@ -49,6 +70,36 @@ public class ProductionOrder {
 
     public ProductionOrder(String productionOrderId,
                            String poId,
+                           LocalDate orderDate,
+                           Integer clientId,
+                           Long managerId,
+                           LocalDate dueDate,
+                           String status,
+                           String clientName,
+                           String country,
+                           String managerName,
+                           String itemName,
+                           String linkedDocuments,
+                           LocalDateTime createdAt,
+                           LocalDateTime updatedAt) {
+        this.productionOrderId = productionOrderId;
+        this.poId = poId;
+        this.orderDate = orderDate;
+        this.clientId = clientId;
+        this.managerId = managerId;
+        this.dueDate = dueDate;
+        this.status = status;
+        this.clientName = clientName;
+        this.country = country;
+        this.managerName = managerName;
+        this.itemName = itemName;
+        this.linkedDocuments = linkedDocuments;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public ProductionOrder(String productionOrderId,
+                           String poId,
                            String poNo,
                            LocalDate orderDate,
                            LocalDate dueDate,
@@ -56,15 +107,10 @@ public class ProductionOrder {
                            List<String> items,
                            LocalDateTime createdAt,
                            LocalDateTime updatedAt) {
-        this.productionOrderId = productionOrderId;
-        this.poId = poId;
+        this(productionOrderId, poId, orderDate, 0, null, dueDate, status,
+                null, null, null, null, null, createdAt, updatedAt);
         this.poNo = poNo;
-        this.orderDate = orderDate;
-        this.dueDate = dueDate;
-        this.status = status;
         this.items = items;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public String getProductionOrderId() {
@@ -73,6 +119,14 @@ public class ProductionOrder {
 
     public String getPoId() {
         return poId;
+    }
+
+    public Integer getClientId() {
+        return clientId;
+    }
+
+    public Long getManagerId() {
+        return managerId;
     }
 
     public String getPoNo() {
@@ -89,6 +143,26 @@ public class ProductionOrder {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public String getManagerName() {
+        return managerName;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public String getLinkedDocuments() {
+        return linkedDocuments;
     }
 
     public List<String> getItems() {

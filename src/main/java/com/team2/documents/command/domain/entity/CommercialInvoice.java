@@ -80,6 +80,22 @@ public class CommercialInvoice {
         return poId;
     }
 
+    public LocalDate getInvoiceDate() {
+        return invoiceDate;
+    }
+
+    public Integer getClientId() {
+        return clientId;
+    }
+
+    public Integer getCurrencyId() {
+        return currencyId;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
     public void setPoId(String poId) {
         this.poId = poId;
     }
@@ -88,7 +104,51 @@ public class CommercialInvoice {
         return status;
     }
 
+    public String getClientName() {
+        return clientName;
+    }
+
+    public String getClientAddress() {
+        return clientAddress;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public String getPaymentTerms() {
+        return paymentTerms;
+    }
+
+    public String getPortOfDischarge() {
+        return portOfDischarge;
+    }
+
+    public String getBuyer() {
+        return buyer;
+    }
+
+    public String getItemsSnapshot() {
+        return itemsSnapshot;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getLinkedDocuments() {
+        return linkedDocuments;
+    }
+
+    public void setLinkedDocuments(String linkedDocuments) {
+        this.linkedDocuments = linkedDocuments;
     }
 }

@@ -48,6 +48,9 @@ class PurchaseOrderCreationServiceTest {
     private DocumentNumberGeneratorService documentNumberGeneratorService;
 
     @Mock
+    private DocumentLinkService documentLinkService;
+
+    @Mock
     private ObjectMapper objectMapper;
 
     @InjectMocks
@@ -129,6 +132,7 @@ class PurchaseOrderCreationServiceTest {
         assertEquals("[{\"action\":\"CREATE\"}]", created.getRevisionHistory());
         assertEquals(PurchaseOrderStatus.DRAFT, created.getStatus());
         assertTrue(created.getApprovalRequestedAt() == null);
+        verify(documentLinkService).linkPurchaseOrderToProformaInvoice("PO2026-0001", "PI2026-0001");
     }
 
     @Test

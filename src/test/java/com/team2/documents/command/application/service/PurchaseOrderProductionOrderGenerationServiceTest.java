@@ -26,6 +26,15 @@ class PurchaseOrderProductionOrderGenerationServiceTest {
     @Mock
     private ProductionOrderCommandService productionOrderCommandService;
 
+    @Mock
+    private DocumentNumberGeneratorService documentNumberGeneratorService;
+
+    @Mock
+    private DocumentLinkService documentLinkService;
+
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
+
     @InjectMocks
     private PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService;
 
@@ -37,12 +46,14 @@ class PurchaseOrderProductionOrderGenerationServiceTest {
         PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.CONFIRMED);
 
         when(purchaseOrderCommandService.findById(poId)).thenReturn(purchaseOrder);
+        when(documentNumberGeneratorService.nextProductionOrderId()).thenReturn("MO260001");
 
         // when
         purchaseOrderProductionOrderGenerationService.generate(poId);
 
         // then
         verify(productionOrderCommandService).save(any(com.team2.documents.command.domain.entity.ProductionOrder.class));
+        verify(documentLinkService).linkProductionOrder(poId, "MO260001");
     }
 
     @Test

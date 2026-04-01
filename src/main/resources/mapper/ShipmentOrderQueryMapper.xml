@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team2.documents.query.mapper.ShipmentOrderQueryMapper">
+
+    <resultMap id="shipmentOrderResultMap" type="com.team2.documents.command.domain.entity.ShipmentOrder">
+        <id property="shipmentOrderId" column="shipment_order_id"/>
+        <result property="poId" column="po_id"/>
+        <result property="issueDate" column="shipment_issue_date"/>
+        <result property="clientId" column="client_id"/>
+        <result property="managerId" column="manager_id"/>
+        <result property="status" column="shipment_status"/>
+        <result property="dueDate" column="shipment_due_date"/>
+        <result property="clientName" column="shipment_client_name"/>
+        <result property="country" column="shipment_country"/>
+        <result property="managerName" column="shipment_manager_name"/>
+        <result property="itemName" column="shipment_item_name"/>
+        <result property="linkedDocuments" column="shipment_linked_documents"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="shipmentOrderResultMap">
+        SELECT shipment_order_id, po_id, shipment_issue_date, client_id, manager_id, shipment_status,
+               shipment_due_date, shipment_client_name, shipment_country, shipment_manager_name,
+               shipment_item_name, shipment_linked_documents, created_at, updated_at
+        FROM shipment_orders
+        WHERE shipment_order_id = #{shipmentOrderId}
+    </select>
+
+    <select id="findAll" resultMap="shipmentOrderResultMap">
+        SELECT shipment_order_id, po_id, shipment_issue_date, client_id, manager_id, shipment_status,
+               shipment_due_date, shipment_client_name, shipment_country, shipment_manager_name,
+               shipment_item_name, shipment_linked_documents, created_at, updated_at
+        FROM shipment_orders
+        ORDER BY shipment_order_id
+    </select>
+
+</mapper>

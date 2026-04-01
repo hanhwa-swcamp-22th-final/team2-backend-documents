@@ -2,6 +2,7 @@ package com.team2.documents.command.application.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -22,13 +23,16 @@ public class ProformaInvoiceCreationService {
 
     private final ProformaInvoiceCommandService proformaInvoiceCommandService;
     private final DocumentNumberGeneratorService documentNumberGeneratorService;
+    private final DocumentJsonSupportService documentJsonSupportService;
     private final ObjectMapper objectMapper;
 
     public ProformaInvoiceCreationService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                           DocumentNumberGeneratorService documentNumberGeneratorService,
+                                          DocumentJsonSupportService documentJsonSupportService,
                                           ObjectMapper objectMapper) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
+        this.documentJsonSupportService = documentJsonSupportService;
         this.objectMapper = objectMapper;
     }
 
@@ -36,6 +40,7 @@ public class ProformaInvoiceCreationService {
         String piId = request.piId() == null || request.piId().isBlank()
                 ? documentNumberGeneratorService.nextProformaInvoiceId()
                 : request.piId();
+        LocalDateTime createdAt = LocalDateTime.now();
 
         List<ProformaInvoiceItem> items = toEntities(request.items());
         BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), items);
@@ -63,8 +68,14 @@ public class ProformaInvoiceCreationService {
                 null,
                 null,
                 serializeItemsSnapshot(items),
-                "[]",
-                "[]",
+                documentJsonSupportService.emptyArray(),
+                documentJsonSupportService.createRevisionHistory(
+                        "CREATE",
+                        request.userId() == null ? 0L : request.userId(),
+                        ProformaInvoiceStatus.DRAFT.name(),
+                        "PI 초안을 생성했습니다.",
+                        createdAt
+                ),
                 items
         );
 

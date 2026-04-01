@@ -33,6 +33,9 @@ class PurchaseOrderModificationRequestServiceTest {
     @Mock
     private ApprovalRequestCommandService approvalRequestCommandService;
 
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
+
     @InjectMocks
     private PurchaseOrderModificationRequestService purchaseOrderModificationRequestService;
 
@@ -75,6 +78,14 @@ class PurchaseOrderModificationRequestServiceTest {
         assertEquals(PurchaseOrderStatus.APPROVAL_PENDING, purchaseOrder.getStatus());
         org.mockito.Mockito.verify(approvalRequestCommandService, org.mockito.Mockito.never())
                 .save(any(com.team2.documents.command.domain.entity.ApprovalRequest.class));
+        verify(documentRevisionHistoryService).recordPurchaseOrderEvent(
+                org.mockito.ArgumentMatchers.eq(poId),
+                org.mockito.ArgumentMatchers.eq("REQUEST_MODIFICATION"),
+                org.mockito.ArgumentMatchers.eq(userId),
+                org.mockito.ArgumentMatchers.eq(PurchaseOrderStatus.APPROVAL_PENDING.name()),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyMap()
+        );
     }
 
     @Test

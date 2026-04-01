@@ -13,11 +13,20 @@ public class PurchaseOrderProductionOrderGenerationService {
 
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final ProductionOrderCommandService productionOrderCommandService;
+    private final DocumentNumberGeneratorService documentNumberGeneratorService;
+    private final DocumentLinkService documentLinkService;
+    private final DocumentRevisionHistoryService documentRevisionHistoryService;
 
     public PurchaseOrderProductionOrderGenerationService(PurchaseOrderCommandService purchaseOrderCommandService,
-                                                         ProductionOrderCommandService productionOrderCommandService) {
+                                                         ProductionOrderCommandService productionOrderCommandService,
+                                                         DocumentNumberGeneratorService documentNumberGeneratorService,
+                                                         DocumentLinkService documentLinkService,
+                                                         DocumentRevisionHistoryService documentRevisionHistoryService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.productionOrderCommandService = productionOrderCommandService;
+        this.documentNumberGeneratorService = documentNumberGeneratorService;
+        this.documentLinkService = documentLinkService;
+        this.documentRevisionHistoryService = documentRevisionHistoryService;
     }
 
     public void generate(String poId) {
@@ -26,16 +35,30 @@ public class PurchaseOrderProductionOrderGenerationService {
             throw new IllegalStateException("확정 상태의 PO만 선택 생성 문서를 가질 수 있습니다.");
         }
 
+        String productionOrderId = documentNumberGeneratorService.nextProductionOrderId();
         productionOrderCommandService.save(new ProductionOrder(
-                "TEMP-PRD-" + poId,
+                productionOrderId,
                 poId,
-                null,
                 java.time.LocalDate.now(),
-                null,
+                purchaseOrder.getClientId(),
+                purchaseOrder.getManagerId(),
+                purchaseOrder.getDeliveryDate(),
                 "진행중",
-                java.util.List.of(),
+                purchaseOrder.getClientName(),
+                purchaseOrder.getCountry(),
+                purchaseOrder.getManagerName(),
+                purchaseOrder.getItems().isEmpty() ? null : purchaseOrder.getItems().get(0).getItemName(),
+                "[{\"id\":\"" + poId + "\",\"type\":\"PO\",\"status\":\"" + purchaseOrder.getStatus().name() + "\"}]",
                 java.time.LocalDateTime.now(),
                 java.time.LocalDateTime.now()
         ));
+        documentLinkService.linkProductionOrder(poId, productionOrderId);
+        documentRevisionHistoryService.recordPurchaseOrderEvent(
+                poId,
+                "GENERATE_PRODUCTION_ORDER",
+                purchaseOrder.getManagerId(),
+                purchaseOrder.getStatus().name(),
+                "생산지시서를 선택 생성했습니다."
+        );
     }
 }

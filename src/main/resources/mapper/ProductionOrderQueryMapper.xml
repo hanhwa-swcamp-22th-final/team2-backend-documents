@@ -7,22 +7,31 @@
         <id property="productionOrderId" column="production_order_id"/>
         <result property="poId" column="po_id"/>
         <result property="orderDate" column="production_issue_date"/>
+        <result property="clientId" column="client_id"/>
+        <result property="managerId" column="manager_id"/>
         <result property="dueDate" column="production_due_date"/>
         <result property="status" column="production_status"/>
+        <result property="clientName" column="production_client_name"/>
+        <result property="country" column="production_country"/>
+        <result property="managerName" column="production_manager_name"/>
+        <result property="itemName" column="production_item_name"/>
+        <result property="linkedDocuments" column="production_linked_documents"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <select id="findById" resultMap="productionOrderResultMap">
-        SELECT production_order_id, po_id, production_issue_date,
-               production_due_date, production_status, created_at, updated_at
+        SELECT production_order_id, po_id, production_issue_date, client_id, manager_id,
+               production_due_date, production_status, production_client_name, production_country,
+               production_manager_name, production_item_name, production_linked_documents, created_at, updated_at
         FROM production_orders
         WHERE production_order_id = #{productionOrderId}
     </select>
 
     <select id="findAll" resultMap="productionOrderResultMap">
-        SELECT production_order_id, po_id, production_issue_date,
-               production_due_date, production_status, created_at, updated_at
+        SELECT production_order_id, po_id, production_issue_date, client_id, manager_id,
+               production_due_date, production_status, production_client_name, production_country,
+               production_manager_name, production_item_name, production_linked_documents, created_at, updated_at
         FROM production_orders
     </select>
 

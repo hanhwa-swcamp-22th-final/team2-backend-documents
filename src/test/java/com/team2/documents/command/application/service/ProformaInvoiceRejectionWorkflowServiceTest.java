@@ -20,6 +20,9 @@ class ProformaInvoiceRejectionWorkflowServiceTest {
     @Mock
     private ProformaInvoiceCommandService proformaInvoiceCommandService;
 
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
+
     @InjectMocks
     private ProformaInvoiceRejectionWorkflowService proformaInvoiceRejectionWorkflowService;
 

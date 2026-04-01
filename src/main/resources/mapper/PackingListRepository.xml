@@ -4,12 +4,26 @@
 <mapper namespace="com.team2.documents.command.domain.repository.PackingListRepository">
 
     <insert id="createFromPurchaseOrder">
-        INSERT INTO packing_lists (pl_id, po_id, pl_invoice_date, client_id)
+        INSERT INTO packing_lists (
+            pl_id, po_id, pl_invoice_date, client_id, pl_gross_weight, pl_status,
+            pl_client_name, pl_client_address, pl_country, pl_payment_terms,
+            pl_port_of_discharge, pl_buyer, pl_items_snapshot, pl_linked_documents
+        )
         SELECT
-            CONCAT('PL', REPLACE(po_id, 'PO', '')),
+            #{plId},
             po_id,
-            CURDATE(),
-            client_id
+            CURRENT_DATE,
+            client_id,
+            NULL,
+            '발행대기',
+            po_client_name,
+            po_client_address,
+            po_country,
+            po_incoterms_code,
+            po_named_place,
+            po_manager_name,
+            po_items_snapshot,
+            CONCAT('[{"id":"', po_id, '","type":"PO","status":"', po_status, '"}]')
         FROM purchase_orders
         WHERE po_id = #{poId}
     </insert>

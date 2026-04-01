@@ -23,13 +23,16 @@ public class PurchaseOrderCreationService {
 
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final DocumentNumberGeneratorService documentNumberGeneratorService;
+    private final DocumentLinkService documentLinkService;
     private final ObjectMapper objectMapper;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                         DocumentNumberGeneratorService documentNumberGeneratorService,
+                                        DocumentLinkService documentLinkService,
                                         ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
+        this.documentLinkService = documentLinkService;
         this.objectMapper = objectMapper;
     }
 
@@ -78,7 +81,11 @@ public class PurchaseOrderCreationService {
                 items
         );
 
-        return purchaseOrderCommandService.save(purchaseOrder);
+        PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
+        if (saved.getPiId() != null && !saved.getPiId().isBlank()) {
+            documentLinkService.linkPurchaseOrderToProformaInvoice(saved.getPoId(), saved.getPiId());
+        }
+        return saved;
     }
 
     public void create(Long userId) {

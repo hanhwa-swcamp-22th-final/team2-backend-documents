@@ -8,9 +8,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.service.ApprovalRequestQueryService;
+import com.team2.documents.query.service.CommercialInvoiceQueryService;
+import com.team2.documents.query.service.PackingListQueryService;
 import com.team2.documents.query.service.ProformaInvoiceQueryService;
 import com.team2.documents.query.service.PurchaseOrderQueryService;
 import com.team2.documents.query.service.ProductionOrderQueryService;
+import com.team2.documents.query.service.ShipmentOrderQueryService;
 import com.team2.documents.query.service.ShipmentQueryService;
 import com.team2.documents.query.service.CollectionQueryService;
 
@@ -20,6 +23,9 @@ public class DocumentQueryController {
 
     private final PurchaseOrderQueryService purchaseOrderQueryService;
     private final ProformaInvoiceQueryService proformaInvoiceQueryService;
+    private final CommercialInvoiceQueryService commercialInvoiceQueryService;
+    private final PackingListQueryService packingListQueryService;
+    private final ShipmentOrderQueryService shipmentOrderQueryService;
     private final ProductionOrderQueryService productionOrderQueryService;
     private final ShipmentQueryService shipmentQueryService;
     private final CollectionQueryService collectionQueryService;
@@ -27,12 +33,18 @@ public class DocumentQueryController {
 
     public DocumentQueryController(PurchaseOrderQueryService purchaseOrderQueryService,
                                    ProformaInvoiceQueryService proformaInvoiceQueryService,
+                                   CommercialInvoiceQueryService commercialInvoiceQueryService,
+                                   PackingListQueryService packingListQueryService,
+                                   ShipmentOrderQueryService shipmentOrderQueryService,
                                    ProductionOrderQueryService productionOrderQueryService,
                                    ShipmentQueryService shipmentQueryService,
                                    CollectionQueryService collectionQueryService,
                                    ApprovalRequestQueryService approvalRequestQueryService) {
         this.purchaseOrderQueryService = purchaseOrderQueryService;
         this.proformaInvoiceQueryService = proformaInvoiceQueryService;
+        this.commercialInvoiceQueryService = commercialInvoiceQueryService;
+        this.packingListQueryService = packingListQueryService;
+        this.shipmentOrderQueryService = shipmentOrderQueryService;
         this.productionOrderQueryService = productionOrderQueryService;
         this.shipmentQueryService = shipmentQueryService;
         this.collectionQueryService = collectionQueryService;
@@ -47,6 +59,37 @@ public class DocumentQueryController {
     @GetMapping("/proforma-invoices/{piId}")
     public ResponseEntity<com.team2.documents.command.domain.entity.ProformaInvoice> getProformaInvoice(@PathVariable String piId) {
         return ResponseEntity.ok(proformaInvoiceQueryService.findById(piId));
+    }
+
+    @GetMapping("/commercial-invoices")
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.CommercialInvoice>> getCommercialInvoices() {
+        return ResponseEntity.ok(commercialInvoiceQueryService.findAll());
+    }
+
+    @GetMapping("/commercial-invoices/{ciId}")
+    public ResponseEntity<com.team2.documents.command.domain.entity.CommercialInvoice> getCommercialInvoice(@PathVariable String ciId) {
+        return ResponseEntity.ok(commercialInvoiceQueryService.findById(ciId));
+    }
+
+    @GetMapping("/packing-lists")
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.PackingList>> getPackingLists() {
+        return ResponseEntity.ok(packingListQueryService.findAll());
+    }
+
+    @GetMapping("/packing-lists/{plId}")
+    public ResponseEntity<com.team2.documents.command.domain.entity.PackingList> getPackingList(@PathVariable String plId) {
+        return ResponseEntity.ok(packingListQueryService.findById(plId));
+    }
+
+    @GetMapping("/shipment-orders")
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.ShipmentOrder>> getShipmentOrders() {
+        return ResponseEntity.ok(shipmentOrderQueryService.findAll());
+    }
+
+    @GetMapping("/shipment-orders/{shipmentOrderId}")
+    public ResponseEntity<com.team2.documents.command.domain.entity.ShipmentOrder> getShipmentOrder(
+            @PathVariable String shipmentOrderId) {
+        return ResponseEntity.ok(shipmentOrderQueryService.findById(shipmentOrderId));
     }
 
     @GetMapping("/purchase-orders")

@@ -18,13 +18,16 @@ public class ProformaInvoiceService {
     private final ProformaInvoiceCommandService proformaInvoiceCommandService;
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
+    private final DocumentRevisionHistoryService documentRevisionHistoryService;
 
     public ProformaInvoiceService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                   UserPositionRepository userPositionRepository,
-                                  ApprovalRequestCommandService approvalRequestCommandService) {
+                                  ApprovalRequestCommandService approvalRequestCommandService,
+                                  DocumentRevisionHistoryService documentRevisionHistoryService) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
+        this.documentRevisionHistoryService = documentRevisionHistoryService;
     }
 
     public void requestRegistration(String piId, Long userId) {
@@ -40,6 +43,13 @@ public class ProformaInvoiceService {
         if (PositionLevel.MANAGER.equals(positionLevel)) {
             proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
             proformaInvoiceCommandService.save(proformaInvoice);
+            documentRevisionHistoryService.recordProformaInvoiceEvent(
+                    piId,
+                    "REQUEST_REGISTRATION",
+                    userId,
+                    ProformaInvoiceStatus.CONFIRMED.name(),
+                    "관리자가 PI를 즉시 확정했습니다."
+            );
             return;
         }
 

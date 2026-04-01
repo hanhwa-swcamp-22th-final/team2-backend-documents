@@ -33,6 +33,9 @@ class ProformaInvoiceServiceTest {
     @Mock
     private ApprovalRequestCommandService approvalRequestCommandService;
 
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
+
     @InjectMocks
     private ProformaInvoiceService proformaInvoiceService;
 
