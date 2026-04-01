@@ -4,10 +4,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.entity.PurchaseOrder;
-import com.team2.documents.entity.enums.PositionLevel;
-import com.team2.documents.entity.enums.PurchaseOrderStatus;
-import com.team2.documents.command.repository.UserPositionRepository;
+import com.team2.documents.command.domain.entity.PurchaseOrder;
+import com.team2.documents.command.domain.entity.enums.PositionLevel;
+import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
+import com.team2.documents.command.domain.repository.UserPositionRepository;
 import com.team2.documents.query.mapper.PurchaseOrderQueryMapper;
 
 @Service

@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.team2.documents.entity.Collection;
+import com.team2.documents.command.domain.entity.Collection;
 
 @Mapper
 public interface CollectionQueryMapper {

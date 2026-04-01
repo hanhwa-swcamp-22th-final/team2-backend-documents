@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.team2.documents.entity.ProformaInvoice;
+import com.team2.documents.command.domain.entity.ProformaInvoice;
 
 @Mapper
 public interface ProformaInvoiceQueryMapper {

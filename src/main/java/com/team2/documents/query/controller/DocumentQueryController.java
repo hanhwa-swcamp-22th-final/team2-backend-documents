@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.team2.documents.dto.PurchaseOrderInitialStatusResponse;
+import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.service.PurchaseOrderQueryService;
 import com.team2.documents.query.service.ProductionOrderQueryService;
 import com.team2.documents.query.service.ShipmentQueryService;
@@ -32,7 +32,7 @@ public class DocumentQueryController {
     }
 
     @GetMapping("/purchase-orders/{poId}")
-    public ResponseEntity<com.team2.documents.entity.PurchaseOrder> getPurchaseOrder(@PathVariable String poId) {
+    public ResponseEntity<com.team2.documents.command.domain.entity.PurchaseOrder> getPurchaseOrder(@PathVariable String poId) {
         return ResponseEntity.ok(purchaseOrderQueryService.findById(poId));
     }
 
@@ -43,33 +43,33 @@ public class DocumentQueryController {
     }
 
     @GetMapping("/production-orders")
-    public ResponseEntity<java.util.List<com.team2.documents.entity.ProductionOrder>> getProductionOrders() {
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.ProductionOrder>> getProductionOrders() {
         return ResponseEntity.ok(productionOrderQueryService.findAll());
     }
 
     @GetMapping("/production-orders/{productionOrderId}")
-    public ResponseEntity<com.team2.documents.entity.ProductionOrder> getProductionOrder(
+    public ResponseEntity<com.team2.documents.command.domain.entity.ProductionOrder> getProductionOrder(
             @PathVariable String productionOrderId) {
         return ResponseEntity.ok(productionOrderQueryService.findById(productionOrderId));
     }
 
     @GetMapping("/shipments")
-    public ResponseEntity<java.util.List<com.team2.documents.entity.Shipment>> getShipments() {
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.Shipment>> getShipments() {
         return ResponseEntity.ok(shipmentQueryService.findAll());
     }
 
     @GetMapping("/shipments/{shipmentId}")
-    public ResponseEntity<com.team2.documents.entity.Shipment> getShipment(@PathVariable Long shipmentId) {
+    public ResponseEntity<com.team2.documents.command.domain.entity.Shipment> getShipment(@PathVariable Long shipmentId) {
         return ResponseEntity.ok(shipmentQueryService.findById(shipmentId));
     }
 
     @GetMapping("/collections")
-    public ResponseEntity<java.util.List<com.team2.documents.entity.Collection>> getCollections() {
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.Collection>> getCollections() {
         return ResponseEntity.ok(collectionQueryService.findAll());
     }
 
     @GetMapping("/collections/{collectionId}")
-    public ResponseEntity<com.team2.documents.entity.Collection> getCollection(@PathVariable Long collectionId) {
+    public ResponseEntity<com.team2.documents.command.domain.entity.Collection> getCollection(@PathVariable Long collectionId) {
         return ResponseEntity.ok(collectionQueryService.findById(collectionId));
     }
 }

@@ -36,7 +36,7 @@ auth:
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
-  type-aliases-package: com.team2.documents.entity,com.team2.documents.entity.enums,com.team2.documents.dto
+  type-aliases-package: com.team2.documents.command.domain.entity,com.team2.documents.command.domain.entity.enums,com.team2.documents.command.application.dto,com.team2.documents.query.dto
 
 management:
   endpoints:

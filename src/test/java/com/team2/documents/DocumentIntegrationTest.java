@@ -22,24 +22,24 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.team2.documents.dto.ApprovalRequestCreateRequest;
-import com.team2.documents.dto.CollectionUpdateRequest;
-import com.team2.documents.dto.ShipmentStatusUpdateRequest;
-import com.team2.documents.entity.Collection;
-import com.team2.documents.entity.ProductionOrder;
-import com.team2.documents.entity.Shipment;
-import com.team2.documents.entity.enums.ApprovalDocumentType;
-import com.team2.documents.entity.enums.ApprovalRequestType;
-import com.team2.documents.entity.enums.ApprovalStatus;
-import com.team2.documents.entity.enums.ShipmentStatus;
-import com.team2.documents.command.repository.ApprovalRequestRepository;
-import com.team2.documents.command.repository.CollectionRepository;
-import com.team2.documents.command.repository.CommercialInvoiceRepository;
-import com.team2.documents.command.repository.PackingListRepository;
-import com.team2.documents.command.repository.ProductionOrderRepository;
-import com.team2.documents.command.repository.ShipmentOrderRepository;
-import com.team2.documents.command.repository.ShipmentRepository;
-import com.team2.documents.command.repository.UserPositionRepository;
+import com.team2.documents.command.application.dto.ApprovalRequestCreateRequest;
+import com.team2.documents.command.application.dto.CollectionUpdateRequest;
+import com.team2.documents.command.application.dto.ShipmentStatusUpdateRequest;
+import com.team2.documents.command.domain.entity.Collection;
+import com.team2.documents.command.domain.entity.ProductionOrder;
+import com.team2.documents.command.domain.entity.Shipment;
+import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
+import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
+import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
+import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
+import com.team2.documents.command.domain.repository.ApprovalRequestRepository;
+import com.team2.documents.command.domain.repository.CollectionRepository;
+import com.team2.documents.command.domain.repository.CommercialInvoiceRepository;
+import com.team2.documents.command.domain.repository.PackingListRepository;
+import com.team2.documents.command.domain.repository.ProductionOrderRepository;
+import com.team2.documents.command.domain.repository.ShipmentOrderRepository;
+import com.team2.documents.command.domain.repository.ShipmentRepository;
+import com.team2.documents.command.domain.repository.UserPositionRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)

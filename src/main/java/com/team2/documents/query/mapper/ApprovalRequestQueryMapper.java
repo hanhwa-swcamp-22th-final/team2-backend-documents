@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.team2.documents.entity.ApprovalRequest;
+import com.team2.documents.command.domain.entity.ApprovalRequest;
 
 @Mapper
 public interface ApprovalRequestQueryMapper {

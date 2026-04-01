@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.PurchaseOrderQueryMapper">
 
-    <resultMap id="purchaseOrderResultMap" type="com.team2.documents.entity.PurchaseOrder">
+    <resultMap id="purchaseOrderResultMap" type="com.team2.documents.command.domain.entity.PurchaseOrder">
         <id property="poId" column="po_id"/>
         <result property="piId" column="pi_id"/>
         <result property="issueDate" column="po_issue_date"/>
@@ -33,11 +33,11 @@
         <result property="revisionHistory" column="po_revision_history"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
-        <collection property="items" ofType="com.team2.documents.entity.PurchaseOrderItem"
+        <collection property="items" ofType="com.team2.documents.command.domain.entity.PurchaseOrderItem"
                     column="po_id" select="findItemsByPoId"/>
     </resultMap>
 
-    <resultMap id="purchaseOrderItemResultMap" type="com.team2.documents.entity.PurchaseOrderItem">
+    <resultMap id="purchaseOrderItemResultMap" type="com.team2.documents.command.domain.entity.PurchaseOrderItem">
         <id property="poItemId" column="po_item_id"/>
         <result property="poId" column="po_id"/>
         <result property="itemId" column="item_id"/>

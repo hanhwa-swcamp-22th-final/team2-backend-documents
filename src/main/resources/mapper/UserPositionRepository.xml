@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.team2.documents.command.repository.UserPositionRepository">
+<mapper namespace="com.team2.documents.command.domain.repository.UserPositionRepository">
 
     <select id="findPositionLevelByUserId"
-            resultType="com.team2.documents.entity.enums.PositionLevel">
+            resultType="com.team2.documents.command.domain.entity.enums.PositionLevel">
         SELECT CASE WHEN p.position_level = 1 THEN 'MANAGER' ELSE 'STAFF' END
         FROM users u
         LEFT JOIN positions p ON u.position_id = p.position_id

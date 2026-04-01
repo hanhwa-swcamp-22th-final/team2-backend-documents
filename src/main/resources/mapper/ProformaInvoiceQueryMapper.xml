@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.ProformaInvoiceQueryMapper">
 
-    <resultMap id="proformaInvoiceResultMap" type="com.team2.documents.entity.ProformaInvoice">
+    <resultMap id="proformaInvoiceResultMap" type="com.team2.documents.command.domain.entity.ProformaInvoice">
         <id property="piId" column="pi_id"/>
         <result property="status" column="pi_status"/>
     </resultMap>

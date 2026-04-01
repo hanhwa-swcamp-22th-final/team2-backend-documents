@@ -17,16 +17,16 @@ import com.team2.documents.query.mapper.ProductionOrderQueryMapper;
 import com.team2.documents.query.mapper.ProformaInvoiceQueryMapper;
 import com.team2.documents.query.mapper.PurchaseOrderQueryMapper;
 import com.team2.documents.query.mapper.ShipmentQueryMapper;
-import com.team2.documents.command.repository.ApprovalRequestRepository;
-import com.team2.documents.command.repository.CollectionRepository;
-import com.team2.documents.command.repository.CommercialInvoiceRepository;
-import com.team2.documents.command.repository.PackingListRepository;
-import com.team2.documents.command.repository.ProductionOrderRepository;
-import com.team2.documents.command.repository.ProformaInvoiceRepository;
-import com.team2.documents.command.repository.PurchaseOrderRepository;
-import com.team2.documents.command.repository.ShipmentRepository;
-import com.team2.documents.command.repository.ShipmentOrderRepository;
-import com.team2.documents.command.repository.UserPositionRepository;
+import com.team2.documents.command.domain.repository.ApprovalRequestRepository;
+import com.team2.documents.command.domain.repository.CollectionRepository;
+import com.team2.documents.command.domain.repository.CommercialInvoiceRepository;
+import com.team2.documents.command.domain.repository.PackingListRepository;
+import com.team2.documents.command.domain.repository.ProductionOrderRepository;
+import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
+import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
+import com.team2.documents.command.domain.repository.ShipmentRepository;
+import com.team2.documents.command.domain.repository.ShipmentOrderRepository;
+import com.team2.documents.command.domain.repository.UserPositionRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")

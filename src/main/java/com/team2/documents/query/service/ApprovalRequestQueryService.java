@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.entity.ApprovalRequest;
+import com.team2.documents.command.domain.entity.ApprovalRequest;
 import com.team2.documents.query.mapper.ApprovalRequestQueryMapper;
 
 @Service

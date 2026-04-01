@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.ProductionOrderQueryMapper">
 
-    <resultMap id="productionOrderResultMap" type="com.team2.documents.entity.ProductionOrder">
+    <resultMap id="productionOrderResultMap" type="com.team2.documents.command.domain.entity.ProductionOrder">
         <id property="productionOrderId" column="production_order_id"/>
         <result property="poId" column="po_id"/>
         <result property="orderDate" column="production_issue_date"/>

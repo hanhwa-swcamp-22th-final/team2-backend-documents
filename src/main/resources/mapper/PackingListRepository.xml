@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.team2.documents.command.repository.PackingListRepository">
+<mapper namespace="com.team2.documents.command.domain.repository.PackingListRepository">
 
     <insert id="createFromPurchaseOrder">
         INSERT INTO packing_lists (pl_id, po_id, pl_invoice_date, client_id)

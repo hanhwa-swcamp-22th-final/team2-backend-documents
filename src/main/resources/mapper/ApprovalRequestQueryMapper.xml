@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.ApprovalRequestQueryMapper">
 
-    <resultMap id="approvalRequestResultMap" type="com.team2.documents.entity.ApprovalRequest">
+    <resultMap id="approvalRequestResultMap" type="com.team2.documents.command.domain.entity.ApprovalRequest">
         <id property="approvalRequestId" column="approval_request_id"/>
         <result property="documentType"  column="approval_document_type"/>
         <result property="documentId"    column="approval_document_id"/>

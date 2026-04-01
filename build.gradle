@@ -75,4 +75,46 @@ jacocoTestReport {
         xml.required = true
         csv.required = false
     }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/DocumentsApplication.class',
+                    '**/config/**',
+                    '**/dto/**',
+                    '**/entity/**',
+                    '**/enums/**',
+                    '**/infrastructure/**'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/DocumentsApplication.class',
+                    '**/config/**',
+                    '**/dto/**',
+                    '**/entity/**',
+                    '**/enums/**',
+                    '**/infrastructure/**'
+            ])
+        }))
+    }
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 1.00
+            }
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 1.00
+            }
+        }
+    }
 }

@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableFeignClients(basePackages = "com.team2.documents.client")
+@EnableFeignClients(basePackages = "com.team2.documents.command.infrastructure.client")
 @SpringBootApplication
 public class DocumentsApplication {
 
