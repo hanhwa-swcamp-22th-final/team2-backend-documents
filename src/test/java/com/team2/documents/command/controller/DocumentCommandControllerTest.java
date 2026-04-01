@@ -255,7 +255,7 @@ class DocumentControllerTest {
         // when & then
         mockMvc.perform(get("/api/production-orders"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].productionOrderNo").value("PRD-2026-001"))
+                .andExpect(jsonPath("$[0].productionOrderId").value("PRD-2026-001"))
                 .andExpect(jsonPath("$[0].poId").value("PO2025001"))
                 .andExpect(jsonPath("$[0].status").value("진행중"));
 
@@ -282,7 +282,7 @@ class DocumentControllerTest {
         // when & then
         mockMvc.perform(get("/api/production-orders/{id}", "PRD-2026-001"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productionOrderNo").value("PRD-2026-001"))
+                .andExpect(jsonPath("$.productionOrderId").value("PRD-2026-001"))
                 .andExpect(jsonPath("$.poId").value("PO2025001"))
                 .andExpect(jsonPath("$.status").value("진행중"));
 
