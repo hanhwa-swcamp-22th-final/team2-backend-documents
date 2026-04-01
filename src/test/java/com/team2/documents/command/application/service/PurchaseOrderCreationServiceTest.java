@@ -12,12 +12,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,10 +30,9 @@ import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.PositionLevel;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
-import com.team2.documents.command.application.service.ApprovalRequestCommandService;
-import com.team2.documents.command.application.service.PurchaseOrderCommandService;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class PurchaseOrderCreationServiceTest {
 
     @Mock
@@ -45,91 +45,34 @@ class PurchaseOrderCreationServiceTest {
     private PurchaseOrderCommandService purchaseOrderCommandService;
 
     @Mock
+    private DocumentNumberGeneratorService documentNumberGeneratorService;
+
+    @Mock
     private ObjectMapper objectMapper;
 
     @InjectMocks
     private PurchaseOrderCreationService purchaseOrderCreationService;
 
     @Test
-    @DisplayName("팀장이 PO를 생성하면 초기 상태는 즉시 확정된다")
-    void determineInitialStatus_whenManagerCreatesPurchaseOrder_thenConfirmed() {
-        // given
-        Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
-
-        // when
-        PurchaseOrderStatus status = purchaseOrderCreationService.determineInitialStatus(userId);
-
-        // then
-        assertEquals(PurchaseOrderStatus.CONFIRMED, status);
+    @DisplayName("PO 생성 초기 상태는 DRAFT다")
+    void determineInitialStatus_whenCreatePurchaseOrder_thenDraft() {
+        PurchaseOrderStatus status = purchaseOrderCreationService.determineInitialStatus(1L);
+        assertEquals(PurchaseOrderStatus.DRAFT, status);
     }
 
     @Test
-    @DisplayName("일반 직원이 PO를 생성하면 초기 상태는 결재대기다")
-    void determineInitialStatus_whenStaffCreatesPurchaseOrder_thenApprovalPending() {
-        // given
+    @DisplayName("PO 생성은 초안만 저장하고 결재 요청을 즉시 만들지 않는다")
+    void createPurchaseOrder_whenCreated_thenStoresDraft() {
         Long userId = 2L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.STAFF));
-
-        // when
-        PurchaseOrderStatus status = purchaseOrderCreationService.determineInitialStatus(userId);
-
-        // then
-        assertEquals(PurchaseOrderStatus.APPROVAL_PENDING, status);
-    }
-
-    @Test
-    @DisplayName("사용자 직급 정보가 없으면 PO 생성 시 예외가 발생한다")
-    void determineInitialStatus_whenPositionLevelDoesNotExist_thenThrowsException() {
-        // given
-        Long userId = 3L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.empty());
-
-        // when & then
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
-                () -> purchaseOrderCreationService.determineInitialStatus(userId));
-    }
-
-    @Test
-    @DisplayName("일반 직원이 PO를 생성하면 결재 요청이 생성된다")
-    void createPurchaseOrder_whenStaffCreates_thenCreatesApprovalRequest() {
-        // given
-        Long userId = 2L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.STAFF));
         stubJsonSerialization();
+        when(documentNumberGeneratorService.nextPurchaseOrderId()).thenReturn("PO260001");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // when
         purchaseOrderCreationService.create(userId);
 
-        // then
         verify(purchaseOrderCommandService).save(argThat(purchaseOrder ->
-                PurchaseOrderStatus.APPROVAL_PENDING.equals(purchaseOrder.getStatus())));
-        verify(approvalRequestCommandService).save(any(ApprovalRequest.class));
-    }
-
-    @Test
-    @DisplayName("팀장이 PO를 생성하면 결재 요청이 생성되지 않는다")
-    void createPurchaseOrder_whenManagerCreates_thenDoesNotCreateApprovalRequest() {
-        // given
-        Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
-        stubJsonSerialization();
-        when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        // when
-        purchaseOrderCreationService.create(userId);
-
-        // then
-        verify(purchaseOrderCommandService).save(argThat(purchaseOrder ->
-                PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())));
+                PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())));
         verify(approvalRequestCommandService, never()).save(any(ApprovalRequest.class));
     }
 
@@ -138,8 +81,7 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenRequestContainsItems_thenStoresSnapshotMetadata() throws JsonProcessingException {
         // given
         Long userId = 2L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.STAFF));
+        when(documentNumberGeneratorService.nextPurchaseOrderId()).thenReturn("PO260001");
         when(objectMapper.writeValueAsString(any()))
                 .thenReturn("[{\"itemName\":\"Bolt\"}]", "[]", "[{\"action\":\"CREATE\"}]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
@@ -185,7 +127,8 @@ class PurchaseOrderCreationServiceTest {
         assertEquals("[{\"itemName\":\"Bolt\"}]", created.getItemsSnapshot());
         assertEquals("[]", created.getLinkedDocuments());
         assertEquals("[{\"action\":\"CREATE\"}]", created.getRevisionHistory());
-        assertTrue(created.getApprovalRequestedAt() != null);
+        assertEquals(PurchaseOrderStatus.DRAFT, created.getStatus());
+        assertTrue(created.getApprovalRequestedAt() == null);
     }
 
     @Test
@@ -193,8 +136,7 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenFieldsAreNull_thenDefaultsApplied() throws JsonProcessingException {
         // given
         Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
+        when(documentNumberGeneratorService.nextPurchaseOrderId()).thenReturn("PO260001");
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -210,7 +152,7 @@ class PurchaseOrderCreationServiceTest {
         PurchaseOrder created = purchaseOrderCreationService.create(request);
 
         // then
-        assertTrue(created.getPoId().startsWith("TEMP-PO-"));
+        assertEquals("PO260001", created.getPoId());
         assertEquals(LocalDate.now(), created.getIssueDate());
         assertEquals(0, created.getClientId());
         assertEquals(0, created.getCurrencyId());
@@ -223,8 +165,6 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenItemAmountNull_thenCalculated() throws JsonProcessingException {
         // given
         Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -349,12 +289,13 @@ class PurchaseOrderCreationServiceTest {
                 null, null, null, null, null,
                 BigDecimal.ZERO, null, null, null, null, null, userId, null
         );
+        when(documentNumberGeneratorService.nextPurchaseOrderId()).thenReturn("PO260001");
 
         // when
         PurchaseOrder created = purchaseOrderCreationService.create(request);
 
         // then
-        assertTrue(created.getPoId().startsWith("TEMP-PO-"));
+        assertEquals("PO260001", created.getPoId());
     }
 
     @Test

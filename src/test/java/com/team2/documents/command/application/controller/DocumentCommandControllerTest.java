@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.application.dto.ApprovalRequestCreateRequest;
 import com.team2.documents.command.application.dto.ApprovalRequestUpdateRequest;
+import com.team2.documents.command.application.dto.ProformaInvoiceCreateRequest;
 import com.team2.documents.command.application.dto.ProformaInvoiceRegistrationRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderDeletionRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderModificationRequest;
@@ -34,16 +35,20 @@ import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
 import com.team2.documents.command.domain.entity.ProductionOrder;
+import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.application.service.ApprovalRequestCommandService;
 import com.team2.documents.command.application.service.CollectionCommandService;
 import com.team2.documents.command.application.service.ProductionOrderCommandService;
 import com.team2.documents.command.application.service.ShipmentCommandService;
+import com.team2.documents.query.service.ApprovalRequestQueryService;
 import com.team2.documents.query.service.CollectionQueryService;
 import com.team2.documents.query.service.ProductionOrderQueryService;
+import com.team2.documents.query.service.ProformaInvoiceQueryService;
 import com.team2.documents.query.service.ShipmentQueryService;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
+import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
 import com.team2.documents.command.application.service.ProformaInvoiceRejectionWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceService;
 import com.team2.documents.command.application.service.PurchaseOrderApprovalWorkflowService;
@@ -100,6 +105,9 @@ class DocumentControllerTest {
     private PurchaseOrderRegistrationService purchaseOrderRegistrationService;
 
     @MockitoBean
+    private ProformaInvoiceCreationService proformaInvoiceCreationService;
+
+    @MockitoBean
     private ProformaInvoiceService proformaInvoiceService;
 
     @MockitoBean
@@ -124,6 +132,12 @@ class DocumentControllerTest {
     private com.team2.documents.query.service.PurchaseOrderQueryService purchaseOrderQueryService;
 
     @MockitoBean
+    private ProformaInvoiceQueryService proformaInvoiceQueryService;
+
+    @MockitoBean
+    private ApprovalRequestQueryService approvalRequestQueryService;
+
+    @MockitoBean
     private ApprovalRequestCommandService approvalRequestCommandService;
 
     @Test
@@ -133,7 +147,7 @@ class DocumentControllerTest {
         Long userId = 2L;
         when(purchaseOrderCreationService.create(org.mockito.ArgumentMatchers.any(
                 com.team2.documents.command.application.dto.PurchaseOrderCreateRequest.class)))
-                .thenReturn(new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.APPROVAL_PENDING));
+                .thenReturn(new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.DRAFT));
 
         // when & then
         mockMvc.perform(post("/api/purchase-orders")
@@ -164,6 +178,26 @@ class DocumentControllerTest {
                 .andExpect(jsonPath("$.message").value("PI 등록 요청이 처리되었습니다."));
 
         verify(proformaInvoiceService).requestRegistration(piId, userId);
+    }
+
+    @Test
+    @DisplayName("PI 생성 API 호출 시 200 OK를 반환하고 Service를 호출한다")
+    void createProformaInvoiceApi_whenRequestIsValid_thenReturnsOkAndCallsService() throws Exception {
+        ProformaInvoiceCreateRequest request = new ProformaInvoiceCreateRequest(
+                "PI260001", null, null, null, null, null, null, null,
+                null, null, null, null, null, null, 2L, java.util.List.of()
+        );
+        when(proformaInvoiceCreationService.create(org.mockito.ArgumentMatchers.any(ProformaInvoiceCreateRequest.class)))
+                .thenReturn(new ProformaInvoice("PI260001", com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus.DRAFT));
+
+        mockMvc.perform(post("/api/proforma-invoices")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("PI 생성 요청이 처리되었습니다."))
+                .andExpect(jsonPath("$.piId").value("PI260001"));
+
+        verify(proformaInvoiceCreationService).create(org.mockito.ArgumentMatchers.any(ProformaInvoiceCreateRequest.class));
     }
 
     @Test
@@ -246,12 +280,12 @@ class DocumentControllerTest {
         // given
         Long userId = 1L;
         when(purchaseOrderQueryService.determineInitialStatus(userId))
-                .thenReturn(PurchaseOrderStatus.CONFIRMED);
+                .thenReturn(PurchaseOrderStatus.DRAFT);
 
         // when & then
         mockMvc.perform(get("/api/purchase-orders/initial-status/{userId}", userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CONFIRMED"));
+                .andExpect(jsonPath("$.status").value("DRAFT"));
 
         verify(purchaseOrderQueryService).determineInitialStatus(userId);
     }
@@ -519,7 +553,7 @@ class DocumentControllerTest {
                 null
         );
         approvalRequest.setStatus(ApprovalStatus.APPROVED);
-        when(approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED)).thenReturn(approvalRequest);
+        when(approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED, "확인 완료")).thenReturn(approvalRequest);
 
         // when & then
         mockMvc.perform(put("/api/approval-requests/{id}", 1L)
@@ -530,7 +564,7 @@ class DocumentControllerTest {
                 .andExpect(jsonPath("$.approvalRequestId").value(1))
                 .andExpect(jsonPath("$.status").value("APPROVED"));
 
-        verify(approvalRequestCommandService).update(1L, ApprovalStatus.APPROVED);
+        verify(approvalRequestCommandService).update(1L, ApprovalStatus.APPROVED, "확인 완료");
     }
 
     @Test

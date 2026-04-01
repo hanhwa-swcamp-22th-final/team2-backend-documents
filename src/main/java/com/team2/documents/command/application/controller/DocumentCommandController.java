@@ -19,13 +19,16 @@ import com.team2.documents.query.dto.PurchaseOrderRegistrationResponse;
 import com.team2.documents.command.application.dto.CollectionUpdateRequest;
 import com.team2.documents.command.application.dto.ApprovalRequestCreateRequest;
 import com.team2.documents.command.application.dto.ApprovalRequestUpdateRequest;
+import com.team2.documents.command.application.dto.ProformaInvoiceCreateRequest;
 import com.team2.documents.command.application.dto.ProformaInvoiceRegistrationRequest;
+import com.team2.documents.query.dto.ProformaInvoiceCreateResponse;
 import com.team2.documents.query.dto.ProformaInvoiceRegistrationResponse;
 import com.team2.documents.command.application.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.command.application.service.ApprovalRequestCommandService;
 import com.team2.documents.command.application.service.CollectionCommandService;
 import com.team2.documents.command.application.service.ShipmentCommandService;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
+import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
 import com.team2.documents.command.application.service.ProformaInvoiceRejectionWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceService;
 import com.team2.documents.command.application.service.PurchaseOrderModificationService;
@@ -53,6 +56,7 @@ public class DocumentCommandController {
     private final PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService;
     private final PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService;
     private final PurchaseOrderRegistrationService purchaseOrderRegistrationService;
+    private final ProformaInvoiceCreationService proformaInvoiceCreationService;
     private final ProformaInvoiceService proformaInvoiceService;
     private final ShipmentCommandService shipmentCommandService;
     private final CollectionCommandService collectionCommandService;
@@ -69,6 +73,7 @@ public class DocumentCommandController {
                               PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService,
                               PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService,
                               PurchaseOrderRegistrationService purchaseOrderRegistrationService,
+                              ProformaInvoiceCreationService proformaInvoiceCreationService,
                               ProformaInvoiceService proformaInvoiceService,
                               ShipmentCommandService shipmentCommandService,
                               CollectionCommandService collectionCommandService,
@@ -84,6 +89,7 @@ public class DocumentCommandController {
         this.purchaseOrderDocumentGenerationService = purchaseOrderDocumentGenerationService;
         this.purchaseOrderProductionOrderGenerationService = purchaseOrderProductionOrderGenerationService;
         this.purchaseOrderRegistrationService = purchaseOrderRegistrationService;
+        this.proformaInvoiceCreationService = proformaInvoiceCreationService;
         this.proformaInvoiceService = proformaInvoiceService;
         this.shipmentCommandService = shipmentCommandService;
         this.collectionCommandService = collectionCommandService;
@@ -94,6 +100,12 @@ public class DocumentCommandController {
     public ResponseEntity<PurchaseOrderCreateResponse> create(@RequestBody PurchaseOrderCreateRequest request) {
         com.team2.documents.command.domain.entity.PurchaseOrder purchaseOrder = purchaseOrderCreationService.create(request);
         return ResponseEntity.ok(new PurchaseOrderCreateResponse("PO 생성 요청이 처리되었습니다.", purchaseOrder.getPoId()));
+    }
+
+    @PostMapping("/proforma-invoices")
+    public ResponseEntity<ProformaInvoiceCreateResponse> createProformaInvoice(@RequestBody ProformaInvoiceCreateRequest request) {
+        com.team2.documents.command.domain.entity.ProformaInvoice proformaInvoice = proformaInvoiceCreationService.create(request);
+        return ResponseEntity.ok(new ProformaInvoiceCreateResponse("PI 생성 요청이 처리되었습니다.", proformaInvoice.getPiId()));
     }
 
     @PostMapping("/proforma-invoices/request-registration")
@@ -150,7 +162,7 @@ public class DocumentCommandController {
     public ResponseEntity<com.team2.documents.command.domain.entity.ApprovalRequest> updateApprovalRequest(
             @PathVariable Long approvalRequestId,
             @RequestBody ApprovalRequestUpdateRequest request) {
-        return ResponseEntity.ok(approvalRequestCommandService.update(approvalRequestId, request.status()));
+        return ResponseEntity.ok(approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment()));
     }
 
     @PostMapping("/purchase-orders/{poId}/validate-modifiable")

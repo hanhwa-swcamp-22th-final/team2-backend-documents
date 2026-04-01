@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,48 +13,34 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderItemCreateRequest;
-import com.team2.documents.command.domain.entity.ApprovalRequest;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.PurchaseOrderItem;
-import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
-import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
-import com.team2.documents.command.domain.entity.enums.PositionLevel;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
-import com.team2.documents.command.domain.repository.UserPositionRepository;
 
 @Service
 @Transactional
 public class PurchaseOrderCreationService {
 
-    private final UserPositionRepository userPositionRepository;
-    private final ApprovalRequestCommandService approvalRequestCommandService;
     private final PurchaseOrderCommandService purchaseOrderCommandService;
+    private final DocumentNumberGeneratorService documentNumberGeneratorService;
     private final ObjectMapper objectMapper;
 
-    public PurchaseOrderCreationService(UserPositionRepository userPositionRepository,
-                                        ApprovalRequestCommandService approvalRequestCommandService,
-                                        PurchaseOrderCommandService purchaseOrderCommandService,
+    public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
+                                        DocumentNumberGeneratorService documentNumberGeneratorService,
                                         ObjectMapper objectMapper) {
-        this.userPositionRepository = userPositionRepository;
-        this.approvalRequestCommandService = approvalRequestCommandService;
         this.purchaseOrderCommandService = purchaseOrderCommandService;
+        this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.objectMapper = objectMapper;
     }
 
     public PurchaseOrderStatus determineInitialStatus(Long userId) {
-        PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));
-
-        if (PositionLevel.MANAGER.equals(positionLevel)) {
-            return PurchaseOrderStatus.CONFIRMED;
-        }
-        return PurchaseOrderStatus.APPROVAL_PENDING;
+        return PurchaseOrderStatus.DRAFT;
     }
 
     public PurchaseOrder create(PurchaseOrderCreateRequest request) {
-        PurchaseOrderStatus initialStatus = determineInitialStatus(request.userId());
+        PurchaseOrderStatus initialStatus = PurchaseOrderStatus.DRAFT;
         String poId = request.poId() == null || request.poId().isBlank()
-                ? "TEMP-PO-" + UUID.randomUUID().toString().substring(0, 8)
+                ? documentNumberGeneratorService.nextPurchaseOrderId()
                 : request.poId();
         LocalDateTime createdAt = LocalDateTime.now();
 
@@ -81,11 +66,11 @@ public class PurchaseOrderCreationService {
                 request.country(),
                 request.currencyCode(),
                 request.managerName(),
-                initialStatus == PurchaseOrderStatus.APPROVAL_PENDING ? "대기" : "승인",
-                initialStatus == PurchaseOrderStatus.APPROVAL_PENDING ? "등록요청" : null,
-                initialStatus == PurchaseOrderStatus.APPROVAL_PENDING ? "등록" : null,
-                request.managerName(),
-                initialStatus == PurchaseOrderStatus.APPROVAL_PENDING ? LocalDateTime.now() : null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 serializeItemsSnapshot(items),
                 serializeLinkedDocuments(),
@@ -93,17 +78,7 @@ public class PurchaseOrderCreationService {
                 items
         );
 
-        PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
-        if (PurchaseOrderStatus.APPROVAL_PENDING.equals(initialStatus)) {
-            approvalRequestCommandService.save(new ApprovalRequest(
-                    ApprovalDocumentType.PO,
-                    saved.getPoId(),
-                    ApprovalRequestType.REGISTRATION,
-                    request.userId(),
-                    1L
-            ));
-        }
-        return saved;
+        return purchaseOrderCommandService.save(purchaseOrder);
     }
 
     public void create(Long userId) {

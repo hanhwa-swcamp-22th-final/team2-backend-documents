@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
+import com.team2.documents.query.service.ApprovalRequestQueryService;
+import com.team2.documents.query.service.ProformaInvoiceQueryService;
 import com.team2.documents.query.service.PurchaseOrderQueryService;
 import com.team2.documents.query.service.ProductionOrderQueryService;
 import com.team2.documents.query.service.ShipmentQueryService;
@@ -17,18 +19,39 @@ import com.team2.documents.query.service.CollectionQueryService;
 public class DocumentQueryController {
 
     private final PurchaseOrderQueryService purchaseOrderQueryService;
+    private final ProformaInvoiceQueryService proformaInvoiceQueryService;
     private final ProductionOrderQueryService productionOrderQueryService;
     private final ShipmentQueryService shipmentQueryService;
     private final CollectionQueryService collectionQueryService;
+    private final ApprovalRequestQueryService approvalRequestQueryService;
 
     public DocumentQueryController(PurchaseOrderQueryService purchaseOrderQueryService,
+                                   ProformaInvoiceQueryService proformaInvoiceQueryService,
                                    ProductionOrderQueryService productionOrderQueryService,
                                    ShipmentQueryService shipmentQueryService,
-                                   CollectionQueryService collectionQueryService) {
+                                   CollectionQueryService collectionQueryService,
+                                   ApprovalRequestQueryService approvalRequestQueryService) {
         this.purchaseOrderQueryService = purchaseOrderQueryService;
+        this.proformaInvoiceQueryService = proformaInvoiceQueryService;
         this.productionOrderQueryService = productionOrderQueryService;
         this.shipmentQueryService = shipmentQueryService;
         this.collectionQueryService = collectionQueryService;
+        this.approvalRequestQueryService = approvalRequestQueryService;
+    }
+
+    @GetMapping("/proforma-invoices")
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.ProformaInvoice>> getProformaInvoices() {
+        return ResponseEntity.ok(proformaInvoiceQueryService.findAll());
+    }
+
+    @GetMapping("/proforma-invoices/{piId}")
+    public ResponseEntity<com.team2.documents.command.domain.entity.ProformaInvoice> getProformaInvoice(@PathVariable String piId) {
+        return ResponseEntity.ok(proformaInvoiceQueryService.findById(piId));
+    }
+
+    @GetMapping("/purchase-orders")
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.PurchaseOrder>> getPurchaseOrders() {
+        return ResponseEntity.ok(purchaseOrderQueryService.findAll());
     }
 
     @GetMapping("/purchase-orders/{poId}")
@@ -40,6 +63,25 @@ public class DocumentQueryController {
     public ResponseEntity<PurchaseOrderInitialStatusResponse> determineInitialStatus(@PathVariable Long userId) {
         return ResponseEntity.ok(new PurchaseOrderInitialStatusResponse(
                 purchaseOrderQueryService.determineInitialStatus(userId)));
+    }
+
+    @GetMapping("/approval-requests")
+    public ResponseEntity<java.util.List<com.team2.documents.command.domain.entity.ApprovalRequest>> getApprovalRequests() {
+        return ResponseEntity.ok(approvalRequestQueryService.findAll());
+    }
+
+    @GetMapping("/approval-requests/{approvalRequestId}")
+    public ResponseEntity<com.team2.documents.command.domain.entity.ApprovalRequest> getApprovalRequest(@PathVariable Long approvalRequestId) {
+        return ResponseEntity.ok(approvalRequestQueryService.findById(approvalRequestId));
+    }
+
+    @GetMapping("/approval-requests/document/{documentType}/{documentId}/status/{status}")
+    public ResponseEntity<com.team2.documents.command.domain.entity.ApprovalRequest> getApprovalRequestByDocumentAndStatus(
+            @PathVariable String documentType,
+            @PathVariable String documentId,
+            @PathVariable String status) {
+        return ResponseEntity.ok(
+                approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(documentType, documentId, status));
     }
 
     @GetMapping("/production-orders")

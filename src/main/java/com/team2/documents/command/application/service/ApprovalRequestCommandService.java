@@ -58,6 +58,10 @@ public class ApprovalRequestCommandService {
     }
 
     public ApprovalRequest update(Long approvalRequestId, ApprovalStatus targetApprovalStatus) {
+        return update(approvalRequestId, targetApprovalStatus, null);
+    }
+
+    public ApprovalRequest update(Long approvalRequestId, ApprovalStatus targetApprovalStatus, String comment) {
         ApprovalRequest approvalRequest = approvalRequestRepository.findById(approvalRequestId)
                 .orElseThrow(() -> new IllegalArgumentException("결재 요청 정보를 찾을 수 없습니다."));
 
@@ -65,6 +69,7 @@ public class ApprovalRequestCommandService {
             approveDocument(approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             approvalRequest.setStatus(ApprovalStatus.APPROVED);
             approvalRequest.setReviewedAt(java.time.LocalDateTime.now());
+            approvalRequest.setReviewSnapshot(comment);
             approvalRequestRepository.save(approvalRequest);
             return approvalRequest;
         }
@@ -73,6 +78,7 @@ public class ApprovalRequestCommandService {
             rejectDocument(approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             approvalRequest.setStatus(ApprovalStatus.REJECTED);
             approvalRequest.setReviewedAt(java.time.LocalDateTime.now());
+            approvalRequest.setReviewSnapshot(comment);
             approvalRequestRepository.save(approvalRequest);
             return approvalRequest;
         }

@@ -1,8 +1,8 @@
 # REST API 명세서
 
 > **프로젝트**: 2팀 ERP 무역관리 시스템
-> **최종 수정일**: 2026-03-26
-> **버전**: v1.0
+> **최종 수정일**: 2026-04-01
+> **버전**: v1.1
 
 ---
 
@@ -1610,700 +1610,367 @@ Authorization: Bearer {accessToken}
 
 ## 4. Document Service (port 8014)
 
-> **상태**: 🟡 부분 구현 — 아래 명세는 프론트엔드 Mock 데이터 기준 설계안이며, 일부 결재/검증/문서생성 API는 TDD 기준으로 선행 구현되어 있다.
+> **상태**: 🟢 현재 코드 기준 반영
+> 생성은 `DRAFT`, 등록 요청이 실제 결재 시작점입니다.
 
-### 4.0 현재 구현 완료된 보조 API
+### 4.0 엔드포인트 요약
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| `POST` | `/api/proforma-invoices/request-registration` | PI 등록 요청 |
-| `POST` | `/api/proforma-invoices/{piId}/approve` | PI 승인 |
-| `POST` | `/api/proforma-invoices/{piId}/reject` | PI 반려 |
-| `POST` | `/api/purchase-orders` | PO 생성 요청 |
-| `GET` | `/api/purchase-orders/initial-status/{userId}` | 사용자 직급 기준 PO 초기 상태 조회 |
-| `POST` | `/api/purchase-orders/request-registration` | PO 등록 요청 |
-| `POST` | `/api/purchase-orders/request-modification` | PO 수정 요청 |
-| `POST` | `/api/purchase-orders/request-deletion` | PO 삭제 요청 |
-| `POST` | `/api/purchase-orders/{poId}/validate-modifiable` | 출하 상태 기준 수정 가능 여부 검증 |
-| `POST` | `/api/purchase-orders/{poId}/validate-deletable` | 출하 상태 기준 삭제 가능 여부 검증 |
-| `POST` | `/api/purchase-orders/{poId}/approve` | PO 승인 |
-| `POST` | `/api/purchase-orders/{poId}/reject` | PO 반려 |
-| `POST` | `/api/purchase-orders/{poId}/generate-documents` | PO 확정 후 CI/PL/출하지시서 자동 생성 |
-| `POST` | `/api/purchase-orders/{poId}/generate-production-order` | PO 확정 후 생산지시서 선택 생성 |
+| 메서드 | 경로 | 설명 | 상태 |
+|--------|------|------|------|
+| `POST` | `/api/proforma-invoices` | PI 초안 생성 | ✅ |
+| `GET` | `/api/proforma-invoices` | PI 목록 조회 | ✅ |
+| `GET` | `/api/proforma-invoices/{piId}` | PI 단건 조회 | ✅ |
+| `POST` | `/api/proforma-invoices/request-registration` | PI 등록 요청 | ✅ |
+| `POST` | `/api/proforma-invoices/{piId}/approve` | PI 승인 | ✅ |
+| `POST` | `/api/proforma-invoices/{piId}/reject` | PI 반려 | ✅ |
+| `POST` | `/api/purchase-orders` | PO 초안 생성 | ✅ |
+| `GET` | `/api/purchase-orders` | PO 목록 조회 | ✅ |
+| `GET` | `/api/purchase-orders/{poId}` | PO 단건 조회 | ✅ |
+| `GET` | `/api/purchase-orders/initial-status/{userId}` | 현재 구현 기준 초기 상태 조회 | ✅ |
+| `POST` | `/api/purchase-orders/request-registration` | PO 등록 요청 | ✅ |
+| `POST` | `/api/purchase-orders/request-modification` | PO 수정 요청 | ✅ |
+| `POST` | `/api/purchase-orders/request-deletion` | PO 삭제 요청 | ✅ |
+| `POST` | `/api/purchase-orders/{poId}/validate-modifiable` | 수정 가능 여부 검증 | ✅ |
+| `POST` | `/api/purchase-orders/{poId}/validate-deletable` | 삭제 가능 여부 검증 | ✅ |
+| `POST` | `/api/purchase-orders/{poId}/generate-documents` | 후속 문서 수동 생성 | ✅ |
+| `POST` | `/api/purchase-orders/{poId}/generate-production-order` | 생산지시서 선택 생성 | ✅ |
+| `POST` | `/api/purchase-orders/{poId}/approve` | PO 승인 | ✅ |
+| `POST` | `/api/purchase-orders/{poId}/reject` | PO 반려 | ✅ |
+| `GET` | `/api/commercial-invoices` | CI 목록 조회 | ✅ |
+| `GET` | `/api/commercial-invoices/{ciId}` | CI 단건 조회 | ✅ |
+| `GET` | `/api/packing-lists` | PL 목록 조회 | ✅ |
+| `GET` | `/api/packing-lists/{plId}` | PL 단건 조회 | ✅ |
+| `GET` | `/api/shipment-orders` | 출하지시서 목록 조회 | ✅ |
+| `GET` | `/api/shipment-orders/{shipmentOrderId}` | 출하지시서 단건 조회 | ✅ |
+| `GET` | `/api/production-orders` | 생산지시서 목록 조회 | ✅ |
+| `GET` | `/api/production-orders/{productionOrderId}` | 생산지시서 단건 조회 | ✅ |
+| `GET` | `/api/shipments` | 출하현황 목록 조회 | ✅ |
+| `GET` | `/api/shipments/{shipmentId}` | 출하현황 단건 조회 | ✅ |
+| `PUT` | `/api/shipments/{shipmentId}` | 출하현황 상태 변경 | ✅ |
+| `GET` | `/api/collections` | 수금 목록 조회 | ✅ |
+| `GET` | `/api/collections/{collectionId}` | 수금 단건 조회 | ✅ |
+| `PUT` | `/api/collections/{collectionId}` | 수금 상태 변경 | ✅ |
+| `POST` | `/api/approval-requests` | 결재 요청 생성 | ✅ |
+| `GET` | `/api/approval-requests` | 결재 요청 목록 조회 | ✅ |
+| `GET` | `/api/approval-requests/{approvalRequestId}` | 결재 요청 단건 조회 | ✅ |
+| `GET` | `/api/approval-requests/document/{documentType}/{documentId}/status/{status}` | 문서별 결재 조회 | ✅ |
+| `PUT` | `/api/approval-requests/{approvalRequestId}` | 결재 승인/반려 | ✅ |
 
 ### 4.1 PI (Proforma Invoice)
 
-#### `GET /api/pi` — PI 목록 조회 🔲 구현예정
+#### `POST /api/proforma-invoices` — PI 초안 생성
 
-등록된 모든 Proforma Invoice 목록을 조회한다.
+새로운 PI를 초안 상태로 저장합니다.
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+**요청 본문 주요 필드**
 
-**응답 `200 OK`**: `PI[]`
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `piId` | `String` | - | 비우면 서버 발급 |
+| `issueDate` | `String (date)` | - | 비우면 오늘 날짜 |
+| `clientId` | `Integer` | - | 거래처 ID |
+| `currencyId` | `Integer` | - | 통화 ID |
+| `managerId` | `Long` | - | 담당자 ID |
+| `deliveryDate` | `String (date)` | - | 납기일 |
+| `incotermsCode` | `String` | - | 인코텀즈 |
+| `namedPlace` | `String` | - | 지정 장소 |
+| `userId` | `Long` | O | 작성자 |
+| `items` | `Array` | - | 품목 목록 |
+
+**응답 `200 OK`**
 
 ```json
-[
-  {
-    "id": 1,
-    "piNo": "PI-2026-001",
-    "clientId": 1,
-    "clientName": "ABC Trading",
-    "incotermId": 1,
-    "currencyId": 1,
-    "piDate": "2026-03-01",
-    "piValidDate": "2026-04-01",
-    "totalAmount": 15000.00,
-    "status": "초안",
-    "items": [
-      {
-        "itemId": 1,
-        "itemName": "Steel Pipe",
-        "qty": 100,
-        "unitPrice": 150.00,
-        "amount": 15000.00
-      }
-    ],
-    "createdAt": "2026-03-01T09:00:00",
-    "updatedAt": "2026-03-01T09:00:00"
-  }
-]
+{
+  "message": "PI 생성 요청이 처리되었습니다.",
+  "piId": "PI260001"
+}
 ```
 
----
+**비고**
 
-#### `GET /api/pi/{id}` — PI 단건 조회 🔲 구현예정
+- 생성 직후 상태는 `DRAFT`
+- 품목 금액이 비어 있으면 서버가 자동 계산
 
-지정한 ID의 PI를 조회한다.
+#### `GET /api/proforma-invoices`
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+PI 목록 조회
 
-**경로 파라미터**:
+#### `GET /api/proforma-invoices/{piId}`
 
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | PI ID |
+PI 상세 조회
 
-**응답 `200 OK`**: `PI` (위 객체와 동일 구조)
+#### `POST /api/proforma-invoices/request-registration`
 
----
+PI 등록 요청
 
-#### `POST /api/pi` — PI 생성 🔲 구현예정
+```json
+{
+  "piId": "PI260001",
+  "userId": 2
+}
+```
 
-새로운 PI를 생성한다.
+**비고**
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+- 일반 직원: `APPROVAL_PENDING` + approval request 생성
+- 팀장: 즉시 `CONFIRMED`
 
-**요청 본문**:
+#### `POST /api/proforma-invoices/{piId}/approve`
 
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `clientId` | `Integer` | O | 거래처 ID |
-| `incotermId` | `Integer` | - | 인코텀즈 ID |
-| `currencyId` | `Integer` | - | 통화 ID |
-| `managerId` | `Integer` | O | 담당자 user_id |
-| `piDate` | `String (date)` | O | PI 발행일 |
-| `piValidDate` | `String (date)` | - | 유효기한 |
-| `items` | `Array` | O | 품목 목록 (아래 참조) |
+PI 직접 승인 워크플로우 호출
 
-**items 배열 요소**:
+#### `POST /api/proforma-invoices/{piId}/reject`
 
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `itemId` | `Integer` | O | 품목 ID |
-| `qty` | `Integer` | O | 수량 |
-| `unitPrice` | `BigDecimal` | O | 단가 |
-
-**응답 `201 Created`**: 생성된 `PI` 객체
-
----
-
-#### `PUT /api/pi/{id}` — PI 수정 🔲 구현예정
-
-기존 PI를 수정한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | PI ID |
-
-**요청 본문**: 생성과 동일 구조
-
-**응답 `200 OK`**: 수정된 `PI` 객체
-
----
-
-#### `DELETE /api/pi/{id}` — PI 삭제 🔲 구현예정
-
-지정한 ID의 PI를 삭제한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | PI ID |
-
-**응답 `204 No Content`**: 본문 없음
-
-**비고**: PO가 연결된 PI는 삭제할 수 없다.
-
----
+PI 직접 반려 워크플로우 호출
 
 ### 4.2 PO (Purchase Order)
 
-#### `GET /api/po` — PO 목록 조회 🔲 구현예정
+#### `POST /api/purchase-orders` — PO 초안 생성
 
-등록된 모든 Purchase Order 목록을 조회한다.
+새로운 PO를 초안 상태로 저장합니다.
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**응답 `200 OK`**: `PO[]`
-
-```json
-[
-  {
-    "id": 1,
-    "poNo": "PO-2026-001",
-    "piId": "PI2025001",
-    "clientId": 1,
-    "clientName": "ABC Trading",
-    "poDate": "2026-03-05",
-    "deliveryDate": "2026-05-01",
-    "totalAmount": 15000.00,
-    "status": "확정",
-    "items": [],
-    "createdAt": "2026-03-05T09:00:00",
-    "updatedAt": "2026-03-05T09:00:00"
-  }
-]
-```
-
----
-
-#### `GET /api/po/{id}` — PO 단건 조회 🔲 구현예정
-
-지정한 ID의 PO를 조회한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | PO ID |
-
-**응답 `200 OK`**: `PO` (위 객체와 동일 구조)
-
----
-
-#### `POST /api/po` — PO 생성 🔲 구현예정
-
-새로운 PO를 생성한다. PI를 기반으로 생성할 수 있다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**요청 본문**:
+**요청 본문 주요 필드**
 
 | 필드 | 타입 | 필수 | 설명 |
 |------|------|------|------|
-| `piId` | `String` | - | 참조 PI ID (예: "PI2025001") |
-| `clientId` | `Integer` | O | 거래처 ID |
-| `managerId` | `Integer` | O | 담당자 user_id |
-| `poDate` | `String (date)` | O | PO 발행일 |
+| `poId` | `String` | - | 비우면 서버 발급 |
+| `piId` | `String` | - | 참조 PI |
+| `issueDate` | `String (date)` | - | 비우면 오늘 날짜 |
+| `clientId` | `Integer` | - | 거래처 ID |
+| `currencyId` | `Integer` | - | 통화 ID |
+| `managerId` | `Long` | - | 담당자 ID |
 | `deliveryDate` | `String (date)` | - | 납기일 |
-| `items` | `Array` | O | 품목 목록 |
+| `sourceDeliveryDate` | `String (date)` | - | 원본 납기일 |
+| `deliveryDateOverride` | `Boolean` | - | 수동 변경 여부 |
+| `userId` | `Long` | O | 작성자 |
+| `items` | `Array` | - | 품목 목록 |
 
-**응답 `201 Created`**: 생성된 `PO` 객체
+**응답 `200 OK`**
 
----
+```json
+{
+  "message": "PO 생성 요청이 처리되었습니다.",
+  "poId": "PO260001"
+}
+```
 
-#### `PUT /api/po/{id}` — PO 수정 🔲 구현예정
+**비고**
 
-기존 PO를 수정한다.
+- 생성 직후 상태는 `DRAFT`
+- `piId`가 있으면 linked document 연결
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+#### `GET /api/purchase-orders`
 
-**경로 파라미터**:
+PO 목록 조회
 
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | PO ID |
+#### `GET /api/purchase-orders/{poId}`
 
-**요청 본문**: 생성과 동일 구조
+PO 상세 조회
 
-**응답 `200 OK`**: 수정된 `PO` 객체
+#### `GET /api/purchase-orders/initial-status/{userId}`
 
----
+현재 구현 기준으로 `DRAFT`를 반환합니다.
 
-#### `DELETE /api/po/{id}` — PO 삭제 🔲 구현예정
+#### `POST /api/purchase-orders/request-registration`
 
-지정한 ID의 PO를 삭제한다.
+PO 등록 요청
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+```json
+{
+  "poId": "PO260001",
+  "userId": 2
+}
+```
 
-**경로 파라미터**:
+#### `POST /api/purchase-orders/request-modification`
 
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | PO ID |
+PO 수정 요청
 
-**응답 `204 No Content`**: 본문 없음
+```json
+{
+  "poId": "PO260001",
+  "userId": 2
+}
+```
 
-**비고**: 출하완료 상태의 PO는 삭제할 수 없다.
+#### `POST /api/purchase-orders/request-deletion`
 
----
+PO 삭제 요청
+
+```json
+{
+  "poId": "PO260001",
+  "userId": 2
+}
+```
+
+#### `POST /api/purchase-orders/{poId}/validate-modifiable`
+
+수정 가능 여부 검증
+
+#### `POST /api/purchase-orders/{poId}/validate-deletable`
+
+삭제 가능 여부 검증
+
+#### `POST /api/purchase-orders/{poId}/generate-documents`
+
+확정 PO 기준 CI/PL/SO 생성
+
+#### `POST /api/purchase-orders/{poId}/generate-production-order`
+
+확정 PO 기준 MO 생성
+
+#### `POST /api/purchase-orders/{poId}/approve`
+
+PO 직접 승인 워크플로우 호출
+
+#### `POST /api/purchase-orders/{poId}/reject`
+
+PO 직접 반려 워크플로우 호출
 
 ### 4.3 CI / PL
 
-#### CI (Commercial Invoice)
+#### `GET /api/commercial-invoices`
 
-| 메서드 | 경로 | 설명 | 상태 |
-|--------|------|------|------|
-| `GET` | `/api/ci` | CI 목록 조회 | 🔲 구현예정 |
-| `GET` | `/api/ci/{id}` | CI 단건 조회 | 🔲 구현예정 |
-| `POST` | `/api/ci` | CI 생성 | 🔲 구현예정 |
-| `PUT` | `/api/ci/{id}` | CI 수정 | 🔲 구현예정 |
+CI 목록 조회
 
-**CI 응답 예시**:
+#### `GET /api/commercial-invoices/{ciId}`
 
-```json
-{
-  "id": 1,
-  "ciNo": "CI-2026-001",
-  "poId": "PO2025001",
-  "clientId": 1,
-  "ciDate": "2026-04-15",
-  "totalAmount": 15000.00,
-  "items": [],
-  "createdAt": "2026-04-15T09:00:00",
-  "updatedAt": "2026-04-15T09:00:00"
-}
-```
+CI 단건 조회
 
-**비고**: CI는 PO를 기반으로 생성하며, 실제 선적된 물품에 대한 상업 송장이다.
+#### `GET /api/packing-lists`
 
----
+PL 목록 조회
 
-#### PL (Packing List)
+#### `GET /api/packing-lists/{plId}`
 
-| 메서드 | 경로 | 설명 | 상태 |
-|--------|------|------|------|
-| `GET` | `/api/pl` | PL 목록 조회 | 🔲 구현예정 |
-| `GET` | `/api/pl/{id}` | PL 단건 조회 | 🔲 구현예정 |
-| `POST` | `/api/pl` | PL 생성 | 🔲 구현예정 |
-| `PUT` | `/api/pl/{id}` | PL 수정 | 🔲 구현예정 |
+PL 단건 조회
 
-**PL 응답 예시**:
+**비고**
 
-```json
-{
-  "id": 1,
-  "plNo": "PL-2026-001",
-  "ciId": "CI2025001",
-  "poId": "PO2025001",
-  "plDate": "2026-04-15",
-  "totalWeight": 2550.000,
-  "totalPackages": 10,
-  "items": [],
-  "createdAt": "2026-04-15T09:00:00",
-  "updatedAt": "2026-04-15T09:00:00"
-}
-```
-
-**비고**: PL은 CI와 연동하여 포장 상세(중량, 수량, 포장 방법 등)를 기록한다.
-
----
+- CI/PL은 PO 확정 시 자동 생성
+- 현재 생성 API, 수정 API는 열려 있지 않음
 
 ### 4.4 생산지시서 (Production Orders)
 
-#### `GET /api/production-orders` — 생산지시서 목록 조회 🔲 구현예정
+#### `GET /api/production-orders`
 
-등록된 모든 생산지시서 목록을 조회한다.
+생산지시서 목록 조회
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+#### `GET /api/production-orders/{productionOrderId}`
 
-**응답 `200 OK`**: `ProductionOrder[]`
+생산지시서 단건 조회
 
-```json
-[
-  {
-    "id": 1,
-    "productionOrderNo": "PRD-2026-001",
-    "poId": "PO2025001",
-    "poNo": "PO-2026-001",
-    "orderDate": "2026-03-10",
-    "dueDate": "2026-04-10",
-    "status": "진행중",
-    "items": [],
-    "createdAt": "2026-03-10T09:00:00",
-    "updatedAt": "2026-03-15T14:00:00"
-  }
-]
-```
+**비고**
 
----
-
-#### `GET /api/production-orders/{id}` — 생산지시서 단건 조회 🔲 구현예정
-
-지정한 ID의 생산지시서를 조회한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 생산지시서 ID |
-
-**응답 `200 OK`**: `ProductionOrder` (위 객체와 동일 구조)
-
----
-
-#### `POST /api/production-orders` — 생산지시서 생성 🔲 구현예정
-
-PO를 기반으로 생산지시서를 생성한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**요청 본문**:
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `poId` | `String` | O | PO ID (예: "PO2025001") |
-| `managerId` | `Integer` | O | 담당자 user_id |
-| `orderDate` | `String (date)` | O | 지시일 |
-| `dueDate` | `String (date)` | O | 납기일 |
-| `items` | `Array` | O | 생산 품목 목록 |
-
-**응답 `201 Created`**: 생성된 `ProductionOrder` 객체
-
----
-
-#### `PUT /api/production-orders/{id}` — 생산지시서 수정 🔲 구현예정
-
-기존 생산지시서를 수정한다. 상태 변경을 포함한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 생산지시서 ID |
-
-**요청 본문**: 생성과 동일 구조 + `status` 필드
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `status` | `String` | - | 상태 (`진행중` / `생산완료`) |
-
-**응답 `200 OK`**: 수정된 `ProductionOrder` 객체
-
----
+- 생성은 `POST /api/purchase-orders/{poId}/generate-production-order`로 수행
+- 문서번호는 `MO260001` 형식
 
 ### 4.5 출하지시서 (Shipment Orders)
 
-#### `GET /api/shipment-orders` — 출하지시서 목록 조회 🔲 구현예정
+#### `GET /api/shipment-orders`
 
-등록된 모든 출하지시서 목록을 조회한다.
+출하지시서 목록 조회
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+#### `GET /api/shipment-orders/{shipmentOrderId}`
 
-**응답 `200 OK`**: `ShipmentOrder[]`
+출하지시서 단건 조회
 
-```json
-[
-  {
-    "id": 1,
-    "shipmentOrderNo": "SO-2026-001",
-    "poId": "PO2025001",
-    "poNo": "PO-2026-001",
-    "shipmentDate": "2026-04-20",
-    "portOfLoadingId": 1,
-    "portOfDischargeId": 2,
-    "status": "출하준비",
-    "items": [],
-    "createdAt": "2026-04-15T09:00:00",
-    "updatedAt": "2026-04-15T09:00:00"
-  }
-]
-```
+**비고**
 
----
-
-#### `GET /api/shipment-orders/{id}` — 출하지시서 단건 조회 🔲 구현예정
-
-지정한 ID의 출하지시서를 조회한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 출하지시서 ID |
-
-**응답 `200 OK`**: `ShipmentOrder` (위 객체와 동일 구조)
-
----
-
-#### `POST /api/shipment-orders` — 출하지시서 생성 🔲 구현예정
-
-새로운 출하지시서를 생성한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**요청 본문**:
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `poId` | `String` | O | PO ID (예: "PO2025001") |
-| `managerId` | `Integer` | O | 담당자 user_id |
-| `shipmentDate` | `String (date)` | O | 출하 예정일 |
-| `portOfLoadingId` | `Integer` | - | 선적항 ID |
-| `portOfDischargeId` | `Integer` | - | 양륙항 ID |
-| `items` | `Array` | O | 출하 품목 목록 |
-
-**응답 `201 Created`**: 생성된 `ShipmentOrder` 객체
-
----
-
-#### `PUT /api/shipment-orders/{id}` — 출하지시서 수정 🔲 구현예정
-
-기존 출하지시서를 수정한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 출하지시서 ID |
-
-**요청 본문**: 생성과 동일 구조
-
-**응답 `200 OK`**: 수정된 `ShipmentOrder` 객체
-
----
+- PO 확정 시 자동 생성
+- 문서번호는 `SO260001` 형식
 
 ### 4.6 출하현황 (Shipments)
 
-#### `GET /api/shipments` — 출하현황 목록 조회 🔲 구현예정
+#### `GET /api/shipments`
 
-전체 출하현황 목록을 조회한다.
+출하현황 목록 조회
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+#### `GET /api/shipments/{shipmentId}`
 
-**응답 `200 OK`**: `Shipment[]`
+출하현황 단건 조회
+
+#### `PUT /api/shipments/{shipmentId}`
+
+출하 상태 변경
 
 ```json
-[
-  {
-    "id": 1,
-    "shipmentOrderId": 1,
-    "shipmentNo": "SHP-2026-001",
-    "blNo": "BL20260420001",
-    "vesselName": "EVER GIVEN",
-    "etd": "2026-04-20",
-    "eta": "2026-05-10",
-    "status": "출하준비",
-    "createdAt": "2026-04-20T09:00:00",
-    "updatedAt": "2026-04-25T14:00:00"
-  }
-]
+{
+  "status": "COMPLETED"
+}
 ```
-
----
-
-#### `GET /api/shipments/{id}` — 출하현황 단건 조회 🔲 구현예정
-
-지정한 ID의 출하현황을 조회한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 출하 ID |
-
-**응답 `200 OK`**: `Shipment` (위 객체와 동일 구조)
-
----
-
-#### `PUT /api/shipments/{id}` — 출하 상태 변경 🔲 구현예정
-
-출하현황의 상태를 변경한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 출하 ID |
-
-**요청 본문**:
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `status` | `String` | O | 상태 (`출하준비` / `출하완료`) |
-| `blNo` | `String` | - | B/L 번호 |
-| `vesselName` | `String` | - | 선박명 |
-| `etd` | `String (date)` | - | 출항 예정일 |
-| `eta` | `String (date)` | - | 도착 예정일 |
-
-**응답 `200 OK`**: 수정된 `Shipment` 객체
-
----
 
 ### 4.7 매출·수금 (Collections)
 
-#### `GET /api/collections` — 매출·수금 현황 조회 🔲 구현예정
+#### `GET /api/collections`
 
-전체 매출 및 수금 현황을 조회한다.
+수금 목록 조회
 
-**요청 헤더**: `Authorization: Bearer {accessToken}`
+#### `GET /api/collections/{collectionId}`
 
-**응답 `200 OK`**: `Collection[]`
+수금 단건 조회
 
-```json
-[
-  {
-    "id": 1,
-    "poId": "PO2025001",
-    "poNo": "PO-2026-001",
-    "clientId": 1,
-    "clientName": "ABC Trading",
-    "totalAmount": 15000.00,
-    "collectedAmount": 10000.00,
-    "remainingAmount": 5000.00,
-    "currencyCode": "USD",
-    "status": "미수금",
-    "collectionDate": "2026-05-15",
-    "createdAt": "2026-03-05T09:00:00",
-    "updatedAt": "2026-05-15T14:00:00"
-  }
-]
-```
+#### `PUT /api/collections/{collectionId}`
 
----
-
-#### `PUT /api/collections/{id}` — 수금 처리 🔲 구현예정
-
-수금 내역을 등록/수정한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 수금 ID |
-
-**요청 본문**:
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `collectedAmount` | `BigDecimal` | O | 수금 금액 |
-| `collectionDate` | `String (date)` | O | 수금일 |
-| `note` | `String` | - | 비고 |
+수금 상태 변경
 
 ```json
 {
-  "collectedAmount": 5000.00,
-  "collectionDate": "2026-06-01",
-  "note": "2차 잔금 입금"
+  "status": "수금완료",
+  "collectionCompletedDate": "2026-03-30",
+  "note": "completed"
 }
 ```
-
-**응답 `200 OK`**: 수정된 `Collection` 객체
-
-**비고**: `collectedAmount`가 `totalAmount`에 도달하면 `status`가 자동으로 `수금완료`로 변경된다.
-
----
 
 ### 4.8 결재 (Approval Requests)
 
-#### `POST /api/approval-requests` — 결재 요청 생성 🔲 구현예정
+#### `POST /api/approval-requests`
 
-문서(PI, PO 등)에 대한 결재 요청을 생성한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**요청 본문**:
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `documentType` | `String` | O | 문서 유형 (`PI` / `PO`) |
-| `documentId` | `String` | O | 문서 ID (예: "PI2025001", "PO2025001") |
-| `requesterId` | `Integer` | O | 요청자(사용자) ID |
-| `approverId` | `Integer` | O | 결재자(사용자) ID |
-| `comment` | `String` | - | 요청 사유 |
+결재 요청 생성
 
 ```json
 {
   "documentType": "PI",
-  "documentId": "PI2025001",
+  "documentId": "PI260001",
+  "requestType": "REGISTRATION",
   "requesterId": 2,
   "approverId": 1,
-  "comment": "PI-2026-001 결재 요청드립니다."
+  "comment": "결재 요청"
 }
 ```
 
-**응답 `201 Created`**:
+#### `GET /api/approval-requests`
+
+결재 요청 목록 조회
+
+#### `GET /api/approval-requests/{approvalRequestId}`
+
+결재 요청 단건 조회
+
+#### `GET /api/approval-requests/document/{documentType}/{documentId}/status/{status}`
+
+문서별 결재 요청 조회
+
+예시:
+
+`GET /api/approval-requests/document/PO/PO260001/status/PENDING`
+
+#### `PUT /api/approval-requests/{approvalRequestId}`
+
+결재 승인/반려
 
 ```json
 {
-  "id": 1,
-  "documentType": "PI",
-  "documentId": "PI2025001",
-  "requesterId": 2,
-  "approverId": 1,
-  "status": "대기",
-  "comment": "PI-2026-001 결재 요청드립니다.",
-  "createdAt": "2026-03-26T09:00:00",
-  "updatedAt": "2026-03-26T09:00:00"
+  "status": "APPROVED",
+  "comment": "승인합니다."
 }
 ```
 
-**비고**: 결재자(`approverId`)는 `position.level == 1` (팀장급)인 사용자만 지정 가능하다. Auth Service의 `hasApprovalAuthority()` 참조.
+**비고**
 
----
-
-#### `PUT /api/approval-requests/{id}` — 결재 승인/반려 🔲 구현예정
-
-결재 요청을 승인하거나 반려한다.
-
-**요청 헤더**: `Authorization: Bearer {accessToken}`
-
-**경로 파라미터**:
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| `id` | `Integer` | 결재 요청 ID |
-
-**요청 본문**:
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| `status` | `String` | O | `승인` / `반려` |
-| `comment` | `String` | - | 승인/반려 사유 |
-
-```json
-{
-  "status": "승인",
-  "comment": "확인 완료. 승인합니다."
-}
-```
-
-**응답 `200 OK`**: 수정된 `ApprovalRequest` 객체
-
-**비고**: 결재 승인 시 해당 문서의 상태가 자동으로 `확정`으로 변경된다. 결재자 본인만 승인/반려 가능하다.
+- 승인 시 문서 상태와 결재 메타데이터가 함께 갱신
+- `approval_requested_by`는 사용자명 스냅샷 우선
 
 ---
 
