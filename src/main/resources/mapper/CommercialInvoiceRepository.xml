@@ -5,9 +5,7 @@
 
     <insert id="createFromPurchaseOrder">
         INSERT INTO commercial_invoices (
-            ci_id, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status,
-            ci_client_name, ci_client_address, ci_country, ci_currency_code, ci_payment_terms,
-            ci_port_of_discharge, ci_buyer, ci_items_snapshot, ci_linked_documents
+            ci_code, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status
         )
         SELECT
             #{ciId},
@@ -16,18 +14,9 @@
             client_id,
             currency_id,
             po_total_amount,
-            '발행대기',
-            po_client_name,
-            po_client_address,
-            po_country,
-            po_currency_code,
-            po_incoterms_code,
-            po_named_place,
-            po_manager_name,
-            po_items_snapshot,
-            CONCAT('[{"id":"', po_id, '","type":"PO","status":"', po_status, '"}]')
+            '발행대기'
         FROM purchase_orders
-        WHERE po_id = #{poId}
+        WHERE po_code = #{poId}
     </insert>
 
 </mapper>

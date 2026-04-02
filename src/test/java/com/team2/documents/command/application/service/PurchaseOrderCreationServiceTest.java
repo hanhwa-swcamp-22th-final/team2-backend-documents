@@ -11,35 +11,22 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderItemCreateRequest;
-import com.team2.documents.command.domain.entity.ApprovalRequest;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
-import com.team2.documents.command.domain.entity.enums.PositionLevel;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
-import com.team2.documents.command.domain.repository.UserPositionRepository;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class PurchaseOrderCreationServiceTest {
-
-    @Mock
-    private UserPositionRepository userPositionRepository;
-
-    @Mock
-    private ApprovalRequestCommandService approvalRequestCommandService;
 
     @Mock
     private PurchaseOrderCommandService purchaseOrderCommandService;
@@ -49,6 +36,9 @@ class PurchaseOrderCreationServiceTest {
 
     @Mock
     private DocumentLinkService documentLinkService;
+
+    @Mock
+    private DocsSnapshotService docsSnapshotService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -76,7 +66,7 @@ class PurchaseOrderCreationServiceTest {
 
         verify(purchaseOrderCommandService).save(argThat(purchaseOrder ->
                 PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())));
-        verify(approvalRequestCommandService, never()).save(any(ApprovalRequest.class));
+        verify(docsSnapshotService).savePurchaseOrderSnapshot(any(PurchaseOrder.class));
     }
 
     @Test
@@ -84,7 +74,6 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenRequestContainsItems_thenStoresSnapshotMetadata() throws JsonProcessingException {
         // given
         Long userId = 2L;
-        when(documentNumberGeneratorService.nextPurchaseOrderId()).thenReturn("PO260001");
         when(objectMapper.writeValueAsString(any()))
                 .thenReturn("[{\"itemName\":\"Bolt\"}]", "[]", "[{\"action\":\"CREATE\"}]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
@@ -132,6 +121,7 @@ class PurchaseOrderCreationServiceTest {
         assertEquals("[{\"action\":\"CREATE\"}]", created.getRevisionHistory());
         assertEquals(PurchaseOrderStatus.DRAFT, created.getStatus());
         assertTrue(created.getApprovalRequestedAt() == null);
+        verify(docsSnapshotService).savePurchaseOrderSnapshot(created);
         verify(documentLinkService).linkPurchaseOrderToProformaInvoice("PO2026-0001", "PI2026-0001");
     }
 
@@ -197,8 +187,6 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenManagerIdProvided_thenUsed() throws JsonProcessingException {
         // given
         Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -221,8 +209,6 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenItemFieldsProvided_thenUsed() throws JsonProcessingException {
         // given
         Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -251,8 +237,6 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenItemSnapshotFieldsNull_thenDefaultsApplied() throws JsonProcessingException {
         // given
         Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -277,12 +261,10 @@ class PurchaseOrderCreationServiceTest {
     }
 
     @Test
-    @DisplayName("PO 생성 시 poId가 빈 문자열이면 TEMP-PO 형식으로 생성된다")
+    @DisplayName("PO 생성 시 poId가 빈 문자열이면 번호 생성기로 발급된다")
     void createPurchaseOrder_whenPoIdIsBlank_thenTempPoIdGenerated() throws JsonProcessingException {
         // given
         Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -306,8 +288,6 @@ class PurchaseOrderCreationServiceTest {
     @DisplayName("PO 생성 시 managerId와 userId 모두 null이면 managerId는 0L이 된다")
     void createPurchaseOrder_whenManagerIdAndUserIdBothNull_thenManagerIdIsZero() throws JsonProcessingException {
         // given
-        when(userPositionRepository.findPositionLevelByUserId(null))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -331,8 +311,6 @@ class PurchaseOrderCreationServiceTest {
     void createPurchaseOrder_whenJsonSerializationFails_thenThrows() throws JsonProcessingException {
         // given
         Long userId = 1L;
-        when(userPositionRepository.findPositionLevelByUserId(userId))
-                .thenReturn(Optional.of(PositionLevel.MANAGER));
         when(objectMapper.writeValueAsString(any()))
                 .thenThrow(new JsonProcessingException("error") {});
 

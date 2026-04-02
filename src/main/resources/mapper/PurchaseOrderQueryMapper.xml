@@ -4,7 +4,8 @@
 <mapper namespace="com.team2.documents.query.mapper.PurchaseOrderQueryMapper">
 
     <resultMap id="purchaseOrderResultMap" type="com.team2.documents.command.domain.entity.PurchaseOrder">
-        <id property="poId" column="po_id"/>
+        <id property="purchaseOrderId" column="po_id"/>
+        <result property="poId" column="po_code"/>
         <result property="piId" column="pi_id"/>
         <result property="issueDate" column="po_issue_date"/>
         <result property="clientId" column="client_id"/>
@@ -50,18 +51,18 @@
     </resultMap>
 
     <select id="findById" resultMap="purchaseOrderResultMap">
-        SELECT po_id, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
+        SELECT po_id, po_code, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
                po_delivery_date, po_incoterms_code, po_named_place, po_source_delivery_date,
                po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
                po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,
                po_approval_action, po_approval_requested_by, po_approval_requested_at, po_approval_review,
                po_items_snapshot, po_linked_documents, po_revision_history, created_at, updated_at
         FROM purchase_orders
-        WHERE po_id = #{poId}
+        WHERE po_code = #{poId}
     </select>
 
     <select id="findAll" resultMap="purchaseOrderResultMap">
-        SELECT po_id, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
+        SELECT po_id, po_code, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
                po_delivery_date, po_incoterms_code, po_named_place, po_source_delivery_date,
                po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
                po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,

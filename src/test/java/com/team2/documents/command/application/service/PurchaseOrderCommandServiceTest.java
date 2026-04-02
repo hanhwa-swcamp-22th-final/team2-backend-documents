@@ -32,7 +32,7 @@ class PurchaseOrderCommandServiceTest {
     void findById_whenPurchaseOrderExists_thenReturnsPurchaseOrder() {
         // given
         PurchaseOrder purchaseOrder = new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.DRAFT);
-        when(purchaseOrderRepository.findById("PO2025-0001")).thenReturn(Optional.of(purchaseOrder));
+        when(purchaseOrderRepository.findByPoCode("PO2025-0001")).thenReturn(Optional.of(purchaseOrder));
 
         // when
         PurchaseOrder result = purchaseOrderCommandService.findById("PO2025-0001");
@@ -45,7 +45,7 @@ class PurchaseOrderCommandServiceTest {
     @DisplayName("존재하지 않는 PO ID로 조회 시 예외가 발생한다")
     void findById_whenPurchaseOrderDoesNotExist_thenThrowsException() {
         // given
-        when(purchaseOrderRepository.findById("NOT-EXIST")).thenReturn(Optional.empty());
+        when(purchaseOrderRepository.findByPoCode("NOT-EXIST")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalArgumentException.class,
@@ -71,7 +71,7 @@ class PurchaseOrderCommandServiceTest {
     void updateStatus_whenPurchaseOrderExists_thenChangesStatus() {
         // given
         PurchaseOrder purchaseOrder = new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.DRAFT);
-        when(purchaseOrderRepository.findById("PO2025-0001")).thenReturn(Optional.of(purchaseOrder));
+        when(purchaseOrderRepository.findByPoCode("PO2025-0001")).thenReturn(Optional.of(purchaseOrder));
         when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -85,7 +85,7 @@ class PurchaseOrderCommandServiceTest {
     @DisplayName("존재하지 않는 PO 상태 변경 시 예외가 발생한다")
     void updateStatus_whenPurchaseOrderDoesNotExist_thenThrowsException() {
         // given
-        when(purchaseOrderRepository.findById("NOT-EXIST")).thenReturn(Optional.empty());
+        when(purchaseOrderRepository.findByPoCode("NOT-EXIST")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalArgumentException.class,

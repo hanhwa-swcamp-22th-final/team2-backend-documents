@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -13,11 +15,15 @@ import jakarta.persistence.Table;
 public class PackingList {
 
     @Id
-    @Column(name = "pl_id", nullable = false, length = 30)
-    private String plId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "pl_id", nullable = false)
+    private Long packingListId;
 
-    @Column(name = "po_id", nullable = false, length = 30)
-    private String poId;
+    @Column(name = "pl_code", nullable = false, unique = true, length = 30)
+    private String plCode;
+
+    @Column(name = "po_id", nullable = false)
+    private Long poId;
 
     @Column(name = "pl_invoice_date")
     private LocalDate invoiceDate;
@@ -31,45 +37,29 @@ public class PackingList {
     @Column(name = "pl_status")
     private String status;
 
-    @Column(name = "pl_client_name")
-    private String clientName;
-
-    @Column(name = "pl_client_address", columnDefinition = "TEXT")
-    private String clientAddress;
-
-    @Column(name = "pl_country")
-    private String country;
-
-    @Column(name = "pl_payment_terms")
-    private String paymentTerms;
-
-    @Column(name = "pl_port_of_discharge")
-    private String portOfDischarge;
-
-    @Column(name = "pl_buyer")
-    private String buyer;
-
-    @Column(name = "pl_items_snapshot", columnDefinition = "TEXT")
-    private String itemsSnapshot;
-
-    @Column(name = "pl_linked_documents", columnDefinition = "TEXT")
-    private String linkedDocuments;
-
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public PackingList() {
     }
 
+    public Long getPackingListId() {
+        return packingListId;
+    }
+
+    public String getPlCode() {
+        return plCode;
+    }
+
     public String getPlId() {
-        return plId;
+        return plCode;
     }
 
     public void setPlId(String plId) {
-        this.plId = plId;
+        this.plCode = plId;
     }
 
-    public String getPoId() {
+    public Long getPoId() {
         return poId;
     }
 
@@ -85,40 +75,12 @@ public class PackingList {
         return grossWeight;
     }
 
-    public void setPoId(String poId) {
+    public void setPoId(Long poId) {
         this.poId = poId;
     }
 
     public String getStatus() {
         return status;
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
-
-    public String getClientAddress() {
-        return clientAddress;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public String getPaymentTerms() {
-        return paymentTerms;
-    }
-
-    public String getPortOfDischarge() {
-        return portOfDischarge;
-    }
-
-    public String getBuyer() {
-        return buyer;
-    }
-
-    public String getItemsSnapshot() {
-        return itemsSnapshot;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -127,13 +89,5 @@ public class PackingList {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getLinkedDocuments() {
-        return linkedDocuments;
-    }
-
-    public void setLinkedDocuments(String linkedDocuments) {
-        this.linkedDocuments = linkedDocuments;
     }
 }

@@ -20,8 +20,8 @@ public class PurchaseOrderItem {
     @Column(name = "po_item_id")
     private Long poItemId;
 
-    @Column(name = "po_id", insertable = false, updatable = false, length = 30)
-    private String poId;
+    @Column(name = "po_id", insertable = false, updatable = false)
+    private Long poId;
 
     @Column(name = "item_id")
     private Integer itemId;
@@ -67,7 +67,7 @@ public class PurchaseOrderItem {
         return poItemId;
     }
 
-    public String getPoId() {
+    public Long getPoId() {
         return poId;
     }
 

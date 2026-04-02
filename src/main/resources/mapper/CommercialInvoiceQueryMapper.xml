@@ -4,37 +4,25 @@
 <mapper namespace="com.team2.documents.query.mapper.CommercialInvoiceQueryMapper">
 
     <resultMap id="commercialInvoiceResultMap" type="com.team2.documents.command.domain.entity.CommercialInvoice">
-        <id property="ciId" column="ci_id"/>
+        <id property="commercialInvoiceId" column="ci_id"/>
+        <result property="ciId" column="ci_code"/>
         <result property="poId" column="po_id"/>
         <result property="invoiceDate" column="ci_invoice_date"/>
         <result property="clientId" column="client_id"/>
         <result property="currencyId" column="currency_id"/>
         <result property="totalAmount" column="ci_total_amount"/>
         <result property="status" column="ci_status"/>
-        <result property="clientName" column="ci_client_name"/>
-        <result property="clientAddress" column="ci_client_address"/>
-        <result property="country" column="ci_country"/>
-        <result property="currencyCode" column="ci_currency_code"/>
-        <result property="paymentTerms" column="ci_payment_terms"/>
-        <result property="portOfDischarge" column="ci_port_of_discharge"/>
-        <result property="buyer" column="ci_buyer"/>
-        <result property="itemsSnapshot" column="ci_items_snapshot"/>
-        <result property="linkedDocuments" column="ci_linked_documents"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
     <select id="findById" resultMap="commercialInvoiceResultMap">
-        SELECT ci_id, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status,
-               ci_client_name, ci_client_address, ci_country, ci_currency_code, ci_payment_terms,
-               ci_port_of_discharge, ci_buyer, ci_items_snapshot, ci_linked_documents, created_at
+        SELECT ci_id, ci_code, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status, created_at
         FROM commercial_invoices
-        WHERE ci_id = #{ciId}
+        WHERE ci_code = #{ciId}
     </select>
 
     <select id="findAll" resultMap="commercialInvoiceResultMap">
-        SELECT ci_id, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status,
-               ci_client_name, ci_client_address, ci_country, ci_currency_code, ci_payment_terms,
-               ci_port_of_discharge, ci_buyer, ci_items_snapshot, ci_linked_documents, created_at
+        SELECT ci_id, ci_code, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status, created_at
         FROM commercial_invoices
         ORDER BY ci_id
     </select>

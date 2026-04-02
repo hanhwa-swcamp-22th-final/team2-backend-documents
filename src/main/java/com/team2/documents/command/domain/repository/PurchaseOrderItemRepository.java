@@ -8,5 +8,5 @@ import com.team2.documents.command.domain.entity.PurchaseOrderItem;
 
 public interface PurchaseOrderItemRepository extends JpaRepository<PurchaseOrderItem, Long> {
 
-    List<PurchaseOrderItem> findByPoId(String poId);
+    List<PurchaseOrderItem> findByPoId(Long poId);
 }

@@ -18,7 +18,7 @@ public class PurchaseOrderCommandService {
     }
 
     public PurchaseOrder findById(String poId) {
-        return purchaseOrderRepository.findById(poId)
+        return purchaseOrderRepository.findByPoCode(poId)
                 .orElseThrow(() -> new IllegalArgumentException("PO 정보를 찾을 수 없습니다."));
     }
 

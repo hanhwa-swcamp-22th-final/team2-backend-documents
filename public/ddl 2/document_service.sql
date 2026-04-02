@@ -23,6 +23,7 @@ DROP TABLE IF EXISTS shipment_orders;
 DROP TABLE IF EXISTS production_orders;
 DROP TABLE IF EXISTS packing_lists;
 DROP TABLE IF EXISTS commercial_invoices;
+DROP TABLE IF EXISTS docs_revision;
 DROP TABLE IF EXISTS po_items;
 DROP TABLE IF EXISTS purchase_orders;
 DROP TABLE IF EXISTS pi_items;
@@ -98,7 +99,8 @@ CREATE TABLE pi_items (
 -- 3. purchase_orders (발주서 PO)
 -- ------------------------------------------------------------
 CREATE TABLE purchase_orders (
-    po_id                       VARCHAR(30)     NOT NULL,            -- 문서번호: PO2025001
+    po_id                       BIGINT          NOT NULL AUTO_INCREMENT,
+    po_code                     VARCHAR(30)     NOT NULL,            -- 문서코드: PO2025001
     pi_id                       VARCHAR(30)     NULL,
     po_issue_date               DATE            NOT NULL,
     client_id                   INT             NOT NULL,            -- REFERENCES master.clients(id)
@@ -137,6 +139,7 @@ CREATE TABLE purchase_orders (
     updated_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (po_id),
+    UNIQUE KEY uk_purchase_orders_po_code (po_code),
     INDEX idx_po_status (po_status),
     INDEX idx_po_issue_date (po_issue_date),
     INDEX idx_po_client_id (client_id),
@@ -151,7 +154,7 @@ CREATE TABLE purchase_orders (
 -- ------------------------------------------------------------
 CREATE TABLE po_items (
     po_item_id      INT            NOT NULL AUTO_INCREMENT,
-    po_id           VARCHAR(30)    NOT NULL,
+    po_id           BIGINT         NOT NULL,
     item_id         INT            NULL,                             -- REFERENCES master.items(id)
     po_item_name    VARCHAR(200)   NOT NULL,
     po_item_qty     INT            NOT NULL DEFAULT 0,
@@ -169,28 +172,19 @@ CREATE TABLE po_items (
 -- 5. commercial_invoices (상업송장 CI)
 -- ------------------------------------------------------------
 CREATE TABLE commercial_invoices (
-    ci_id                 VARCHAR(30)     NOT NULL,                 -- 문서번호: CI2025001
-    po_id                 VARCHAR(30)     NOT NULL,
+    ci_id                 BIGINT          NOT NULL AUTO_INCREMENT,
+    ci_code               VARCHAR(30)     NOT NULL,                 -- 문서코드: CI2025001
+    po_id                 BIGINT          NOT NULL,
     ci_invoice_date       DATE            NOT NULL,
     client_id             INT             NOT NULL,                 -- REFERENCES master.clients(id)
     currency_id           INT             NOT NULL,                 -- REFERENCES master.currencies(id)
     ci_total_amount       DECIMAL(15,2)   NOT NULL DEFAULT 0,
     ci_status             ENUM('발행대기','발행완료') NOT NULL DEFAULT '발행대기',
 
-    -- 출력용 스냅샷
-    ci_client_name        VARCHAR(200)    NULL,
-    ci_client_address     TEXT            NULL,
-    ci_country            VARCHAR(100)    NULL,
-    ci_currency_code      VARCHAR(10)     NULL,
-    ci_payment_terms      VARCHAR(100)    NULL,
-    ci_port_of_discharge  VARCHAR(200)    NULL,
-    ci_buyer              VARCHAR(100)    NULL,
-    ci_items_snapshot     JSON            NULL COMMENT '품목 스냅샷 (PDF/출력용)',
-    ci_linked_documents   JSON            NULL COMMENT '연결 문서 목록 [{id, type, status}]',
-
     created_at            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (ci_id),
+    UNIQUE KEY uk_commercial_invoices_ci_code (ci_code),
     INDEX idx_ci_po_id (po_id),
     INDEX idx_ci_client_id (client_id),
     INDEX idx_ci_invoice_date (ci_invoice_date),
@@ -201,29 +195,35 @@ CREATE TABLE commercial_invoices (
 -- 6. packing_lists (포장명세서 PL)
 -- ------------------------------------------------------------
 CREATE TABLE packing_lists (
-    pl_id                 VARCHAR(30)     NOT NULL,                 -- 문서번호: PL2025001
-    po_id                 VARCHAR(30)     NOT NULL,
+    pl_id                 BIGINT          NOT NULL AUTO_INCREMENT,
+    pl_code               VARCHAR(30)     NOT NULL,                 -- 문서코드: PL2025001
+    po_id                 BIGINT          NOT NULL,
     pl_invoice_date       DATE            NOT NULL,
     client_id             INT             NOT NULL,                 -- REFERENCES master.clients(id)
     pl_gross_weight       DECIMAL(10,3)   NULL,
     pl_status             ENUM('발행대기','발행완료') NOT NULL DEFAULT '발행대기',
 
-    -- 출력용 스냅샷
-    pl_client_name        VARCHAR(200)    NULL,
-    pl_client_address     TEXT            NULL,
-    pl_country            VARCHAR(100)    NULL,
-    pl_payment_terms      VARCHAR(100)    NULL,
-    pl_port_of_discharge  VARCHAR(200)    NULL,
-    pl_buyer              VARCHAR(100)    NULL,
-    pl_items_snapshot     JSON            NULL COMMENT '품목 스냅샷 (PDF/출력용)',
-    pl_linked_documents   JSON            NULL COMMENT '연결 문서 목록 [{id, type, status}]',
-
     created_at            TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (pl_id),
+    UNIQUE KEY uk_packing_lists_pl_code (pl_code),
     INDEX idx_pl_po_id (po_id),
     INDEX idx_pl_client_id (client_id),
     CONSTRAINT fk_pl_po FOREIGN KEY (po_id) REFERENCES purchase_orders (po_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- docs_revision (문서 스냅샷 단일 소스)
+-- ------------------------------------------------------------
+CREATE TABLE docs_revision (
+    docs_revision_id      BIGINT          NOT NULL AUTO_INCREMENT,
+    doc_type              VARCHAR(50)     NOT NULL,
+    doc_id                BIGINT          NOT NULL,
+    snapshot_data         JSON            NOT NULL,
+    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (docs_revision_id),
+    INDEX idx_docs_revision_doc (doc_type, doc_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
@@ -231,7 +231,7 @@ CREATE TABLE packing_lists (
 -- ------------------------------------------------------------
 CREATE TABLE production_orders (
     production_order_id      VARCHAR(30)     NOT NULL,                  -- 문서번호: PRD2025001
-    po_id                    VARCHAR(30)     NOT NULL,
+    po_id                    BIGINT          NOT NULL,
     production_issue_date    DATE            NOT NULL,
     client_id                INT             NOT NULL,                  -- REFERENCES master.clients(id)
     manager_id               INT             NULL,                      -- REFERENCES auth.users(id)
@@ -261,7 +261,7 @@ CREATE TABLE production_orders (
 -- ------------------------------------------------------------
 CREATE TABLE shipment_orders (
     shipment_order_id        VARCHAR(30)     NOT NULL,                  -- 문서번호: SH2025001
-    po_id                    VARCHAR(30)     NOT NULL,
+    po_id                    BIGINT          NOT NULL,
     shipment_issue_date      DATE            NOT NULL,
     client_id                INT             NOT NULL,                  -- REFERENCES master.clients(id)
     manager_id               INT             NULL,                      -- REFERENCES auth.users(id)
@@ -313,7 +313,7 @@ CREATE TABLE approval_requests (
 -- ------------------------------------------------------------
 CREATE TABLE collections (
     collection_id           INT             NOT NULL AUTO_INCREMENT,
-    po_id                   VARCHAR(30)     NOT NULL,
+    po_id                   BIGINT          NOT NULL,
     client_id               INT             NOT NULL,                   -- REFERENCES master.clients(id)
     manager_id              INT             NOT NULL,                   -- REFERENCES auth.users(id)
     currency_id             INT             NOT NULL,                   -- REFERENCES master.currencies(id)
@@ -339,7 +339,7 @@ CREATE TABLE collections (
 -- ------------------------------------------------------------
 CREATE TABLE shipments (
     shipment_id           INT             NOT NULL AUTO_INCREMENT,
-    po_id                 VARCHAR(30)     NOT NULL,
+    po_id                 BIGINT          NOT NULL,
     shipment_order_id     VARCHAR(30)     NOT NULL,
     client_id             INT             NOT NULL,                 -- REFERENCES master.clients(id)
     shipment_request_date DATE            NULL,

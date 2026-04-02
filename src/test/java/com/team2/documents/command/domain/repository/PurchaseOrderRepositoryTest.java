@@ -25,7 +25,7 @@ class PurchaseOrderRepositoryTest {
 
         purchaseOrderRepository.save(purchaseOrder);
 
-        PurchaseOrder result = purchaseOrderRepository.findById("PO2025-0001").orElseThrow();
+        PurchaseOrder result = purchaseOrderRepository.findByPoCode("PO2025-0001").orElseThrow();
 
         assertEquals("PO2025-0001", result.getPoId());
         assertEquals(PurchaseOrderStatus.DRAFT, result.getStatus());
@@ -36,11 +36,11 @@ class PurchaseOrderRepositoryTest {
     void update_whenPurchaseOrderStatusChanges_thenPersistsUpdatedStatus() {
         purchaseOrderRepository.save(new PurchaseOrder("PO2025-0002", PurchaseOrderStatus.DRAFT));
 
-        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById("PO2025-0002").orElseThrow();
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPoCode("PO2025-0002").orElseThrow();
         purchaseOrder.setStatus(PurchaseOrderStatus.CONFIRMED);
         purchaseOrderRepository.save(purchaseOrder);
 
-        PurchaseOrder result = purchaseOrderRepository.findById("PO2025-0002").orElseThrow();
+        PurchaseOrder result = purchaseOrderRepository.findByPoCode("PO2025-0002").orElseThrow();
         assertEquals(PurchaseOrderStatus.CONFIRMED, result.getStatus());
     }
 
@@ -52,7 +52,7 @@ class PurchaseOrderRepositoryTest {
 
         purchaseOrderRepository.delete(purchaseOrder);
 
-        assertFalse(purchaseOrderRepository.findById("PO2025-0003").isPresent());
+        assertFalse(purchaseOrderRepository.findByPoCode("PO2025-0003").isPresent());
     }
 
     @Test

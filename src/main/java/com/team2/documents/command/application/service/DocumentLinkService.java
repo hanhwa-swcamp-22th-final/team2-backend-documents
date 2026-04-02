@@ -3,14 +3,10 @@ package com.team2.documents.command.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.team2.documents.command.domain.entity.CommercialInvoice;
-import com.team2.documents.command.domain.entity.PackingList;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.ShipmentOrder;
 import com.team2.documents.command.domain.entity.ProductionOrder;
-import com.team2.documents.command.domain.repository.CommercialInvoiceJpaRepository;
-import com.team2.documents.command.domain.repository.PackingListJpaRepository;
 import com.team2.documents.command.domain.repository.ProductionOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderJpaRepository;
 
@@ -20,23 +16,17 @@ public class DocumentLinkService {
 
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final ProformaInvoiceCommandService proformaInvoiceCommandService;
-    private final CommercialInvoiceJpaRepository commercialInvoiceJpaRepository;
-    private final PackingListJpaRepository packingListJpaRepository;
     private final ShipmentOrderJpaRepository shipmentOrderJpaRepository;
     private final ProductionOrderRepository productionOrderRepository;
     private final DocumentJsonSupportService documentJsonSupportService;
 
     public DocumentLinkService(PurchaseOrderCommandService purchaseOrderCommandService,
                                ProformaInvoiceCommandService proformaInvoiceCommandService,
-                               CommercialInvoiceJpaRepository commercialInvoiceJpaRepository,
-                               PackingListJpaRepository packingListJpaRepository,
                                ShipmentOrderJpaRepository shipmentOrderJpaRepository,
                                ProductionOrderRepository productionOrderRepository,
                                DocumentJsonSupportService documentJsonSupportService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
-        this.commercialInvoiceJpaRepository = commercialInvoiceJpaRepository;
-        this.packingListJpaRepository = packingListJpaRepository;
         this.shipmentOrderJpaRepository = shipmentOrderJpaRepository;
         this.productionOrderRepository = productionOrderRepository;
         this.documentJsonSupportService = documentJsonSupportService;
@@ -69,30 +59,6 @@ public class DocumentLinkService {
         purchaseOrder.setLinkedDocuments(documentJsonSupportService.appendLinkedDocument(
                 purchaseOrder.getLinkedDocuments(), shipmentOrderId, "SO", "출하준비"));
         purchaseOrderCommandService.save(purchaseOrder);
-
-        CommercialInvoice commercialInvoice = commercialInvoiceJpaRepository.findById(ciId).orElse(null);
-        if (commercialInvoice != null) {
-            commercialInvoice.setLinkedDocuments(documentJsonSupportService.appendLinkedDocument(
-                    commercialInvoice.getLinkedDocuments(), poId, "PO",
-                    purchaseOrder.getStatus() == null ? null : purchaseOrder.getStatus().name()));
-            if (purchaseOrder.getPiId() != null && !purchaseOrder.getPiId().isBlank()) {
-                commercialInvoice.setLinkedDocuments(documentJsonSupportService.appendLinkedDocument(
-                        commercialInvoice.getLinkedDocuments(), purchaseOrder.getPiId(), "PI", "CONFIRMED"));
-            }
-            commercialInvoiceJpaRepository.save(commercialInvoice);
-        }
-
-        PackingList packingList = packingListJpaRepository.findById(plId).orElse(null);
-        if (packingList != null) {
-            packingList.setLinkedDocuments(documentJsonSupportService.appendLinkedDocument(
-                    packingList.getLinkedDocuments(), poId, "PO",
-                    purchaseOrder.getStatus() == null ? null : purchaseOrder.getStatus().name()));
-            if (purchaseOrder.getPiId() != null && !purchaseOrder.getPiId().isBlank()) {
-                packingList.setLinkedDocuments(documentJsonSupportService.appendLinkedDocument(
-                        packingList.getLinkedDocuments(), purchaseOrder.getPiId(), "PI", "CONFIRMED"));
-            }
-            packingListJpaRepository.save(packingList);
-        }
 
         ShipmentOrder shipmentOrder = shipmentOrderJpaRepository.findById(shipmentOrderId).orElse(null);
         if (shipmentOrder != null) {

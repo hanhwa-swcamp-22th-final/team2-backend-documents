@@ -11,6 +11,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
@@ -26,8 +28,12 @@ import lombok.Setter;
 public class PurchaseOrder {
 
     @Id
-    @Column(name = "po_id", nullable = false, length = 30)
-    private String poId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "po_id", nullable = false)
+    private Long purchaseOrderId;
+
+    @Column(name = "po_code", nullable = false, unique = true, length = 30)
+    private String poCode;
 
     @Column(name = "pi_id", length = 30)
     private String piId;
@@ -126,7 +132,7 @@ public class PurchaseOrder {
     }
 
     public PurchaseOrder(String poId, PurchaseOrderStatus status) {
-        this.poId = poId;
+        this.poCode = poId;
         this.status = status;
         this.issueDate = LocalDate.now();
         this.clientId = 0;
@@ -163,7 +169,7 @@ public class PurchaseOrder {
                          String linkedDocuments,
                          String revisionHistory,
                          List<PurchaseOrderItem> items) {
-        this.poId = poId;
+        this.poCode = poId;
         this.piId = piId;
         this.issueDate = issueDate;
         this.clientId = clientId;
@@ -222,8 +228,20 @@ public class PurchaseOrder {
         }
     }
 
+    public Long getPurchaseOrderId() {
+        return purchaseOrderId;
+    }
+
+    public String getPoCode() {
+        return poCode;
+    }
+
     public String getPoId() {
-        return poId;
+        return poCode;
+    }
+
+    public void setPoId(String poId) {
+        this.poCode = poId;
     }
 
     public String getPiId() {

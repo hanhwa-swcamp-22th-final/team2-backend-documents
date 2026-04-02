@@ -24,15 +24,18 @@ public class PurchaseOrderCreationService {
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final DocumentNumberGeneratorService documentNumberGeneratorService;
     private final DocumentLinkService documentLinkService;
+    private final DocsSnapshotService docsSnapshotService;
     private final ObjectMapper objectMapper;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                         DocumentNumberGeneratorService documentNumberGeneratorService,
                                         DocumentLinkService documentLinkService,
+                                        DocsSnapshotService docsSnapshotService,
                                         ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.documentLinkService = documentLinkService;
+        this.docsSnapshotService = docsSnapshotService;
         this.objectMapper = objectMapper;
     }
 
@@ -82,6 +85,7 @@ public class PurchaseOrderCreationService {
         );
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
+        docsSnapshotService.savePurchaseOrderSnapshot(saved);
         if (saved.getPiId() != null && !saved.getPiId().isBlank()) {
             documentLinkService.linkPurchaseOrderToProformaInvoice(saved.getPoId(), saved.getPiId());
         }

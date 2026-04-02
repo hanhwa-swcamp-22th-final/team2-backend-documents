@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -14,11 +16,15 @@ import jakarta.persistence.Table;
 public class CommercialInvoice {
 
     @Id
-    @Column(name = "ci_id", nullable = false, length = 30)
-    private String ciId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ci_id", nullable = false)
+    private Long commercialInvoiceId;
 
-    @Column(name = "po_id", nullable = false, length = 30)
-    private String poId;
+    @Column(name = "ci_code", nullable = false, unique = true, length = 30)
+    private String ciCode;
+
+    @Column(name = "po_id", nullable = false)
+    private Long poId;
 
     @Column(name = "ci_invoice_date")
     private LocalDate invoiceDate;
@@ -35,48 +41,29 @@ public class CommercialInvoice {
     @Column(name = "ci_status")
     private String status;
 
-    @Column(name = "ci_client_name")
-    private String clientName;
-
-    @Column(name = "ci_client_address", columnDefinition = "TEXT")
-    private String clientAddress;
-
-    @Column(name = "ci_country")
-    private String country;
-
-    @Column(name = "ci_currency_code")
-    private String currencyCode;
-
-    @Column(name = "ci_payment_terms")
-    private String paymentTerms;
-
-    @Column(name = "ci_port_of_discharge")
-    private String portOfDischarge;
-
-    @Column(name = "ci_buyer")
-    private String buyer;
-
-    @Column(name = "ci_items_snapshot", columnDefinition = "TEXT")
-    private String itemsSnapshot;
-
-    @Column(name = "ci_linked_documents", columnDefinition = "TEXT")
-    private String linkedDocuments;
-
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public CommercialInvoice() {
     }
 
+    public Long getCommercialInvoiceId() {
+        return commercialInvoiceId;
+    }
+
+    public String getCiCode() {
+        return ciCode;
+    }
+
     public String getCiId() {
-        return ciId;
+        return ciCode;
     }
 
     public void setCiId(String ciId) {
-        this.ciId = ciId;
+        this.ciCode = ciId;
     }
 
-    public String getPoId() {
+    public Long getPoId() {
         return poId;
     }
 
@@ -96,44 +83,12 @@ public class CommercialInvoice {
         return totalAmount;
     }
 
-    public void setPoId(String poId) {
+    public void setPoId(Long poId) {
         this.poId = poId;
     }
 
     public String getStatus() {
         return status;
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
-
-    public String getClientAddress() {
-        return clientAddress;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public String getCurrencyCode() {
-        return currencyCode;
-    }
-
-    public String getPaymentTerms() {
-        return paymentTerms;
-    }
-
-    public String getPortOfDischarge() {
-        return portOfDischarge;
-    }
-
-    public String getBuyer() {
-        return buyer;
-    }
-
-    public String getItemsSnapshot() {
-        return itemsSnapshot;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -142,13 +97,5 @@ public class CommercialInvoice {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getLinkedDocuments() {
-        return linkedDocuments;
-    }
-
-    public void setLinkedDocuments(String linkedDocuments) {
-        this.linkedDocuments = linkedDocuments;
     }
 }
