@@ -3,9 +3,13 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.ProductionOrderQueryMapper">
 
-    <resultMap id="productionOrderResultMap" type="com.team2.documents.command.domain.entity.ProductionOrder">
-        <id property="productionOrderId" column="production_order_id"/>
-        <result property="poId" column="po_id"/>
+    <resultMap id="productionOrderResultMap" type="com.team2.documents.query.model.ProductionOrderView">
+        <id property="productionOrderPk" column="production_order_id"/>
+        <result property="productionOrderCode" column="production_order_code"/>
+        <result property="productionOrderId" column="production_order_code"/>
+        <result property="poId" column="po_code"/>
+        <result property="purchaseOrderId" column="po_id"/>
+        <result property="poNo" column="po_code"/>
         <result property="orderDate" column="production_issue_date"/>
         <result property="clientId" column="client_id"/>
         <result property="managerId" column="manager_id"/>
@@ -21,18 +25,21 @@
     </resultMap>
 
     <select id="findById" resultMap="productionOrderResultMap">
-        SELECT production_order_id, po_id, production_issue_date, client_id, manager_id,
-               production_due_date, production_status, production_client_name, production_country,
-               production_manager_name, production_item_name, production_linked_documents, created_at, updated_at
-        FROM production_orders
-        WHERE production_order_id = #{productionOrderId}
+        SELECT pr.production_order_id, pr.production_order_code, pr.po_id, po.po_code, pr.production_issue_date, pr.client_id, pr.manager_id,
+               pr.production_due_date, pr.production_status, pr.production_client_name, pr.production_country,
+               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents, pr.created_at, pr.updated_at
+        FROM production_orders pr
+        JOIN purchase_orders po ON pr.po_id = po.po_id
+        WHERE pr.production_order_code = #{productionOrderId}
     </select>
 
     <select id="findAll" resultMap="productionOrderResultMap">
-        SELECT production_order_id, po_id, production_issue_date, client_id, manager_id,
-               production_due_date, production_status, production_client_name, production_country,
-               production_manager_name, production_item_name, production_linked_documents, created_at, updated_at
-        FROM production_orders
+        SELECT pr.production_order_id, pr.production_order_code, pr.po_id, po.po_code, pr.production_issue_date, pr.client_id, pr.manager_id,
+               pr.production_due_date, pr.production_status, pr.production_client_name, pr.production_country,
+               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents, pr.created_at, pr.updated_at
+        FROM production_orders pr
+        JOIN purchase_orders po ON pr.po_id = po.po_id
+        ORDER BY pr.production_order_id
     </select>
 
 </mapper>

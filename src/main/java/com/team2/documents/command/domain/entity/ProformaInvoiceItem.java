@@ -18,8 +18,8 @@ public class ProformaInvoiceItem {
     @Column(name = "pi_item_id")
     private Long piItemId;
 
-    @Column(name = "pi_id", nullable = false, length = 30)
-    private String piId;
+    @Column(name = "pi_id", nullable = false)
+    private Long piId;
 
     @Column(name = "item_id")
     private Integer itemId;

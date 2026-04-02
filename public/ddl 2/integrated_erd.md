@@ -243,7 +243,6 @@ erDiagram
         JSON pi_approval_review "결재 검토 스냅샷"
         JSON pi_items_snapshot "품목 스냅샷"
         JSON pi_linked_documents "연결 문서 목록"
-        JSON pi_revision_history "변경 이력"
         TIMESTAMP created_at
         TIMESTAMP updated_at
     }
@@ -287,7 +286,6 @@ erDiagram
         JSON po_approval_review "결재 검토 스냅샷"
         JSON po_items_snapshot "품목 스냅샷"
         JSON po_linked_documents "연결 문서 목록"
-        JSON po_revision_history "변경 이력"
         TIMESTAMP created_at
         TIMESTAMP updated_at
     }
@@ -343,8 +341,9 @@ erDiagram
     }
 
     production_orders {
-        VARCHAR production_order_id PK "문서번호 PRD2025001"
-        VARCHAR po_id FK
+        BIGINT production_order_id PK
+        VARCHAR production_order_code "문서번호 MO2025001"
+        BIGINT po_id FK
         DATE production_issue_date
         INT client_id FK "cross: master.clients"
         INT manager_id FK "cross: auth.users"
@@ -360,8 +359,9 @@ erDiagram
     }
 
     shipment_orders {
-        VARCHAR shipment_order_id PK "문서번호 SH2025001"
-        VARCHAR po_id FK
+        BIGINT shipment_order_id PK
+        VARCHAR shipment_order_code "문서번호 SO2025001"
+        BIGINT po_id FK
         DATE shipment_issue_date
         INT client_id FK "cross: master.clients"
         INT manager_id FK "cross: auth.users"

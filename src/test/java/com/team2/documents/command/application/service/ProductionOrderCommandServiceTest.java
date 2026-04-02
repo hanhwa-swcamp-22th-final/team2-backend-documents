@@ -54,7 +54,7 @@ class ProductionOrderCommandServiceTest {
                 "PRD-2026-001", "PO2025001", null,
                 LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 10),
                 "진행중", List.of(), null, null);
-        when(productionOrderRepository.findById("PRD-2026-001")).thenReturn(Optional.of(productionOrder));
+        when(productionOrderRepository.findByProductionOrderCode("PRD-2026-001")).thenReturn(Optional.of(productionOrder));
 
         // when
         ProductionOrder result = productionOrderCommandService.findById("PRD-2026-001");
@@ -68,7 +68,7 @@ class ProductionOrderCommandServiceTest {
     @DisplayName("존재하지 않는 생산지시서 조회 시 예외를 던진다")
     void findById_whenProductionOrderNotExists_thenThrowsException() {
         // given
-        when(productionOrderRepository.findById("NOT-EXIST")).thenReturn(Optional.empty());
+        when(productionOrderRepository.findByProductionOrderCode("NOT-EXIST")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalArgumentException.class,

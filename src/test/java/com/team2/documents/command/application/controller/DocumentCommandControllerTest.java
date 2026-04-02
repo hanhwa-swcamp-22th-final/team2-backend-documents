@@ -48,11 +48,16 @@ import com.team2.documents.command.application.service.ShipmentCommandService;
 import com.team2.documents.query.service.ApprovalRequestQueryService;
 import com.team2.documents.query.service.CommercialInvoiceQueryService;
 import com.team2.documents.query.service.CollectionQueryService;
+import com.team2.documents.query.service.DocsRevisionQueryService;
 import com.team2.documents.query.service.PackingListQueryService;
 import com.team2.documents.query.service.ProductionOrderQueryService;
 import com.team2.documents.query.service.ProformaInvoiceQueryService;
 import com.team2.documents.query.service.ShipmentOrderQueryService;
 import com.team2.documents.query.service.ShipmentQueryService;
+import com.team2.documents.query.model.CollectionView;
+import com.team2.documents.query.model.ProductionOrderView;
+import com.team2.documents.query.model.PurchaseOrderView;
+import com.team2.documents.query.model.ShipmentView;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
 import com.team2.documents.command.application.service.ProformaInvoiceRejectionWorkflowService;
@@ -154,6 +159,9 @@ class DocumentControllerTest {
 
     @MockitoBean
     private ApprovalRequestCommandService approvalRequestCommandService;
+
+    @MockitoBean
+    private DocsRevisionQueryService docsRevisionQueryService;
 
     @Test
     @DisplayName("PO 생성 API 호출 시 200 OK를 반환하고 Service를 호출한다")
@@ -276,8 +284,9 @@ class DocumentControllerTest {
     @DisplayName("PO 단건 조회 API 호출 시 200 OK와 PO를 반환한다")
     void getPurchaseOrderApi_whenPurchaseOrderExists_thenReturnsOkAndPurchaseOrder() throws Exception {
         // given
-        com.team2.documents.command.domain.entity.PurchaseOrder purchaseOrder =
-                new com.team2.documents.command.domain.entity.PurchaseOrder("PO2025-0001", PurchaseOrderStatus.DRAFT);
+        PurchaseOrderView purchaseOrder = new PurchaseOrderView();
+        purchaseOrder.setPoId("PO2025-0001");
+        purchaseOrder.setStatus(PurchaseOrderStatus.DRAFT.name());
         when(purchaseOrderQueryService.findById("PO2025-0001")).thenReturn(purchaseOrder);
 
         // when & then
@@ -309,17 +318,16 @@ class DocumentControllerTest {
     @DisplayName("생산지시서 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
     void getProductionOrdersApi_whenProductionOrdersExist_thenReturnsOkAndList() throws Exception {
         // given
-        ProductionOrder productionOrder = new ProductionOrder(
-                "PRD-2026-001",
-                "PO2025001",
-                "PO-2026-001",
-                java.time.LocalDate.of(2026, 3, 10),
-                java.time.LocalDate.of(2026, 4, 10),
-                "진행중",
-                java.util.List.of(),
-                java.time.LocalDateTime.of(2026, 3, 10, 9, 0),
-                java.time.LocalDateTime.of(2026, 3, 15, 14, 0)
-        );
+        ProductionOrderView productionOrder = new ProductionOrderView();
+        productionOrder.setProductionOrderId("PRD-2026-001");
+        productionOrder.setPoId("PO2025001");
+        productionOrder.setPoNo("PO-2026-001");
+        productionOrder.setOrderDate(java.time.LocalDate.of(2026, 3, 10));
+        productionOrder.setDueDate(java.time.LocalDate.of(2026, 4, 10));
+        productionOrder.setStatus("진행중");
+        productionOrder.setItems(java.util.List.of());
+        productionOrder.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 10, 9, 0));
+        productionOrder.setUpdatedAt(java.time.LocalDateTime.of(2026, 3, 15, 14, 0));
         when(productionOrderQueryService.findAll()).thenReturn(java.util.List.of(productionOrder));
 
         // when & then
@@ -336,17 +344,16 @@ class DocumentControllerTest {
     @DisplayName("생산지시서 단건 조회 API 호출 시 200 OK와 생산지시서를 반환한다")
     void getProductionOrderApi_whenProductionOrderExists_thenReturnsOkAndProductionOrder() throws Exception {
         // given
-        ProductionOrder productionOrder = new ProductionOrder(
-                "PRD-2026-001",
-                "PO2025001",
-                "PO-2026-001",
-                java.time.LocalDate.of(2026, 3, 10),
-                java.time.LocalDate.of(2026, 4, 10),
-                "진행중",
-                java.util.List.of(),
-                java.time.LocalDateTime.of(2026, 3, 10, 9, 0),
-                java.time.LocalDateTime.of(2026, 3, 15, 14, 0)
-        );
+        ProductionOrderView productionOrder = new ProductionOrderView();
+        productionOrder.setProductionOrderId("PRD-2026-001");
+        productionOrder.setPoId("PO2025001");
+        productionOrder.setPoNo("PO-2026-001");
+        productionOrder.setOrderDate(java.time.LocalDate.of(2026, 3, 10));
+        productionOrder.setDueDate(java.time.LocalDate.of(2026, 4, 10));
+        productionOrder.setStatus("진행중");
+        productionOrder.setItems(java.util.List.of());
+        productionOrder.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 10, 9, 0));
+        productionOrder.setUpdatedAt(java.time.LocalDateTime.of(2026, 3, 15, 14, 0));
         when(productionOrderQueryService.findById("PRD-2026-001")).thenReturn(productionOrder);
 
         // when & then
@@ -363,8 +370,10 @@ class DocumentControllerTest {
     @DisplayName("출하현황 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
     void getShipmentsApi_whenShipmentsExist_thenReturnsOkAndList() throws Exception {
         // given
-        com.team2.documents.command.domain.entity.Shipment shipment =
-                new com.team2.documents.command.domain.entity.Shipment(1L, "PO2025-0001", com.team2.documents.command.domain.entity.enums.ShipmentStatus.READY);
+        ShipmentView shipment = new ShipmentView();
+        shipment.setShipmentId(1L);
+        shipment.setPoId("PO2025-0001");
+        shipment.setShipmentStatus("READY");
         when(shipmentQueryService.findAll()).thenReturn(java.util.List.of(shipment));
 
         // when & then
@@ -381,8 +390,10 @@ class DocumentControllerTest {
     @DisplayName("출하현황 단건 조회 API 호출 시 200 OK와 출하현황을 반환한다")
     void getShipmentApi_whenShipmentExists_thenReturnsOkAndShipment() throws Exception {
         // given
-        com.team2.documents.command.domain.entity.Shipment shipment =
-                new com.team2.documents.command.domain.entity.Shipment(1L, "PO2025-0001", com.team2.documents.command.domain.entity.enums.ShipmentStatus.READY);
+        ShipmentView shipment = new ShipmentView();
+        shipment.setShipmentId(1L);
+        shipment.setPoId("PO2025-0001");
+        shipment.setShipmentStatus("READY");
         when(shipmentQueryService.findById(1L)).thenReturn(shipment);
 
         // when & then
@@ -399,21 +410,20 @@ class DocumentControllerTest {
     @DisplayName("매출·수금 현황 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
     void getCollectionsApi_whenCollectionsExist_thenReturnsOkAndList() throws Exception {
         // given
-        Collection collection = new Collection(
-                1L,
-                "PO2025001",
-                "PO-2026-001",
-                1L,
-                "ABC Trading",
-                new java.math.BigDecimal("15000.00"),
-                new java.math.BigDecimal("10000.00"),
-                new java.math.BigDecimal("5000.00"),
-                "USD",
-                "미수금",
-                java.time.LocalDate.of(2026, 5, 15),
-                java.time.LocalDateTime.of(2026, 3, 5, 9, 0),
-                java.time.LocalDateTime.of(2026, 5, 15, 14, 0)
-        );
+        CollectionView collection = new CollectionView();
+        collection.setCollectionId(1L);
+        collection.setPoId("PO2025001");
+        collection.setPoNo("PO-2026-001");
+        collection.setClientId(1L);
+        collection.setClientName("ABC Trading");
+        collection.setTotalAmount(new java.math.BigDecimal("15000.00"));
+        collection.setCollectedAmount(new java.math.BigDecimal("10000.00"));
+        collection.setRemainingAmount(new java.math.BigDecimal("5000.00"));
+        collection.setCurrencyCode("USD");
+        collection.setStatus("미수금");
+        collection.setCollectionDate(java.time.LocalDate.of(2026, 5, 15));
+        collection.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 5, 9, 0));
+        collection.setUpdatedAt(java.time.LocalDateTime.of(2026, 5, 15, 14, 0));
         when(collectionQueryService.findAll()).thenReturn(java.util.List.of(collection));
 
         // when & then
@@ -430,21 +440,20 @@ class DocumentControllerTest {
     @DisplayName("매출·수금 현황 단건 조회 API 호출 시 200 OK와 현황을 반환한다")
     void getCollectionApi_whenCollectionExists_thenReturnsOkAndCollection() throws Exception {
         // given
-        Collection collection = new Collection(
-                1L,
-                "PO2025001",
-                "PO-2026-001",
-                1L,
-                "ABC Trading",
-                new java.math.BigDecimal("15000.00"),
-                new java.math.BigDecimal("10000.00"),
-                new java.math.BigDecimal("5000.00"),
-                "USD",
-                "미수금",
-                java.time.LocalDate.of(2026, 5, 15),
-                java.time.LocalDateTime.of(2026, 3, 5, 9, 0),
-                java.time.LocalDateTime.of(2026, 5, 15, 14, 0)
-        );
+        CollectionView collection = new CollectionView();
+        collection.setCollectionId(1L);
+        collection.setPoId("PO2025001");
+        collection.setPoNo("PO-2026-001");
+        collection.setClientId(1L);
+        collection.setClientName("ABC Trading");
+        collection.setTotalAmount(new java.math.BigDecimal("15000.00"));
+        collection.setCollectedAmount(new java.math.BigDecimal("10000.00"));
+        collection.setRemainingAmount(new java.math.BigDecimal("5000.00"));
+        collection.setCurrencyCode("USD");
+        collection.setStatus("미수금");
+        collection.setCollectionDate(java.time.LocalDate.of(2026, 5, 15));
+        collection.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 5, 9, 0));
+        collection.setUpdatedAt(java.time.LocalDateTime.of(2026, 5, 15, 14, 0));
         when(collectionQueryService.findById(1L)).thenReturn(collection);
 
         // when & then

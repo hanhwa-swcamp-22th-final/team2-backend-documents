@@ -34,7 +34,10 @@ class ProformaInvoiceCreationServiceTest {
     private DocumentNumberGeneratorService documentNumberGeneratorService;
 
     @Mock
-    private DocumentJsonSupportService documentJsonSupportService;
+    private DocsSnapshotService docsSnapshotService;
+
+    @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -43,17 +46,9 @@ class ProformaInvoiceCreationServiceTest {
     private ProformaInvoiceCreationService proformaInvoiceCreationService;
 
     @Test
-    @DisplayName("PI 생성 시 스냅샷과 revision history가 공용 JSON 서비스 규칙으로 저장된다")
+    @DisplayName("PI 생성 시 스냅샷과 docs_revision 이력이 저장된다")
     void createProformaInvoice_whenRequestContainsItems_thenStoresConsistentMetadata() throws JsonProcessingException {
         when(objectMapper.writeValueAsString(any())).thenReturn("[{\"itemName\":\"Bolt\"}]");
-        when(documentJsonSupportService.emptyArray()).thenReturn("[]");
-        when(documentJsonSupportService.createRevisionHistory(
-                org.mockito.ArgumentMatchers.eq("CREATE"),
-                org.mockito.ArgumentMatchers.eq(2L),
-                org.mockito.ArgumentMatchers.eq(ProformaInvoiceStatus.DRAFT.name()),
-                org.mockito.ArgumentMatchers.anyString(),
-                any()
-        )).thenReturn("[{\"action\":\"CREATE\"}]");
         when(proformaInvoiceCommandService.save(any(ProformaInvoice.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -90,8 +85,14 @@ class ProformaInvoiceCreationServiceTest {
         assertEquals(new BigDecimal("50.00"), created.getTotalAmount());
         assertEquals("[{\"itemName\":\"Bolt\"}]", created.getItemsSnapshot());
         assertEquals("[]", created.getLinkedDocuments());
-        assertEquals("[{\"action\":\"CREATE\"}]", created.getRevisionHistory());
         assertTrue(created.getApprovalRequestedAt() == null);
-        verify(documentJsonSupportService).emptyArray();
+        verify(docsSnapshotService).saveProformaInvoiceSnapshot(created);
+        verify(documentRevisionHistoryService).recordProformaInvoiceEvent(
+                "PI260001",
+                "CREATE",
+                2L,
+                ProformaInvoiceStatus.DRAFT.name(),
+                "PI 초안을 생성했습니다."
+        );
     }
 }

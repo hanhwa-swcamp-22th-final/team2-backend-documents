@@ -2,7 +2,6 @@ package com.team2.documents.command.application.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -25,17 +24,20 @@ public class PurchaseOrderCreationService {
     private final DocumentNumberGeneratorService documentNumberGeneratorService;
     private final DocumentLinkService documentLinkService;
     private final DocsSnapshotService docsSnapshotService;
+    private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ObjectMapper objectMapper;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                         DocumentNumberGeneratorService documentNumberGeneratorService,
                                         DocumentLinkService documentLinkService,
                                         DocsSnapshotService docsSnapshotService,
+                                        DocumentRevisionHistoryService documentRevisionHistoryService,
                                         ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.documentLinkService = documentLinkService;
         this.docsSnapshotService = docsSnapshotService;
+        this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.objectMapper = objectMapper;
     }
 
@@ -48,8 +50,6 @@ public class PurchaseOrderCreationService {
         String poId = request.poId() == null || request.poId().isBlank()
                 ? documentNumberGeneratorService.nextPurchaseOrderId()
                 : request.poId();
-        LocalDateTime createdAt = LocalDateTime.now();
-
         List<PurchaseOrderItem> items = toEntities(request.items());
         BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), items);
 
@@ -80,12 +80,18 @@ public class PurchaseOrderCreationService {
                 null,
                 serializeItemsSnapshot(items),
                 serializeLinkedDocuments(),
-                serializeRevisionHistory(request.userId(), initialStatus, createdAt),
                 items
         );
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
         docsSnapshotService.savePurchaseOrderSnapshot(saved);
+        documentRevisionHistoryService.recordPurchaseOrderEvent(
+                saved.getPoId(),
+                "CREATE",
+                request.userId(),
+                saved.getStatus().name(),
+                "PO 초안을 생성했습니다."
+        );
         if (saved.getPiId() != null && !saved.getPiId().isBlank()) {
             documentLinkService.linkPurchaseOrderToProformaInvoice(saved.getPoId(), saved.getPiId());
         }
@@ -158,15 +164,6 @@ public class PurchaseOrderCreationService {
 
     private String serializeLinkedDocuments() {
         return writeJson(List.of());
-    }
-
-    private String serializeRevisionHistory(Long userId, PurchaseOrderStatus status, LocalDateTime createdAt) {
-        return writeJson(List.of(Map.of(
-                "action", "CREATE",
-                "actorUserId", userId == null ? 0L : userId,
-                "status", status.name(),
-                "at", createdAt.toString()
-        )));
     }
 
     private String writeJson(Object value) {

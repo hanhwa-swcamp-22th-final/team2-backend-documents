@@ -23,7 +23,7 @@ public class ProductionOrderCommandService {
     }
 
     public ProductionOrder findById(String id) {
-        return productionOrderRepository.findById(id)
+        return productionOrderRepository.findByProductionOrderCode(id)
                 .orElseThrow(() -> new IllegalArgumentException("생산지시서 정보를 찾을 수 없습니다."));
     }
 

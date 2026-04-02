@@ -4,10 +4,10 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.team2.documents.command.domain.entity.PackingList;
+import com.team2.documents.query.model.PackingListView;
 
 @Mapper
 public interface PackingListQueryMapper {
-    PackingList findById(String plId);
-    List<PackingList> findAll();
+    PackingListView findById(String plId);
+    List<PackingListView> findAll();
 }

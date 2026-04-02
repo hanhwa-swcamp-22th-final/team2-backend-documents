@@ -28,11 +28,13 @@ import com.team2.documents.command.application.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.command.domain.entity.Collection;
 import com.team2.documents.command.domain.entity.ProductionOrder;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
+import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.Shipment;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
 import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
+import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.domain.repository.ApprovalRequestRepository;
 import com.team2.documents.command.domain.repository.CollectionRepository;
@@ -40,6 +42,7 @@ import com.team2.documents.command.domain.repository.CommercialInvoiceRepository
 import com.team2.documents.command.domain.repository.PackingListRepository;
 import com.team2.documents.command.domain.repository.ProductionOrderRepository;
 import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
+import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentRepository;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
@@ -69,6 +72,9 @@ class DocumentIntegrationTest {
 
     @Autowired
     private ProformaInvoiceRepository proformaInvoiceRepository;
+
+    @Autowired
+    private PurchaseOrderRepository purchaseOrderRepository;
 
     @MockitoBean
     private CommercialInvoiceRepository commercialInvoiceRepository;
@@ -134,10 +140,11 @@ class DocumentIntegrationTest {
     @Test
     @DisplayName("생산지시서 목록 조회 API는 H2에 저장된 데이터를 반환한다")
     void getProductionOrders_returnsPersistedProductionOrders() throws Exception {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO2025-0003", PurchaseOrderStatus.DRAFT));
         productionOrderRepository.save(new ProductionOrder(
                 "PRD-2026-001",
-                "PO2025-0003",
-                "PO-2025-0003",
+                purchaseOrder.getPurchaseOrderId(),
+                purchaseOrder.getPoId(),
                 LocalDate.of(2026, 3, 30),
                 LocalDate.of(2026, 4, 5),
                 "진행중",

@@ -32,7 +32,7 @@ class ProformaInvoiceCommandServiceTest {
     void findById_whenProformaInvoiceExists_thenReturnsProformaInvoice() {
         // given
         ProformaInvoice pi = new ProformaInvoice("PI2025-0001", ProformaInvoiceStatus.DRAFT);
-        when(proformaInvoiceRepository.findById("PI2025-0001")).thenReturn(Optional.of(pi));
+        when(proformaInvoiceRepository.findByPiCode("PI2025-0001")).thenReturn(Optional.of(pi));
 
         // when
         ProformaInvoice result = proformaInvoiceCommandService.findById("PI2025-0001");
@@ -45,7 +45,7 @@ class ProformaInvoiceCommandServiceTest {
     @DisplayName("존재하지 않는 PI ID로 조회 시 예외가 발생한다")
     void findById_whenProformaInvoiceDoesNotExist_thenThrowsException() {
         // given
-        when(proformaInvoiceRepository.findById("NOT-EXIST")).thenReturn(Optional.empty());
+        when(proformaInvoiceRepository.findByPiCode("NOT-EXIST")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalArgumentException.class,
@@ -71,7 +71,7 @@ class ProformaInvoiceCommandServiceTest {
     void updateStatus_whenProformaInvoiceExists_thenChangesStatus() {
         // given
         ProformaInvoice pi = new ProformaInvoice("PI2025-0001", ProformaInvoiceStatus.DRAFT);
-        when(proformaInvoiceRepository.findById("PI2025-0001")).thenReturn(Optional.of(pi));
+        when(proformaInvoiceRepository.findByPiCode("PI2025-0001")).thenReturn(Optional.of(pi));
         when(proformaInvoiceRepository.save(any(ProformaInvoice.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -85,7 +85,7 @@ class ProformaInvoiceCommandServiceTest {
     @DisplayName("존재하지 않는 PI 상태 변경 시 예외가 발생한다")
     void updateStatus_whenProformaInvoiceDoesNotExist_thenThrowsException() {
         // given
-        when(proformaInvoiceRepository.findById("NOT-EXIST")).thenReturn(Optional.empty());
+        when(proformaInvoiceRepository.findByPiCode("NOT-EXIST")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalArgumentException.class,

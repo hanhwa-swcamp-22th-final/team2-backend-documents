@@ -91,7 +91,7 @@ class ShipmentCommandServiceTest {
     void findByPoId_whenShipmentExists_thenReturnsShipment() {
         // given
         Shipment shipment = new Shipment(1L, "PO2025-0001", ShipmentStatus.READY);
-        when(shipmentRepository.findByPoId("PO2025-0001")).thenReturn(Optional.of(shipment));
+        when(shipmentRepository.findByPoCode("PO2025-0001")).thenReturn(Optional.of(shipment));
 
         // when
         Shipment result = shipmentCommandService.findByPoId("PO2025-0001");
@@ -104,7 +104,7 @@ class ShipmentCommandServiceTest {
     @DisplayName("존재하지 않는 PO ID로 출하현황 조회 시 예외가 발생한다")
     void findByPoId_whenShipmentDoesNotExist_thenThrowsException() {
         // given
-        when(shipmentRepository.findByPoId("NOT-EXIST")).thenReturn(Optional.empty());
+        when(shipmentRepository.findByPoCode("NOT-EXIST")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalArgumentException.class,

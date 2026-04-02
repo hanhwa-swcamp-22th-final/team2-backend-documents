@@ -4,8 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.command.domain.entity.Shipment;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.ShipmentQueryMapper;
+import com.team2.documents.query.model.ShipmentView;
 
 @Service
 public class ShipmentQueryService {
@@ -16,22 +17,22 @@ public class ShipmentQueryService {
         this.shipmentQueryMapper = shipmentQueryMapper;
     }
 
-    public Shipment findById(Long shipmentId) {
-        Shipment shipment = shipmentQueryMapper.findById(shipmentId);
+    public ShipmentView findById(Long shipmentId) {
+        ShipmentView shipment = shipmentQueryMapper.findById(shipmentId);
         if (shipment == null) {
-            throw new IllegalArgumentException("출하현황 정보를 찾을 수 없습니다.");
+            throw new ResourceNotFoundException("출하현황 정보를 찾을 수 없습니다.");
         }
         return shipment;
     }
 
-    public List<Shipment> findAll() {
+    public List<ShipmentView> findAll() {
         return shipmentQueryMapper.findAll();
     }
 
-    public Shipment findByPoId(String poId) {
-        Shipment shipment = shipmentQueryMapper.findByPoId(poId);
+    public ShipmentView findByPoId(String poId) {
+        ShipmentView shipment = shipmentQueryMapper.findByPoId(poId);
         if (shipment == null) {
-            throw new IllegalArgumentException("해당 PO의 출하현황 정보를 찾을 수 없습니다.");
+            throw new ResourceNotFoundException("해당 PO의 출하현황 정보를 찾을 수 없습니다.");
         }
         return shipment;
     }

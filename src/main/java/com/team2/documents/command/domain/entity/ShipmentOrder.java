@@ -5,19 +5,29 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "shipment_orders")
 public class ShipmentOrder {
 
     @Id
-    @Column(name = "shipment_order_id", nullable = false, length = 30)
-    private String shipmentOrderId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "shipment_order_id", nullable = false)
+    private Long shipmentOrderPk;
 
-    @Column(name = "po_id", nullable = false, length = 30)
-    private String poId;
+    @Column(name = "shipment_order_code", nullable = false, unique = true, length = 30)
+    private String shipmentOrderCode;
+
+    @Column(name = "po_id", nullable = false)
+    private Long poId;
+
+    @Transient
+    private String poCode;
 
     @Column(name = "shipment_issue_date")
     private LocalDate issueDate;
@@ -58,15 +68,35 @@ public class ShipmentOrder {
     public ShipmentOrder() {
     }
 
+    public Long getShipmentOrderPk() {
+        return shipmentOrderPk;
+    }
+
+    public void setShipmentOrderPk(Long shipmentOrderPk) {
+        this.shipmentOrderPk = shipmentOrderPk;
+    }
+
     public String getShipmentOrderId() {
-        return shipmentOrderId;
+        return shipmentOrderCode;
     }
 
     public void setShipmentOrderId(String shipmentOrderId) {
-        this.shipmentOrderId = shipmentOrderId;
+        this.shipmentOrderCode = shipmentOrderId;
+    }
+
+    public String getShipmentOrderCode() {
+        return shipmentOrderCode;
+    }
+
+    public void setShipmentOrderCode(String shipmentOrderCode) {
+        this.shipmentOrderCode = shipmentOrderCode;
     }
 
     public String getPoId() {
+        return poCode != null ? poCode : (poId == null ? null : String.valueOf(poId));
+    }
+
+    public Long getPurchaseOrderId() {
         return poId;
     }
 
@@ -82,8 +112,16 @@ public class ShipmentOrder {
         return managerId;
     }
 
-    public void setPoId(String poId) {
+    public void setPoId(Long poId) {
         this.poId = poId;
+    }
+
+    public String getPoCode() {
+        return poCode;
+    }
+
+    public void setPoCode(String poCode) {
+        this.poCode = poCode;
     }
 
     public String getStatus() {

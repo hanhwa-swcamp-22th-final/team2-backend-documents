@@ -4,8 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.command.domain.entity.ProductionOrder;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.ProductionOrderQueryMapper;
+import com.team2.documents.query.model.ProductionOrderView;
 
 @Service
 public class ProductionOrderQueryService {
@@ -16,15 +17,15 @@ public class ProductionOrderQueryService {
         this.productionOrderQueryMapper = productionOrderQueryMapper;
     }
 
-    public ProductionOrder findById(String productionOrderId) {
-        ProductionOrder productionOrder = productionOrderQueryMapper.findById(productionOrderId);
+    public ProductionOrderView findById(String productionOrderId) {
+        ProductionOrderView productionOrder = productionOrderQueryMapper.findById(productionOrderId);
         if (productionOrder == null) {
-            throw new IllegalArgumentException("생산지시서 정보를 찾을 수 없습니다.");
+            throw new ResourceNotFoundException("생산지시서 정보를 찾을 수 없습니다.");
         }
         return productionOrder;
     }
 
-    public List<ProductionOrder> findAll() {
+    public List<ProductionOrderView> findAll() {
         return productionOrderQueryMapper.findAll();
     }
 }

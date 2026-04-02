@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
+import com.team2.documents.common.error.ResourceNotFoundException;
 
 @Service
 @Transactional
@@ -18,8 +19,8 @@ public class ProformaInvoiceCommandService {
     }
 
     public ProformaInvoice findById(String piId) {
-        return proformaInvoiceRepository.findById(piId)
-                .orElseThrow(() -> new IllegalArgumentException("PI 정보를 찾을 수 없습니다."));
+        return proformaInvoiceRepository.findByPiCode(piId)
+                .orElseThrow(() -> new ResourceNotFoundException("PI 정보를 찾을 수 없습니다."));
     }
 
     public ProformaInvoice save(ProformaInvoice proformaInvoice) {

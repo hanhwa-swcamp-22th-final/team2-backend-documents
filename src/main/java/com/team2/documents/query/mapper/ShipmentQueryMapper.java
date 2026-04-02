@@ -4,14 +4,14 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.team2.documents.command.domain.entity.Shipment;
+import com.team2.documents.query.model.ShipmentView;
 
 @Mapper
 public interface ShipmentQueryMapper {
 
-    Shipment findById(Long shipmentId);
+    ShipmentView findById(Long shipmentId);
 
-    List<Shipment> findAll();
+    List<ShipmentView> findAll();
 
-    Shipment findByPoId(String poId);
+    ShipmentView findByPoId(String poId);
 }

@@ -7,8 +7,8 @@
 --   - po_items: PO 품목
 --   - commercial_invoices: 상업송장 (CI)     — PK: CI2025001
 --   - packing_lists: 포장명세서 (PL)         — PK: PL2025001
---   - production_orders: 생산지시서(선택 생성) — PK: PRD2025001
---   - shipment_orders: 출하지시서            — PK: SH2025001
+--   - production_orders: 생산지시서(선택 생성) — PK: production_order_id, 문서코드: production_order_code
+--   - shipment_orders: 출하지시서            — PK: shipment_order_id, 문서코드: shipment_order_code
 --   - approval_requests: 결재 요청
 --   - collections: 매출·수금 현황
 --   - shipments: 출하현황                    — PK: SHP2025001
@@ -63,7 +63,6 @@ CREATE TABLE proforma_invoices (
     -- JSON 컬럼
     pi_items_snapshot        JSON          NULL COMMENT '품목 스냅샷 (PDF/상세용)',
     pi_linked_documents      JSON          NULL COMMENT '연결 문서 목록 [{id, type, status}]',
-    pi_revision_history      JSON          NULL COMMENT '변경 이력',
 
     created_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -133,7 +132,6 @@ CREATE TABLE purchase_orders (
     -- JSON 컬럼
     po_items_snapshot            JSON          NULL COMMENT '품목 스냅샷 (PDF/상세용)',
     po_linked_documents          JSON          NULL COMMENT '연결 문서 목록 [{id, type, status}]',
-    po_revision_history          JSON          NULL COMMENT '변경 이력',
 
     created_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -230,7 +228,8 @@ CREATE TABLE docs_revision (
 -- 7. production_orders (생산지시서, 선택 생성)
 -- ------------------------------------------------------------
 CREATE TABLE production_orders (
-    production_order_id      VARCHAR(30)     NOT NULL,                  -- 문서번호: PRD2025001
+    production_order_id      BIGINT          NOT NULL AUTO_INCREMENT,
+    production_order_code    VARCHAR(30)     NOT NULL,                  -- 문서번호: MO2025001
     po_id                    BIGINT          NOT NULL,
     production_issue_date    DATE            NOT NULL,
     client_id                INT             NOT NULL,                  -- REFERENCES master.clients(id)
@@ -249,6 +248,7 @@ CREATE TABLE production_orders (
     updated_at               TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (production_order_id),
+    UNIQUE KEY uk_production_orders_code (production_order_code),
     INDEX idx_prod_po_id (po_id),
     INDEX idx_prod_status (production_status),
     INDEX idx_prod_client_id (client_id),
@@ -260,7 +260,8 @@ CREATE TABLE production_orders (
 -- 8. shipment_orders (출하지시서)
 -- ------------------------------------------------------------
 CREATE TABLE shipment_orders (
-    shipment_order_id        VARCHAR(30)     NOT NULL,                  -- 문서번호: SH2025001
+    shipment_order_id        BIGINT          NOT NULL AUTO_INCREMENT,
+    shipment_order_code      VARCHAR(30)     NOT NULL,                  -- 문서번호: SO2025001
     po_id                    BIGINT          NOT NULL,
     shipment_issue_date      DATE            NOT NULL,
     client_id                INT             NOT NULL,                  -- REFERENCES master.clients(id)
@@ -279,6 +280,7 @@ CREATE TABLE shipment_orders (
     updated_at               TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (shipment_order_id),
+    UNIQUE KEY uk_shipment_orders_code (shipment_order_code),
     INDEX idx_ship_po_id (po_id),
     INDEX idx_ship_status (shipment_status),
     INDEX idx_ship_client_id (client_id),

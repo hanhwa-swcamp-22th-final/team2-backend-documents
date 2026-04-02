@@ -14,9 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.ProformaInvoiceQueryMapper;
+import com.team2.documents.query.model.ProformaInvoiceView;
 
 @ExtendWith(MockitoExtension.class)
 class ProformaInvoiceQueryServiceTest {
@@ -31,11 +32,13 @@ class ProformaInvoiceQueryServiceTest {
     @DisplayName("PI ID로 조회 시 해당 PI를 반환한다")
     void findById_whenProformaInvoiceExists_thenReturnsProformaInvoice() {
         // given
-        ProformaInvoice pi = new ProformaInvoice("PI2025-0001", ProformaInvoiceStatus.DRAFT);
+        ProformaInvoiceView pi = new ProformaInvoiceView();
+        pi.setPiId("PI2025-0001");
+        pi.setStatus(ProformaInvoiceStatus.DRAFT.name());
         when(proformaInvoiceQueryMapper.findById("PI2025-0001")).thenReturn(pi);
 
         // when
-        ProformaInvoice result = proformaInvoiceQueryService.findById("PI2025-0001");
+        ProformaInvoiceView result = proformaInvoiceQueryService.findById("PI2025-0001");
 
         // then
         assertEquals("PI2025-0001", result.getPiId());
@@ -48,7 +51,7 @@ class ProformaInvoiceQueryServiceTest {
         when(proformaInvoiceQueryMapper.findById("NOT-EXIST")).thenReturn(null);
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> proformaInvoiceQueryService.findById("NOT-EXIST"));
     }
 
@@ -56,11 +59,13 @@ class ProformaInvoiceQueryServiceTest {
     @DisplayName("전체 PI 목록을 조회한다")
     void findAll_whenProformaInvoicesExist_thenReturnsAll() {
         // given
-        ProformaInvoice pi = new ProformaInvoice("PI2025-0001", ProformaInvoiceStatus.DRAFT);
+        ProformaInvoiceView pi = new ProformaInvoiceView();
+        pi.setPiId("PI2025-0001");
+        pi.setStatus(ProformaInvoiceStatus.DRAFT.name());
         when(proformaInvoiceQueryMapper.findAll()).thenReturn(List.of(pi));
 
         // when
-        List<ProformaInvoice> result = proformaInvoiceQueryService.findAll();
+        List<ProformaInvoiceView> result = proformaInvoiceQueryService.findAll();
 
         // then
         assertNotNull(result);

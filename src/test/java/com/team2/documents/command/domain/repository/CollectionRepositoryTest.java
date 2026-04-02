@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import com.team2.documents.command.domain.entity.Collection;
+import com.team2.documents.command.domain.entity.PurchaseOrder;
+import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 
 @DataJpaTest
 class CollectionRepositoryTest {
@@ -21,13 +23,17 @@ class CollectionRepositoryTest {
     @Autowired
     private CollectionRepository collectionRepository;
 
+    @Autowired
+    private PurchaseOrderRepository purchaseOrderRepository;
+
     @Test
     @DisplayName("매출·수금 엔티티를 H2에 저장하고 조회할 수 있다")
     void saveAndFindById_whenCollectionExists_thenReturnsEntity() {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO2025001", PurchaseOrderStatus.DRAFT));
         Collection saved = collectionRepository.save(new Collection(
                 null,
-                "PO2025001",
-                null,
+                purchaseOrder.getPurchaseOrderId(),
+                purchaseOrder.getPoId(),
                 1L,
                 null,
                 new BigDecimal("15000.00"),
@@ -49,10 +55,11 @@ class CollectionRepositoryTest {
     @Test
     @DisplayName("매출·수금 엔티티를 수정할 수 있다")
     void update_whenCollectionStatusChanges_thenPersistsUpdatedStatus() {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO2025002", PurchaseOrderStatus.DRAFT));
         Collection collection = collectionRepository.save(new Collection(
                 null,
-                "PO2025002",
-                null,
+                purchaseOrder.getPurchaseOrderId(),
+                purchaseOrder.getPoId(),
                 1L,
                 null,
                 new BigDecimal("12000.00"),
@@ -77,10 +84,11 @@ class CollectionRepositoryTest {
     @Test
     @DisplayName("매출·수금 엔티티를 삭제할 수 있다")
     void delete_whenCollectionExists_thenRemovesEntity() {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO2025003", PurchaseOrderStatus.DRAFT));
         Collection collection = collectionRepository.save(new Collection(
                 null,
-                "PO2025003",
-                null,
+                purchaseOrder.getPurchaseOrderId(),
+                purchaseOrder.getPoId(),
                 1L,
                 null,
                 new BigDecimal("1000.00"),
@@ -101,8 +109,10 @@ class CollectionRepositoryTest {
     @Test
     @DisplayName("매출·수금 엔티티 전체 목록을 조회할 수 있다")
     void findAll_whenCollectionsExist_thenReturnsAllEntities() {
-        collectionRepository.save(new Collection(null, "PO2025100", null, 1L, null, BigDecimal.ONE, null, null, null, "미수금", null, LocalDateTime.now(), LocalDateTime.now()));
-        collectionRepository.save(new Collection(null, "PO2025101", null, 1L, null, BigDecimal.TEN, null, null, null, "미수금", null, LocalDateTime.now(), LocalDateTime.now()));
+        PurchaseOrder purchaseOrder1 = purchaseOrderRepository.save(new PurchaseOrder("PO2025100", PurchaseOrderStatus.DRAFT));
+        PurchaseOrder purchaseOrder2 = purchaseOrderRepository.save(new PurchaseOrder("PO2025101", PurchaseOrderStatus.DRAFT));
+        collectionRepository.save(new Collection(null, purchaseOrder1.getPurchaseOrderId(), purchaseOrder1.getPoId(), 1L, null, BigDecimal.ONE, null, null, null, "미수금", null, LocalDateTime.now(), LocalDateTime.now()));
+        collectionRepository.save(new Collection(null, purchaseOrder2.getPurchaseOrderId(), purchaseOrder2.getPoId(), 1L, null, BigDecimal.TEN, null, null, null, "미수금", null, LocalDateTime.now(), LocalDateTime.now()));
 
         assertTrue(collectionRepository.findAll().size() >= 2);
     }

@@ -14,10 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.command.domain.entity.ApprovalRequest;
-import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
-import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.ApprovalRequestQueryMapper;
+import com.team2.documents.query.model.ApprovalRequestView;
 
 @ExtendWith(MockitoExtension.class)
 class ApprovalRequestQueryServiceTest {
@@ -32,13 +31,18 @@ class ApprovalRequestQueryServiceTest {
     @DisplayName("결재 요청 ID로 조회 시 해당 결재 요청을 반환한다")
     void findById_whenApprovalRequestExists_thenReturnsApprovalRequest() {
         // given
-        ApprovalRequest approvalRequest = new ApprovalRequest(
-                1L, ApprovalDocumentType.PO, "PO2025-0001",
-                ApprovalRequestType.REGISTRATION, 2L, 1L, "결재 요청", null);
+        ApprovalRequestView approvalRequest = new ApprovalRequestView();
+        approvalRequest.setApprovalRequestId(1L);
+        approvalRequest.setDocumentType("PO");
+        approvalRequest.setDocumentId("PO2025-0001");
+        approvalRequest.setRequestType("REGISTRATION");
+        approvalRequest.setRequesterId(2L);
+        approvalRequest.setApproverId(1L);
+        approvalRequest.setComment("결재 요청");
         when(approvalRequestQueryMapper.findById(1L)).thenReturn(approvalRequest);
 
         // when
-        ApprovalRequest result = approvalRequestQueryService.findById(1L);
+        ApprovalRequestView result = approvalRequestQueryService.findById(1L);
 
         // then
         assertEquals(1L, result.getApprovalRequestId());
@@ -51,7 +55,7 @@ class ApprovalRequestQueryServiceTest {
         when(approvalRequestQueryMapper.findById(999L)).thenReturn(null);
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> approvalRequestQueryService.findById(999L));
     }
 
@@ -59,14 +63,19 @@ class ApprovalRequestQueryServiceTest {
     @DisplayName("문서 유형, 문서 ID, 상태로 결재 요청을 조회한다")
     void findByDocumentTypeAndDocumentIdAndStatus_whenExists_thenReturnsApprovalRequest() {
         // given
-        ApprovalRequest approvalRequest = new ApprovalRequest(
-                1L, ApprovalDocumentType.PO, "PO2025-0001",
-                ApprovalRequestType.REGISTRATION, 2L, 1L, "결재 요청", null);
+        ApprovalRequestView approvalRequest = new ApprovalRequestView();
+        approvalRequest.setApprovalRequestId(1L);
+        approvalRequest.setDocumentType("PO");
+        approvalRequest.setDocumentId("PO2025-0001");
+        approvalRequest.setRequestType("REGISTRATION");
+        approvalRequest.setRequesterId(2L);
+        approvalRequest.setApproverId(1L);
+        approvalRequest.setComment("결재 요청");
         when(approvalRequestQueryMapper.findByDocumentTypeAndDocumentIdAndStatus("PO", "PO2025-0001", "PENDING"))
                 .thenReturn(approvalRequest);
 
         // when
-        ApprovalRequest result = approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(
+        ApprovalRequestView result = approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(
                 "PO", "PO2025-0001", "PENDING");
 
         // then
@@ -81,7 +90,7 @@ class ApprovalRequestQueryServiceTest {
                 .thenReturn(null);
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(
                         "PO", "NOT-EXIST", "PENDING"));
     }
@@ -90,13 +99,18 @@ class ApprovalRequestQueryServiceTest {
     @DisplayName("전체 결재 요청 목록을 조회한다")
     void findAll_whenApprovalRequestsExist_thenReturnsAll() {
         // given
-        ApprovalRequest approvalRequest = new ApprovalRequest(
-                1L, ApprovalDocumentType.PO, "PO2025-0001",
-                ApprovalRequestType.REGISTRATION, 2L, 1L, "결재 요청", null);
+        ApprovalRequestView approvalRequest = new ApprovalRequestView();
+        approvalRequest.setApprovalRequestId(1L);
+        approvalRequest.setDocumentType("PO");
+        approvalRequest.setDocumentId("PO2025-0001");
+        approvalRequest.setRequestType("REGISTRATION");
+        approvalRequest.setRequesterId(2L);
+        approvalRequest.setApproverId(1L);
+        approvalRequest.setComment("결재 요청");
         when(approvalRequestQueryMapper.findAll()).thenReturn(List.of(approvalRequest));
 
         // when
-        List<ApprovalRequest> result = approvalRequestQueryService.findAll();
+        List<ApprovalRequestView> result = approvalRequestQueryService.findAll();
 
         // then
         assertNotNull(result);

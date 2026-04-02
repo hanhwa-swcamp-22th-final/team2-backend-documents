@@ -17,8 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.command.domain.entity.Collection;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.CollectionQueryMapper;
+import com.team2.documents.query.model.CollectionView;
 
 @ExtendWith(MockitoExtension.class)
 class CollectionQueryServiceTest {
@@ -33,14 +34,24 @@ class CollectionQueryServiceTest {
     @DisplayName("ID로 매출수금 현황을 조회한다")
     void findById_whenCollectionExists_thenReturnsCollection() {
         // given
-        Collection collection = new Collection(1L, "PO2025-0001", "PO-2026-001", 1L, "ABC Trading",
-                new BigDecimal("15000.00"), new BigDecimal("10000.00"), new BigDecimal("5000.00"),
-                "USD", "미수금", LocalDate.of(2026, 5, 15),
-                LocalDateTime.of(2026, 3, 5, 9, 0), LocalDateTime.of(2026, 5, 15, 14, 0));
+        CollectionView collection = new CollectionView();
+        collection.setCollectionId(1L);
+        collection.setPoId("PO2025-0001");
+        collection.setPoNo("PO-2026-001");
+        collection.setClientId(1L);
+        collection.setClientName("ABC Trading");
+        collection.setTotalAmount(new BigDecimal("15000.00"));
+        collection.setCollectedAmount(new BigDecimal("10000.00"));
+        collection.setRemainingAmount(new BigDecimal("5000.00"));
+        collection.setCurrencyCode("USD");
+        collection.setStatus("미수금");
+        collection.setCollectionDate(LocalDate.of(2026, 5, 15));
+        collection.setCreatedAt(LocalDateTime.of(2026, 3, 5, 9, 0));
+        collection.setUpdatedAt(LocalDateTime.of(2026, 5, 15, 14, 0));
         when(collectionQueryMapper.findById(1L)).thenReturn(collection);
 
         // when
-        Collection result = collectionQueryService.findById(1L);
+        CollectionView result = collectionQueryService.findById(1L);
 
         // then
         assertEquals(1L, result.getCollectionId());
@@ -53,7 +64,7 @@ class CollectionQueryServiceTest {
         when(collectionQueryMapper.findById(999L)).thenReturn(null);
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> collectionQueryService.findById(999L));
     }
 
@@ -61,14 +72,24 @@ class CollectionQueryServiceTest {
     @DisplayName("전체 매출수금 현황 목록을 조회한다")
     void findAll_whenCollectionsExist_thenReturnsAll() {
         // given
-        Collection collection = new Collection(1L, "PO2025-0001", "PO-2026-001", 1L, "ABC Trading",
-                new BigDecimal("15000.00"), new BigDecimal("10000.00"), new BigDecimal("5000.00"),
-                "USD", "미수금", LocalDate.of(2026, 5, 15),
-                LocalDateTime.of(2026, 3, 5, 9, 0), LocalDateTime.of(2026, 5, 15, 14, 0));
+        CollectionView collection = new CollectionView();
+        collection.setCollectionId(1L);
+        collection.setPoId("PO2025-0001");
+        collection.setPoNo("PO-2026-001");
+        collection.setClientId(1L);
+        collection.setClientName("ABC Trading");
+        collection.setTotalAmount(new BigDecimal("15000.00"));
+        collection.setCollectedAmount(new BigDecimal("10000.00"));
+        collection.setRemainingAmount(new BigDecimal("5000.00"));
+        collection.setCurrencyCode("USD");
+        collection.setStatus("미수금");
+        collection.setCollectionDate(LocalDate.of(2026, 5, 15));
+        collection.setCreatedAt(LocalDateTime.of(2026, 3, 5, 9, 0));
+        collection.setUpdatedAt(LocalDateTime.of(2026, 5, 15, 14, 0));
         when(collectionQueryMapper.findAll()).thenReturn(List.of(collection));
 
         // when
-        List<Collection> result = collectionQueryService.findAll();
+        List<CollectionView> result = collectionQueryService.findAll();
 
         // then
         assertNotNull(result);

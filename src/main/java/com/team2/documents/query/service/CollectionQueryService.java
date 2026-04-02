@@ -4,8 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.command.domain.entity.Collection;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.CollectionQueryMapper;
+import com.team2.documents.query.model.CollectionView;
 
 @Service
 public class CollectionQueryService {
@@ -16,15 +17,15 @@ public class CollectionQueryService {
         this.collectionQueryMapper = collectionQueryMapper;
     }
 
-    public Collection findById(Long id) {
-        Collection collection = collectionQueryMapper.findById(id);
+    public CollectionView findById(Long id) {
+        CollectionView collection = collectionQueryMapper.findById(id);
         if (collection == null) {
-            throw new IllegalArgumentException("매출·수금 현황 정보를 찾을 수 없습니다.");
+            throw new ResourceNotFoundException("매출·수금 현황 정보를 찾을 수 없습니다.");
         }
         return collection;
     }
 
-    public List<Collection> findAll() {
+    public List<CollectionView> findAll() {
         return collectionQueryMapper.findAll();
     }
 }

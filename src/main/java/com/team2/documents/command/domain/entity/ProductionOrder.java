@@ -6,6 +6,8 @@ import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -17,11 +19,18 @@ import lombok.Setter;
 public class ProductionOrder {
 
     @Id
-    @Column(name = "production_order_id", nullable = false, length = 30)
-    private String productionOrderId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "production_order_id", nullable = false)
+    private Long productionOrderPk;
 
-    @Column(name = "po_id", nullable = false, length = 30)
-    private String poId;
+    @Column(name = "production_order_code", nullable = false, unique = true, length = 30)
+    private String productionOrderCode;
+
+    @Column(name = "po_id", nullable = false)
+    private Long poId;
+
+    @Transient
+    private String poCode;
 
     @Column(name = "production_issue_date", nullable = false)
     private LocalDate orderDate;
@@ -54,9 +63,6 @@ public class ProductionOrder {
     private String linkedDocuments;
 
     @Transient
-    private String poNo;
-
-    @Transient
     private List<String> items;
 
     @Column(name = "created_at", insertable = false, updatable = false)
@@ -70,6 +76,7 @@ public class ProductionOrder {
 
     public ProductionOrder(String productionOrderId,
                            String poId,
+                           String poCode,
                            LocalDate orderDate,
                            Integer clientId,
                            Long managerId,
@@ -82,8 +89,28 @@ public class ProductionOrder {
                            String linkedDocuments,
                            LocalDateTime createdAt,
                            LocalDateTime updatedAt) {
-        this.productionOrderId = productionOrderId;
+        this(productionOrderId, 0L, poId, orderDate, clientId, managerId, dueDate, status,
+                clientName, country, managerName, itemName, linkedDocuments, createdAt, updatedAt);
+    }
+
+    public ProductionOrder(String productionOrderId,
+                           Long poId,
+                           String poCode,
+                           LocalDate orderDate,
+                           Integer clientId,
+                           Long managerId,
+                           LocalDate dueDate,
+                           String status,
+                           String clientName,
+                           String country,
+                           String managerName,
+                           String itemName,
+                           String linkedDocuments,
+                           LocalDateTime createdAt,
+                           LocalDateTime updatedAt) {
+        this.productionOrderCode = productionOrderId;
         this.poId = poId;
+        this.poCode = poCode;
         this.orderDate = orderDate;
         this.clientId = clientId;
         this.managerId = managerId;
@@ -100,24 +127,43 @@ public class ProductionOrder {
 
     public ProductionOrder(String productionOrderId,
                            String poId,
-                           String poNo,
+                           String poCode,
                            LocalDate orderDate,
                            LocalDate dueDate,
                            String status,
                            List<String> items,
                            LocalDateTime createdAt,
                            LocalDateTime updatedAt) {
-        this(productionOrderId, poId, orderDate, 0, null, dueDate, status,
+        this(productionOrderId, 0L, poId, orderDate, dueDate, status, items, createdAt, updatedAt);
+    }
+
+    public ProductionOrder(String productionOrderId,
+                           Long poId,
+                           String poCode,
+                           LocalDate orderDate,
+                           LocalDate dueDate,
+                           String status,
+                           List<String> items,
+                           LocalDateTime createdAt,
+                           LocalDateTime updatedAt) {
+        this(productionOrderId, poId, poCode, orderDate, 0, null, dueDate, status,
                 null, null, null, null, null, createdAt, updatedAt);
-        this.poNo = poNo;
         this.items = items;
     }
 
+    public Long getProductionOrderPk() {
+        return productionOrderPk;
+    }
+
     public String getProductionOrderId() {
-        return productionOrderId;
+        return productionOrderCode;
     }
 
     public String getPoId() {
+        return poCode != null ? poCode : (poId == null ? null : String.valueOf(poId));
+    }
+
+    public Long getPurchaseOrderId() {
         return poId;
     }
 
@@ -130,7 +176,7 @@ public class ProductionOrder {
     }
 
     public String getPoNo() {
-        return poNo;
+        return poCode;
     }
 
     public LocalDate getOrderDate() {
@@ -163,6 +209,10 @@ public class ProductionOrder {
 
     public String getLinkedDocuments() {
         return linkedDocuments;
+    }
+
+    public void setPoCode(String poCode) {
+        this.poCode = poCode;
     }
 
     public List<String> getItems() {

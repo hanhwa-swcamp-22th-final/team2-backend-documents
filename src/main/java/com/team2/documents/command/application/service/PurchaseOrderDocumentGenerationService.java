@@ -10,6 +10,7 @@ import com.team2.documents.command.domain.repository.CommercialInvoiceRepository
 import com.team2.documents.command.domain.repository.PackingListJpaRepository;
 import com.team2.documents.command.domain.repository.PackingListRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderRepository;
+import com.team2.documents.common.error.BusinessConflictException;
 
 @Service
 @Transactional
@@ -51,7 +52,7 @@ public class PurchaseOrderDocumentGenerationService {
     public void generateOnConfirmation(String poId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
         if (!PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())) {
-            throw new IllegalStateException("확정 상태의 PO만 자동 생성 문서를 가질 수 있습니다.");
+            throw new BusinessConflictException("확정 상태의 PO만 자동 생성 문서를 가질 수 있습니다.");
         }
 
         String ciId = documentNumberGeneratorService.nextCommercialInvoiceId();

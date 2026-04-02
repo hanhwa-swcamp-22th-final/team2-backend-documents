@@ -4,8 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.command.domain.entity.PackingList;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.PackingListQueryMapper;
+import com.team2.documents.query.model.PackingListView;
 
 @Service
 public class PackingListQueryService {
@@ -16,15 +17,15 @@ public class PackingListQueryService {
         this.packingListQueryMapper = packingListQueryMapper;
     }
 
-    public PackingList findById(String plId) {
-        PackingList packingList = packingListQueryMapper.findById(plId);
+    public PackingListView findById(String plId) {
+        PackingListView packingList = packingListQueryMapper.findById(plId);
         if (packingList == null) {
-            throw new IllegalArgumentException("PL 정보를 찾을 수 없습니다.");
+            throw new ResourceNotFoundException("PL 정보를 찾을 수 없습니다.");
         }
         return packingList;
     }
 
-    public List<PackingList> findAll() {
+    public List<PackingListView> findAll() {
         return packingListQueryMapper.findAll();
     }
 }

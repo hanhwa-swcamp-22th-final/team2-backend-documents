@@ -3,9 +3,11 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.ShipmentOrderQueryMapper">
 
-    <resultMap id="shipmentOrderResultMap" type="com.team2.documents.command.domain.entity.ShipmentOrder">
-        <id property="shipmentOrderId" column="shipment_order_id"/>
-        <result property="poId" column="po_id"/>
+    <resultMap id="shipmentOrderResultMap" type="com.team2.documents.query.model.ShipmentOrderView">
+        <id property="shipmentOrderPk" column="shipment_order_id"/>
+        <result property="shipmentOrderId" column="shipment_order_code"/>
+        <result property="poId" column="po_code"/>
+        <result property="purchaseOrderId" column="po_id"/>
         <result property="issueDate" column="shipment_issue_date"/>
         <result property="clientId" column="client_id"/>
         <result property="managerId" column="manager_id"/>
@@ -21,19 +23,21 @@
     </resultMap>
 
     <select id="findById" resultMap="shipmentOrderResultMap">
-        SELECT shipment_order_id, po_id, shipment_issue_date, client_id, manager_id, shipment_status,
-               shipment_due_date, shipment_client_name, shipment_country, shipment_manager_name,
-               shipment_item_name, shipment_linked_documents, created_at, updated_at
-        FROM shipment_orders
-        WHERE shipment_order_id = #{shipmentOrderId}
+        SELECT so.shipment_order_id, so.shipment_order_code, so.po_id, po.po_code, so.shipment_issue_date, so.client_id, so.manager_id, so.shipment_status,
+               so.shipment_due_date, so.shipment_client_name, so.shipment_country, so.shipment_manager_name,
+               so.shipment_item_name, so.shipment_linked_documents, so.created_at, so.updated_at
+        FROM shipment_orders so
+        JOIN purchase_orders po ON so.po_id = po.po_id
+        WHERE so.shipment_order_code = #{shipmentOrderId}
     </select>
 
     <select id="findAll" resultMap="shipmentOrderResultMap">
-        SELECT shipment_order_id, po_id, shipment_issue_date, client_id, manager_id, shipment_status,
-               shipment_due_date, shipment_client_name, shipment_country, shipment_manager_name,
-               shipment_item_name, shipment_linked_documents, created_at, updated_at
-        FROM shipment_orders
-        ORDER BY shipment_order_id
+        SELECT so.shipment_order_id, so.shipment_order_code, so.po_id, po.po_code, so.shipment_issue_date, so.client_id, so.manager_id, so.shipment_status,
+               so.shipment_due_date, so.shipment_client_name, so.shipment_country, so.shipment_manager_name,
+               so.shipment_item_name, so.shipment_linked_documents, so.created_at, so.updated_at
+        FROM shipment_orders so
+        JOIN purchase_orders po ON so.po_id = po.po_id
+        ORDER BY so.shipment_order_id
     </select>
 
 </mapper>

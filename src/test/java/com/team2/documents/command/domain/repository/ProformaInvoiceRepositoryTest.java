@@ -23,7 +23,7 @@ class ProformaInvoiceRepositoryTest {
     void saveAndFindById_whenProformaInvoiceExists_thenReturnsEntity() {
         proformaInvoiceRepository.save(new ProformaInvoice("PI2025-0001", ProformaInvoiceStatus.DRAFT));
 
-        ProformaInvoice result = proformaInvoiceRepository.findById("PI2025-0001").orElseThrow();
+        ProformaInvoice result = proformaInvoiceRepository.findByPiCode("PI2025-0001").orElseThrow();
 
         assertEquals("PI2025-0001", result.getPiId());
         assertEquals(ProformaInvoiceStatus.DRAFT, result.getStatus());
@@ -34,11 +34,11 @@ class ProformaInvoiceRepositoryTest {
     void update_whenProformaInvoiceStatusChanges_thenPersistsUpdatedStatus() {
         proformaInvoiceRepository.save(new ProformaInvoice("PI2025-0002", ProformaInvoiceStatus.DRAFT));
 
-        ProformaInvoice proformaInvoice = proformaInvoiceRepository.findById("PI2025-0002").orElseThrow();
+        ProformaInvoice proformaInvoice = proformaInvoiceRepository.findByPiCode("PI2025-0002").orElseThrow();
         proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
         proformaInvoiceRepository.save(proformaInvoice);
 
-        ProformaInvoice result = proformaInvoiceRepository.findById("PI2025-0002").orElseThrow();
+        ProformaInvoice result = proformaInvoiceRepository.findByPiCode("PI2025-0002").orElseThrow();
         assertEquals(ProformaInvoiceStatus.CONFIRMED, result.getStatus());
     }
 
@@ -50,7 +50,7 @@ class ProformaInvoiceRepositoryTest {
 
         proformaInvoiceRepository.delete(proformaInvoice);
 
-        assertFalse(proformaInvoiceRepository.findById("PI2025-0003").isPresent());
+        assertFalse(proformaInvoiceRepository.findByPiCode("PI2025-0003").isPresent());
     }
 
     @Test

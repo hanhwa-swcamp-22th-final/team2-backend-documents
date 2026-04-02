@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.team2.documents.query.mapper.DocsRevisionQueryMapper">
+
+    <select id="findRevisionPayloadsByDocTypeAndDocId" resultType="string">
+        SELECT snapshot_data
+        FROM docs_revision
+        WHERE doc_type = #{docType}
+          AND doc_id = #{docId}
+        ORDER BY created_at ASC, docs_revision_id ASC
+    </select>
+
+</mapper>

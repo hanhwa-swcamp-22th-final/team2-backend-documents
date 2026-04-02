@@ -27,10 +27,10 @@ public class Collection {
     private Long collectionId;
 
     @Column(name = "po_id", nullable = false)
-    private String poId;
+    private Long poId;
 
     @Transient
-    private String poNo;
+    private String poCode;
 
     @Column(name = "client_id", nullable = false)
     private Long clientId;
@@ -77,9 +77,26 @@ public class Collection {
                       LocalDate collectionDate,
                       LocalDateTime createdAt,
                       LocalDateTime updatedAt) {
+        this(collectionId, 0L, poId, clientId, clientName, totalAmount,
+                collectedAmount, remainingAmount, currencyCode, status, collectionDate, createdAt, updatedAt);
+    }
+
+    public Collection(Long collectionId,
+                      Long poId,
+                      String poCode,
+                      Long clientId,
+                      String clientName,
+                      BigDecimal totalAmount,
+                      BigDecimal collectedAmount,
+                      BigDecimal remainingAmount,
+                      String currencyCode,
+                      String status,
+                      LocalDate collectionDate,
+                      LocalDateTime createdAt,
+                      LocalDateTime updatedAt) {
         this.collectionId = collectionId;
         this.poId = poId;
-        this.poNo = poNo;
+        this.poCode = poCode;
         this.clientId = clientId;
         this.clientName = clientName;
         this.totalAmount = totalAmount;
@@ -97,11 +114,15 @@ public class Collection {
     }
 
     public String getPoId() {
-        return poId;
+        return poCode != null ? poCode : (poId == null ? null : String.valueOf(poId));
     }
 
     public String getPoNo() {
-        return poNo;
+        return poCode;
+    }
+
+    public Long getPurchaseOrderId() {
+        return poId;
     }
 
     public Long getClientId() {

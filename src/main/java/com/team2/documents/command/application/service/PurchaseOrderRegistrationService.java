@@ -10,6 +10,8 @@ import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
+import com.team2.documents.common.error.BusinessConflictException;
+import com.team2.documents.common.error.ResourceNotFoundException;
 
 @Service
 @Transactional
@@ -37,10 +39,10 @@ public class PurchaseOrderRegistrationService {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
 
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("사용자 직급 정보를 찾을 수 없습니다."));
 
         if (!PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())) {
-            throw new IllegalStateException("초안 상태의 PO만 등록 요청할 수 있습니다.");
+            throw new BusinessConflictException("초안 상태의 PO만 등록 요청할 수 있습니다.");
         }
 
         java.util.Map<String, Object> beforeSnapshot = documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);

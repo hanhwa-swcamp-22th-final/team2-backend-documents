@@ -1,12 +1,13 @@
-package com.team2.documents.command.domain.repository;
+package com.team2.documents.command.infrastructure.repository;
 
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import com.team2.documents.command.domain.entity.enums.PositionLevel;
+import com.team2.documents.command.domain.repository.UserPositionRepository;
 import com.team2.documents.command.infrastructure.client.AuthFeignClient;
 import com.team2.documents.command.infrastructure.client.AuthUserResponse;
-import com.team2.documents.command.domain.entity.enums.PositionLevel;
 
 @Component
 public class UserPositionRepositoryImpl implements UserPositionRepository {

@@ -111,9 +111,6 @@ public class PurchaseOrder {
     @Column(name = "po_linked_documents", columnDefinition = "TEXT")
     private String linkedDocuments;
 
-    @Column(name = "po_revision_history", columnDefinition = "TEXT")
-    private String revisionHistory;
-
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -167,7 +164,6 @@ public class PurchaseOrder {
                          String approvalReview,
                          String itemsSnapshot,
                          String linkedDocuments,
-                         String revisionHistory,
                          List<PurchaseOrderItem> items) {
         this.poCode = poId;
         this.piId = piId;
@@ -195,7 +191,6 @@ public class PurchaseOrder {
         this.approvalReview = approvalReview;
         this.itemsSnapshot = itemsSnapshot;
         this.linkedDocuments = linkedDocuments;
-        this.revisionHistory = revisionHistory;
         replaceItems(items);
     }
 
@@ -342,10 +337,6 @@ public class PurchaseOrder {
 
     public String getLinkedDocuments() {
         return linkedDocuments;
-    }
-
-    public String getRevisionHistory() {
-        return revisionHistory;
     }
 
     public LocalDateTime getCreatedAt() {

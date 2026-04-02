@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.PurchaseOrderQueryMapper">
 
-    <resultMap id="purchaseOrderResultMap" type="com.team2.documents.command.domain.entity.PurchaseOrder">
+    <resultMap id="purchaseOrderResultMap" type="com.team2.documents.query.model.PurchaseOrderView">
         <id property="purchaseOrderId" column="po_id"/>
         <result property="poId" column="po_code"/>
         <result property="piId" column="pi_id"/>
@@ -31,14 +31,13 @@
         <result property="approvalReview" column="po_approval_review"/>
         <result property="itemsSnapshot" column="po_items_snapshot"/>
         <result property="linkedDocuments" column="po_linked_documents"/>
-        <result property="revisionHistory" column="po_revision_history"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
-        <collection property="items" ofType="com.team2.documents.command.domain.entity.PurchaseOrderItem"
+        <collection property="items" ofType="com.team2.documents.query.model.PurchaseOrderItemView"
                     column="po_id" select="findItemsByPoId"/>
     </resultMap>
 
-    <resultMap id="purchaseOrderItemResultMap" type="com.team2.documents.command.domain.entity.PurchaseOrderItem">
+    <resultMap id="purchaseOrderItemResultMap" type="com.team2.documents.query.model.PurchaseOrderItemView">
         <id property="poItemId" column="po_item_id"/>
         <result property="poId" column="po_id"/>
         <result property="itemId" column="item_id"/>
@@ -56,7 +55,7 @@
                po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
                po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,
                po_approval_action, po_approval_requested_by, po_approval_requested_at, po_approval_review,
-               po_items_snapshot, po_linked_documents, po_revision_history, created_at, updated_at
+               po_items_snapshot, po_linked_documents, created_at, updated_at
         FROM purchase_orders
         WHERE po_code = #{poId}
     </select>
@@ -67,7 +66,7 @@
                po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
                po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,
                po_approval_action, po_approval_requested_by, po_approval_requested_at, po_approval_review,
-               po_items_snapshot, po_linked_documents, po_revision_history, created_at, updated_at
+               po_items_snapshot, po_linked_documents, created_at, updated_at
         FROM purchase_orders
     </select>
 

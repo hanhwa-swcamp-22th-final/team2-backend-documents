@@ -38,6 +38,7 @@ public class PurchaseOrderProductionOrderGenerationService {
         String productionOrderId = documentNumberGeneratorService.nextProductionOrderId();
         productionOrderCommandService.save(new ProductionOrder(
                 productionOrderId,
+                purchaseOrder.getPurchaseOrderId(),
                 poId,
                 java.time.LocalDate.now(),
                 purchaseOrder.getClientId(),

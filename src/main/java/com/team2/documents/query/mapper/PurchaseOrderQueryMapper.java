@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.team2.documents.command.domain.entity.PurchaseOrder;
+import com.team2.documents.query.model.PurchaseOrderView;
 
 @Mapper
 public interface PurchaseOrderQueryMapper {
 
-    PurchaseOrder findById(String poId);
+    PurchaseOrderView findById(String poId);
 
-    List<PurchaseOrder> findAll();
+    List<PurchaseOrderView> findAll();
 }

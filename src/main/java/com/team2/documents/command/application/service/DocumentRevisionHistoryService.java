@@ -7,8 +7,11 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
+import com.team2.documents.command.domain.entity.DocsRevision;
+import com.team2.documents.command.domain.repository.DocsRevisionRepository;
 
 @Service
 @Transactional
@@ -17,13 +20,19 @@ public class DocumentRevisionHistoryService {
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final ProformaInvoiceCommandService proformaInvoiceCommandService;
     private final DocumentJsonSupportService documentJsonSupportService;
+    private final DocsRevisionRepository docsRevisionRepository;
+    private final ObjectMapper objectMapper;
 
     public DocumentRevisionHistoryService(PurchaseOrderCommandService purchaseOrderCommandService,
                                           ProformaInvoiceCommandService proformaInvoiceCommandService,
-                                          DocumentJsonSupportService documentJsonSupportService) {
+                                          DocumentJsonSupportService documentJsonSupportService,
+                                          DocsRevisionRepository docsRevisionRepository,
+                                          ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.documentJsonSupportService = documentJsonSupportService;
+        this.docsRevisionRepository = docsRevisionRepository;
+        this.objectMapper = objectMapper;
     }
 
     public Map<String, Object> capturePurchaseOrderSnapshot(PurchaseOrder purchaseOrder) {
@@ -67,16 +76,8 @@ public class DocumentRevisionHistoryService {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
         Map<String, Object> changes = beforeSnapshot == null ? Map.of()
                 : documentJsonSupportService.diffSnapshots(beforeSnapshot, capturePurchaseOrderSnapshot(purchaseOrder));
-        purchaseOrder.setRevisionHistory(documentJsonSupportService.appendRevision(
-                purchaseOrder.getRevisionHistory(),
-                action,
-                actorUserId,
-                status,
-                message,
-                LocalDateTime.now(),
-                changes
-        ));
-        purchaseOrderCommandService.save(purchaseOrder);
+        persistRevisionEvent("PO", purchaseOrder.getPurchaseOrderId(), purchaseOrder.getPoId(),
+                action, actorUserId, status, message, changes);
     }
 
     public void recordProformaInvoiceEvent(String piId, String action, Long actorUserId, String status, String message) {
@@ -92,15 +93,34 @@ public class DocumentRevisionHistoryService {
         ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
         Map<String, Object> changes = beforeSnapshot == null ? Map.of()
                 : documentJsonSupportService.diffSnapshots(beforeSnapshot, captureProformaInvoiceSnapshot(proformaInvoice));
-        proformaInvoice.setRevisionHistory(documentJsonSupportService.appendRevision(
-                proformaInvoice.getRevisionHistory(),
-                action,
-                actorUserId,
-                status,
-                message,
-                LocalDateTime.now(),
-                changes
-        ));
-        proformaInvoiceCommandService.save(proformaInvoice);
+        persistRevisionEvent("PI", proformaInvoice.getProformaInvoiceId(), proformaInvoice.getPiId(),
+                action, actorUserId, status, message, changes);
+    }
+
+    private void persistRevisionEvent(String docType,
+                                      Long docId,
+                                      String docCode,
+                                      String action,
+                                      Long actorUserId,
+                                      String status,
+                                      String message,
+                                      Map<String, Object> changes) {
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("entryType", "REVISION");
+        event.put("docType", docType);
+        event.put("docCode", docCode);
+        event.put("action", action);
+        event.put("actorUserId", actorUserId);
+        event.put("status", status);
+        event.put("message", message);
+        event.put("at", LocalDateTime.now().toString());
+        if (changes != null && !changes.isEmpty()) {
+            event.put("changes", changes);
+        }
+        try {
+            docsRevisionRepository.save(new DocsRevision(docType, docId, objectMapper.writeValueAsString(event)));
+        } catch (Exception exception) {
+            throw new IllegalStateException("문서 이력 저장에 실패했습니다.", exception);
+        }
     }
 }

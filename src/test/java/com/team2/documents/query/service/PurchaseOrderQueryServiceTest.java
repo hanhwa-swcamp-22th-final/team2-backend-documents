@@ -13,9 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.PurchaseOrderQueryMapper;
+import com.team2.documents.query.model.PurchaseOrderView;
 
 @ExtendWith(MockitoExtension.class)
 class PurchaseOrderQueryServiceTest {
@@ -37,11 +38,13 @@ class PurchaseOrderQueryServiceTest {
     @DisplayName("PO ID로 조회 시 해당 PO를 반환한다")
     void findById_whenPurchaseOrderExists_thenReturnsPurchaseOrder() {
         // given
-        PurchaseOrder purchaseOrder = new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.DRAFT);
+        PurchaseOrderView purchaseOrder = new PurchaseOrderView();
+        purchaseOrder.setPoId("PO2025-0001");
+        purchaseOrder.setStatus(PurchaseOrderStatus.DRAFT.name());
         when(purchaseOrderQueryMapper.findById("PO2025-0001")).thenReturn(purchaseOrder);
 
         // when
-        PurchaseOrder result = purchaseOrderQueryService.findById("PO2025-0001");
+        PurchaseOrderView result = purchaseOrderQueryService.findById("PO2025-0001");
 
         // then
         assertEquals("PO2025-0001", result.getPoId());
@@ -54,7 +57,7 @@ class PurchaseOrderQueryServiceTest {
         when(purchaseOrderQueryMapper.findById("NOT-EXIST")).thenReturn(null);
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> purchaseOrderQueryService.findById("NOT-EXIST"));
     }
 
@@ -62,11 +65,13 @@ class PurchaseOrderQueryServiceTest {
     @DisplayName("전체 PO 목록을 조회한다")
     void findAll_whenPurchaseOrdersExist_thenReturnsAll() {
         // given
-        PurchaseOrder purchaseOrder = new PurchaseOrder("PO2025-0001", PurchaseOrderStatus.DRAFT);
+        PurchaseOrderView purchaseOrder = new PurchaseOrderView();
+        purchaseOrder.setPoId("PO2025-0001");
+        purchaseOrder.setStatus(PurchaseOrderStatus.DRAFT.name());
         when(purchaseOrderQueryMapper.findAll()).thenReturn(List.of(purchaseOrder));
 
         // when
-        List<PurchaseOrder> result = purchaseOrderQueryService.findAll();
+        List<PurchaseOrderView> result = purchaseOrderQueryService.findAll();
 
         // then
         assertNotNull(result);

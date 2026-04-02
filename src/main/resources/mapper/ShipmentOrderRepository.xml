@@ -5,7 +5,7 @@
 
     <insert id="createFromPurchaseOrder">
         INSERT INTO shipment_orders (
-            shipment_order_id, po_id, shipment_issue_date, client_id, manager_id, shipment_status,
+            shipment_order_code, po_id, shipment_issue_date, client_id, manager_id, shipment_status,
             shipment_due_date, shipment_client_name, shipment_country, shipment_manager_name,
             shipment_item_name, shipment_linked_documents
         )
@@ -21,9 +21,9 @@
             po_country,
             po_manager_name,
             '',
-            CONCAT('[{"id":"', po_id, '","type":"PO","status":"', po_status, '"}]')
+            CONCAT('[{"id":"', po_code, '","type":"PO","status":"', po_status, '"}]')
         FROM purchase_orders
-        WHERE po_id = #{poId}
+        WHERE po_code = #{poId}
     </insert>
 
 </mapper>

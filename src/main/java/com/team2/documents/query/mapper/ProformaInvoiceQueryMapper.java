@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.team2.documents.command.domain.entity.ProformaInvoice;
+import com.team2.documents.query.model.ProformaInvoiceView;
 
 @Mapper
 public interface ProformaInvoiceQueryMapper {
 
-    ProformaInvoice findById(String piId);
+    ProformaInvoiceView findById(String piId);
 
-    List<ProformaInvoice> findAll();
+    List<ProformaInvoiceView> findAll();
 }

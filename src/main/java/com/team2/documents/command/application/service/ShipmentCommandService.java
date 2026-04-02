@@ -36,7 +36,7 @@ public class ShipmentCommandService {
     }
 
     public Shipment findByPoId(String poId) {
-        return shipmentRepository.findByPoId(poId)
+        return shipmentRepository.findByPoCode(poId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 PO의 출하현황 정보를 찾을 수 없습니다."));
     }
 }

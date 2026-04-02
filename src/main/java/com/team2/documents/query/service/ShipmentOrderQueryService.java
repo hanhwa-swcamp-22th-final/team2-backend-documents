@@ -4,8 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.command.domain.entity.ShipmentOrder;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.ShipmentOrderQueryMapper;
+import com.team2.documents.query.model.ShipmentOrderView;
 
 @Service
 public class ShipmentOrderQueryService {
@@ -16,15 +17,15 @@ public class ShipmentOrderQueryService {
         this.shipmentOrderQueryMapper = shipmentOrderQueryMapper;
     }
 
-    public ShipmentOrder findById(String shipmentOrderId) {
-        ShipmentOrder shipmentOrder = shipmentOrderQueryMapper.findById(shipmentOrderId);
+    public ShipmentOrderView findById(String shipmentOrderId) {
+        ShipmentOrderView shipmentOrder = shipmentOrderQueryMapper.findById(shipmentOrderId);
         if (shipmentOrder == null) {
-            throw new IllegalArgumentException("출하지시서 정보를 찾을 수 없습니다.");
+            throw new ResourceNotFoundException("출하지시서 정보를 찾을 수 없습니다.");
         }
         return shipmentOrder;
     }
 
-    public List<ShipmentOrder> findAll() {
+    public List<ShipmentOrderView> findAll() {
         return shipmentOrderQueryMapper.findAll();
     }
 }

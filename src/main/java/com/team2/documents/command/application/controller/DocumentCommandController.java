@@ -1,5 +1,9 @@
 package com.team2.documents.command.application.controller;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -137,32 +141,33 @@ public class DocumentCommandController {
     }
 
     @PutMapping("/shipments/{shipmentId}")
-    public ResponseEntity<com.team2.documents.command.domain.entity.Shipment> updateShipmentStatus(@PathVariable Long shipmentId,
-                                                                                     @RequestBody ShipmentStatusUpdateRequest request) {
-        return ResponseEntity.ok(shipmentCommandService.updateStatus(shipmentId, request.status()));
+    public ResponseEntity<ShipmentResponse> updateShipmentStatus(@PathVariable Long shipmentId,
+                                                                 @RequestBody ShipmentStatusUpdateRequest request) {
+        return ResponseEntity.ok(toShipmentResponse(shipmentCommandService.updateStatus(shipmentId, request.status())));
     }
 
     @PutMapping("/collections/{collectionId}")
-    public ResponseEntity<com.team2.documents.command.domain.entity.Collection> updateCollection(@PathVariable Long collectionId,
-                                                                                  @RequestBody CollectionUpdateRequest request) {
-        return ResponseEntity.ok(collectionCommandService.complete(
+    public ResponseEntity<CollectionResponse> updateCollection(@PathVariable Long collectionId,
+                                                               @RequestBody CollectionUpdateRequest request) {
+        return ResponseEntity.ok(toCollectionResponse(collectionCommandService.complete(
                 collectionId,
                 request.status(),
                 request.collectionCompletedDate()
-        ));
+        )));
     }
 
     @PostMapping("/approval-requests")
-    public ResponseEntity<com.team2.documents.command.domain.entity.ApprovalRequest> createApprovalRequest(
+    public ResponseEntity<ApprovalRequestResponse> createApprovalRequest(
             @RequestBody ApprovalRequestCreateRequest request) {
-        return ResponseEntity.ok(approvalRequestCommandService.create(request));
+        return ResponseEntity.ok(toApprovalRequestResponse(approvalRequestCommandService.create(request)));
     }
 
     @PutMapping("/approval-requests/{approvalRequestId}")
-    public ResponseEntity<com.team2.documents.command.domain.entity.ApprovalRequest> updateApprovalRequest(
+    public ResponseEntity<ApprovalRequestResponse> updateApprovalRequest(
             @PathVariable Long approvalRequestId,
             @RequestBody ApprovalRequestUpdateRequest request) {
-        return ResponseEntity.ok(approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment()));
+        return ResponseEntity.ok(toApprovalRequestResponse(
+                approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment())));
     }
 
     @PostMapping("/purchase-orders/{poId}/validate-modifiable")
@@ -211,5 +216,87 @@ public class DocumentCommandController {
     public ResponseEntity<Void> rejectProformaInvoice(@PathVariable String piId) {
         proformaInvoiceRejectionWorkflowService.reject(piId);
         return ResponseEntity.ok().build();
+    }
+
+    private ShipmentResponse toShipmentResponse(com.team2.documents.command.domain.entity.Shipment shipment) {
+        return new ShipmentResponse(
+                shipment.getShipmentId(),
+                shipment.getPoId(),
+                shipment.getShipmentStatus().name()
+        );
+    }
+
+    private CollectionResponse toCollectionResponse(com.team2.documents.command.domain.entity.Collection collection) {
+        return new CollectionResponse(
+                collection.getCollectionId(),
+                collection.getPoId(),
+                collection.getPoNo(),
+                collection.getClientId(),
+                collection.getClientName(),
+                collection.getTotalAmount(),
+                collection.getCollectedAmount(),
+                collection.getRemainingAmount(),
+                collection.getCurrencyCode(),
+                collection.getStatus(),
+                collection.getCollectionDate(),
+                collection.getCreatedAt(),
+                collection.getUpdatedAt()
+        );
+    }
+
+    private ApprovalRequestResponse toApprovalRequestResponse(
+            com.team2.documents.command.domain.entity.ApprovalRequest approvalRequest) {
+        return new ApprovalRequestResponse(
+                approvalRequest.getApprovalRequestId(),
+                approvalRequest.getDocumentType().name(),
+                approvalRequest.getDocumentId(),
+                approvalRequest.getRequestType().name(),
+                approvalRequest.getRequesterId(),
+                approvalRequest.getApproverId(),
+                approvalRequest.getComment(),
+                approvalRequest.getReviewSnapshot(),
+                approvalRequest.getRequestedAt(),
+                approvalRequest.getReviewedAt(),
+                approvalRequest.getStatus().name()
+        );
+    }
+
+    public record ShipmentResponse(
+            Long shipmentId,
+            String poId,
+            String shipmentStatus
+    ) {
+    }
+
+    public record CollectionResponse(
+            Long collectionId,
+            String poId,
+            String poNo,
+            Long clientId,
+            String clientName,
+            BigDecimal totalAmount,
+            BigDecimal collectedAmount,
+            BigDecimal remainingAmount,
+            String currencyCode,
+            String status,
+            LocalDate collectionDate,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+    }
+
+    public record ApprovalRequestResponse(
+            Long approvalRequestId,
+            String documentType,
+            String documentId,
+            String requestType,
+            Long requesterId,
+            Long approverId,
+            String comment,
+            String reviewSnapshot,
+            LocalDateTime requestedAt,
+            LocalDateTime reviewedAt,
+            String status
+    ) {
     }
 }

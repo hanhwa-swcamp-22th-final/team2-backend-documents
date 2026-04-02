@@ -4,8 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.team2.documents.command.domain.entity.CommercialInvoice;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.CommercialInvoiceQueryMapper;
+import com.team2.documents.query.model.CommercialInvoiceView;
 
 @Service
 public class CommercialInvoiceQueryService {
@@ -16,15 +17,15 @@ public class CommercialInvoiceQueryService {
         this.commercialInvoiceQueryMapper = commercialInvoiceQueryMapper;
     }
 
-    public CommercialInvoice findById(String ciId) {
-        CommercialInvoice commercialInvoice = commercialInvoiceQueryMapper.findById(ciId);
+    public CommercialInvoiceView findById(String ciId) {
+        CommercialInvoiceView commercialInvoice = commercialInvoiceQueryMapper.findById(ciId);
         if (commercialInvoice == null) {
-            throw new IllegalArgumentException("CI 정보를 찾을 수 없습니다.");
+            throw new ResourceNotFoundException("CI 정보를 찾을 수 없습니다.");
         }
         return commercialInvoice;
     }
 
-    public List<CommercialInvoice> findAll() {
+    public List<CommercialInvoiceView> findAll() {
         return commercialInvoiceQueryMapper.findAll();
     }
 }

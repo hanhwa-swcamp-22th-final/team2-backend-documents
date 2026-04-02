@@ -3,9 +3,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.CollectionQueryMapper">
 
-    <resultMap id="collectionResultMap" type="com.team2.documents.command.domain.entity.Collection">
+    <resultMap id="collectionResultMap" type="com.team2.documents.query.model.CollectionView">
         <id property="collectionId" column="collection_id"/>
-        <result property="poId" column="po_id"/>
+        <result property="poId" column="po_code"/>
+        <result property="poNo" column="po_code"/>
         <result property="clientId" column="client_id"/>
         <result property="totalAmount" column="collection_sales_amount"/>
         <result property="status" column="collection_status"/>
@@ -15,16 +16,18 @@
     </resultMap>
 
     <select id="findById" resultMap="collectionResultMap">
-        SELECT collection_id, po_id, client_id, collection_sales_amount,
-               collection_status, collection_completed_date, created_at, updated_at
-        FROM collections
-        WHERE collection_id = #{id}
+        SELECT c.collection_id, c.po_id, po.po_code, c.client_id, c.collection_sales_amount,
+               c.collection_status, c.collection_completed_date, c.created_at, c.updated_at
+        FROM collections c
+        JOIN purchase_orders po ON c.po_id = po.po_id
+        WHERE c.collection_id = #{id}
     </select>
 
     <select id="findAll" resultMap="collectionResultMap">
-        SELECT collection_id, po_id, client_id, collection_sales_amount,
-               collection_status, collection_completed_date, created_at, updated_at
-        FROM collections
+        SELECT c.collection_id, c.po_id, po.po_code, c.client_id, c.collection_sales_amount,
+               c.collection_status, c.collection_completed_date, c.created_at, c.updated_at
+        FROM collections c
+        JOIN purchase_orders po ON c.po_id = po.po_id
     </select>
 
 </mapper>

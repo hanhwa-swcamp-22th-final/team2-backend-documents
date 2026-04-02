@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.domain.entity.CommercialInvoice;
 import com.team2.documents.command.domain.entity.DocsRevision;
 import com.team2.documents.command.domain.entity.PackingList;
+import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.repository.DocsRevisionRepository;
 
@@ -28,6 +29,7 @@ public class DocsSnapshotService {
 
     public void savePurchaseOrderSnapshot(PurchaseOrder purchaseOrder) {
         Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("entryType", "SNAPSHOT");
         snapshot.put("purchaseOrderId", purchaseOrder.getPurchaseOrderId());
         snapshot.put("poId", purchaseOrder.getPoId());
         snapshot.put("piId", purchaseOrder.getPiId());
@@ -46,6 +48,7 @@ public class DocsSnapshotService {
 
     public void saveCommercialInvoiceSnapshot(CommercialInvoice commercialInvoice, PurchaseOrder purchaseOrder) {
         Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("entryType", "SNAPSHOT");
         snapshot.put("commercialInvoiceId", commercialInvoice.getCommercialInvoiceId());
         snapshot.put("ciId", commercialInvoice.getCiId());
         snapshot.put("poId", commercialInvoice.getPoId());
@@ -62,6 +65,7 @@ public class DocsSnapshotService {
 
     public void savePackingListSnapshot(PackingList packingList, PurchaseOrder purchaseOrder) {
         Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("entryType", "SNAPSHOT");
         snapshot.put("packingListId", packingList.getPackingListId());
         snapshot.put("plId", packingList.getPlId());
         snapshot.put("poId", packingList.getPoId());
@@ -73,6 +77,24 @@ public class DocsSnapshotService {
         snapshot.put("sourceItemsSnapshot", purchaseOrder.getItemsSnapshot());
         snapshot.put("sourceClientName", purchaseOrder.getClientName());
         persist("PL", packingList.getPackingListId(), snapshot);
+    }
+
+    public void saveProformaInvoiceSnapshot(ProformaInvoice proformaInvoice) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("entryType", "SNAPSHOT");
+        snapshot.put("proformaInvoiceId", proformaInvoice.getProformaInvoiceId());
+        snapshot.put("piId", proformaInvoice.getPiId());
+        snapshot.put("issueDate", proformaInvoice.getIssueDate());
+        snapshot.put("clientId", proformaInvoice.getClientId());
+        snapshot.put("currencyId", proformaInvoice.getCurrencyId());
+        snapshot.put("managerId", proformaInvoice.getManagerId());
+        snapshot.put("status", proformaInvoice.getStatus() == null ? null : proformaInvoice.getStatus().name());
+        snapshot.put("deliveryDate", proformaInvoice.getDeliveryDate());
+        snapshot.put("incotermsCode", proformaInvoice.getIncotermsCode());
+        snapshot.put("namedPlace", proformaInvoice.getNamedPlace());
+        snapshot.put("totalAmount", proformaInvoice.getTotalAmount());
+        snapshot.put("itemsSnapshot", proformaInvoice.getItemsSnapshot());
+        persist("PI", proformaInvoice.getProformaInvoiceId(), snapshot);
     }
 
     private void persist(String docType, Long docId, Map<String, Object> snapshot) {

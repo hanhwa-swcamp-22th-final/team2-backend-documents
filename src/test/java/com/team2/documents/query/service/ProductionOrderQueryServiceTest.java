@@ -16,8 +16,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.command.domain.entity.ProductionOrder;
+import com.team2.documents.common.error.ResourceNotFoundException;
 import com.team2.documents.query.mapper.ProductionOrderQueryMapper;
+import com.team2.documents.query.model.ProductionOrderView;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionOrderQueryServiceTest {
@@ -32,15 +33,20 @@ class ProductionOrderQueryServiceTest {
     @DisplayName("ID로 생산지시서를 조회한다")
     void findById_whenProductionOrderExists_thenReturnsProductionOrder() {
         // given
-        ProductionOrder productionOrder = new ProductionOrder(
-                "PRD-2026-001", "PO2025-0001", "PO-2026-001",
-                LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 10),
-                "진행중", List.of(),
-                LocalDateTime.of(2026, 3, 10, 9, 0), LocalDateTime.of(2026, 3, 15, 14, 0));
+        ProductionOrderView productionOrder = new ProductionOrderView();
+        productionOrder.setProductionOrderId("PRD-2026-001");
+        productionOrder.setPoId("PO2025-0001");
+        productionOrder.setPoNo("PO-2026-001");
+        productionOrder.setOrderDate(LocalDate.of(2026, 3, 10));
+        productionOrder.setDueDate(LocalDate.of(2026, 4, 10));
+        productionOrder.setStatus("진행중");
+        productionOrder.setItems(List.of());
+        productionOrder.setCreatedAt(LocalDateTime.of(2026, 3, 10, 9, 0));
+        productionOrder.setUpdatedAt(LocalDateTime.of(2026, 3, 15, 14, 0));
         when(productionOrderQueryMapper.findById("PRD-2026-001")).thenReturn(productionOrder);
 
         // when
-        ProductionOrder result = productionOrderQueryService.findById("PRD-2026-001");
+        ProductionOrderView result = productionOrderQueryService.findById("PRD-2026-001");
 
         // then
         assertEquals("PRD-2026-001", result.getProductionOrderId());
@@ -53,7 +59,7 @@ class ProductionOrderQueryServiceTest {
         when(productionOrderQueryMapper.findById("NOT-EXIST")).thenReturn(null);
 
         // when & then
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> productionOrderQueryService.findById("NOT-EXIST"));
     }
 
@@ -61,15 +67,20 @@ class ProductionOrderQueryServiceTest {
     @DisplayName("전체 생산지시서 목록을 조회한다")
     void findAll_whenProductionOrdersExist_thenReturnsAll() {
         // given
-        ProductionOrder productionOrder = new ProductionOrder(
-                "PRD-2026-001", "PO2025-0001", "PO-2026-001",
-                LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 10),
-                "진행중", List.of(),
-                LocalDateTime.of(2026, 3, 10, 9, 0), LocalDateTime.of(2026, 3, 15, 14, 0));
+        ProductionOrderView productionOrder = new ProductionOrderView();
+        productionOrder.setProductionOrderId("PRD-2026-001");
+        productionOrder.setPoId("PO2025-0001");
+        productionOrder.setPoNo("PO-2026-001");
+        productionOrder.setOrderDate(LocalDate.of(2026, 3, 10));
+        productionOrder.setDueDate(LocalDate.of(2026, 4, 10));
+        productionOrder.setStatus("진행중");
+        productionOrder.setItems(List.of());
+        productionOrder.setCreatedAt(LocalDateTime.of(2026, 3, 10, 9, 0));
+        productionOrder.setUpdatedAt(LocalDateTime.of(2026, 3, 15, 14, 0));
         when(productionOrderQueryMapper.findAll()).thenReturn(List.of(productionOrder));
 
         // when
-        List<ProductionOrder> result = productionOrderQueryService.findAll();
+        List<ProductionOrderView> result = productionOrderQueryService.findAll();
 
         // then
         assertNotNull(result);

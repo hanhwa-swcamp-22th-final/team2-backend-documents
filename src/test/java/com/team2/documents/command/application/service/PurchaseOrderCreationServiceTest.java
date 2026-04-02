@@ -41,6 +41,9 @@ class PurchaseOrderCreationServiceTest {
     private DocsSnapshotService docsSnapshotService;
 
     @Mock
+    private DocumentRevisionHistoryService documentRevisionHistoryService;
+
+    @Mock
     private ObjectMapper objectMapper;
 
     @InjectMocks
@@ -118,10 +121,16 @@ class PurchaseOrderCreationServiceTest {
         assertEquals(new BigDecimal("30.00"), created.getItems().get(0).getAmount());
         assertEquals("[{\"itemName\":\"Bolt\"}]", created.getItemsSnapshot());
         assertEquals("[]", created.getLinkedDocuments());
-        assertEquals("[{\"action\":\"CREATE\"}]", created.getRevisionHistory());
         assertEquals(PurchaseOrderStatus.DRAFT, created.getStatus());
         assertTrue(created.getApprovalRequestedAt() == null);
         verify(docsSnapshotService).savePurchaseOrderSnapshot(created);
+        verify(documentRevisionHistoryService).recordPurchaseOrderEvent(
+                "PO2026-0001",
+                "CREATE",
+                userId,
+                PurchaseOrderStatus.DRAFT.name(),
+                "PO 초안을 생성했습니다."
+        );
         verify(documentLinkService).linkPurchaseOrderToProformaInvoice("PO2026-0001", "PI2026-0001");
     }
 

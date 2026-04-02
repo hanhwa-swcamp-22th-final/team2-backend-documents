@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.PackingListQueryMapper">
 
-    <resultMap id="packingListResultMap" type="com.team2.documents.command.domain.entity.PackingList">
+    <resultMap id="packingListResultMap" type="com.team2.documents.query.model.PackingListView">
         <id property="packingListId" column="pl_id"/>
         <result property="plId" column="pl_code"/>
         <result property="poId" column="po_id"/>

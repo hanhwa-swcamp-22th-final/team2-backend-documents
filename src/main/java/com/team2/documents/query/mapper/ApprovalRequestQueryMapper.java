@@ -5,17 +5,17 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.team2.documents.command.domain.entity.ApprovalRequest;
+import com.team2.documents.query.model.ApprovalRequestView;
 
 @Mapper
 public interface ApprovalRequestQueryMapper {
 
-    ApprovalRequest findById(Long approvalRequestId);
+    ApprovalRequestView findById(Long approvalRequestId);
 
-    ApprovalRequest findByDocumentTypeAndDocumentIdAndStatus(
+    ApprovalRequestView findByDocumentTypeAndDocumentIdAndStatus(
             @Param("documentType") String documentType,
             @Param("documentId") String documentId,
             @Param("status") String status);
 
-    List<ApprovalRequest> findAll();
+    List<ApprovalRequestView> findAll();
 }

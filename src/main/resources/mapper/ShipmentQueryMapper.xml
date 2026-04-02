@@ -3,27 +3,33 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.query.mapper.ShipmentQueryMapper">
 
-    <resultMap id="shipmentResultMap" type="com.team2.documents.command.domain.entity.Shipment">
+    <resultMap id="shipmentResultMap" type="com.team2.documents.query.model.ShipmentView">
         <id property="shipmentId" column="shipment_id"/>
-        <result property="poId" column="po_id"/>
+        <result property="poId" column="po_code"/>
         <result property="shipmentStatus" column="shipment_status"/>
     </resultMap>
 
     <select id="findById" resultMap="shipmentResultMap">
-        SELECT shipment_id, po_id, shipment_status
-        FROM shipments
-        WHERE shipment_id = #{shipmentId}
+        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        FROM shipments s
+        JOIN purchase_orders po ON s.po_id = po.po_id
+        LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
+        WHERE s.shipment_id = #{shipmentId}
     </select>
 
     <select id="findAll" resultMap="shipmentResultMap">
-        SELECT shipment_id, po_id, shipment_status
-        FROM shipments
+        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        FROM shipments s
+        JOIN purchase_orders po ON s.po_id = po.po_id
+        LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
     </select>
 
     <select id="findByPoId" resultMap="shipmentResultMap">
-        SELECT shipment_id, po_id, shipment_status
-        FROM shipments
-        WHERE po_id = #{poId}
+        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        FROM shipments s
+        JOIN purchase_orders po ON s.po_id = po.po_id
+        LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
+        WHERE po.po_code = #{poId}
     </select>
 
 </mapper>

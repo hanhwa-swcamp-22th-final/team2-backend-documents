@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.team2.documents.command.domain.entity.ProductionOrder;
+import com.team2.documents.query.model.ProductionOrderView;
 
 @Mapper
 public interface ProductionOrderQueryMapper {
 
-    ProductionOrder findById(String productionOrderId);
+    ProductionOrderView findById(String productionOrderId);
 
-    List<ProductionOrder> findAll();
+    List<ProductionOrderView> findAll();
 }

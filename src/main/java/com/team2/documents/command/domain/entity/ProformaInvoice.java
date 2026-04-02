@@ -11,6 +11,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
@@ -26,8 +28,12 @@ import lombok.Setter;
 public class ProformaInvoice {
 
     @Id
-    @Column(name = "pi_id", nullable = false, length = 30)
-    private String piId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "pi_id", nullable = false)
+    private Long proformaInvoiceId;
+
+    @Column(name = "pi_code", nullable = false, unique = true, length = 30)
+    private String piCode;
 
     @Column(name = "pi_issue_date", nullable = false)
     private LocalDate issueDate;
@@ -96,9 +102,6 @@ public class ProformaInvoice {
     @Column(name = "pi_linked_documents", columnDefinition = "TEXT")
     private String linkedDocuments;
 
-    @Column(name = "pi_revision_history", columnDefinition = "TEXT")
-    private String revisionHistory;
-
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -113,7 +116,7 @@ public class ProformaInvoice {
     }
 
     public ProformaInvoice(String piId, ProformaInvoiceStatus status) {
-        this.piId = piId;
+        this.piCode = piId;
         this.status = status;
         this.issueDate = LocalDate.now();
         this.clientId = 0;
@@ -145,9 +148,8 @@ public class ProformaInvoice {
                            String approvalReview,
                            String itemsSnapshot,
                            String linkedDocuments,
-                           String revisionHistory,
                            List<ProformaInvoiceItem> items) {
-        this.piId = piId;
+        this.piCode = piId;
         this.issueDate = issueDate;
         this.clientId = clientId;
         this.currencyId = currencyId;
@@ -170,7 +172,6 @@ public class ProformaInvoice {
         this.approvalReview = approvalReview;
         this.itemsSnapshot = itemsSnapshot;
         this.linkedDocuments = linkedDocuments;
-        this.revisionHistory = revisionHistory;
         replaceItems(items);
     }
 
@@ -203,8 +204,20 @@ public class ProformaInvoice {
         }
     }
 
+    public Long getProformaInvoiceId() {
+        return proformaInvoiceId;
+    }
+
+    public String getPiCode() {
+        return piCode;
+    }
+
     public String getPiId() {
-        return piId;
+        return piCode;
+    }
+
+    public void setPiId(String piId) {
+        this.piCode = piId;
     }
 
     public ProformaInvoiceStatus getStatus() {
@@ -293,10 +306,6 @@ public class ProformaInvoice {
 
     public String getLinkedDocuments() {
         return linkedDocuments;
-    }
-
-    public String getRevisionHistory() {
-        return revisionHistory;
     }
 
     public List<ProformaInvoiceItem> getItems() {

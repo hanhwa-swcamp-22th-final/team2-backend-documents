@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
+import com.team2.documents.common.error.ResourceNotFoundException;
 
 @Service
 @Transactional
@@ -19,7 +20,7 @@ public class PurchaseOrderCommandService {
 
     public PurchaseOrder findById(String poId) {
         return purchaseOrderRepository.findByPoCode(poId)
-                .orElseThrow(() -> new IllegalArgumentException("PO 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("PO 정보를 찾을 수 없습니다."));
     }
 
     public PurchaseOrder save(PurchaseOrder purchaseOrder) {
