@@ -31,33 +31,15 @@ import com.team2.documents.command.application.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.command.domain.entity.Collection;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.ApprovalRequest;
-import com.team2.documents.command.domain.entity.CommercialInvoice;
-import com.team2.documents.command.domain.entity.PackingList;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
-import com.team2.documents.command.domain.entity.ProductionOrder;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
-import com.team2.documents.command.domain.entity.ShipmentOrder;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.application.service.ApprovalRequestCommandService;
 import com.team2.documents.command.application.service.CollectionCommandService;
-import com.team2.documents.command.application.service.ProductionOrderCommandService;
 import com.team2.documents.command.application.service.ShipmentCommandService;
-import com.team2.documents.query.service.ApprovalRequestQueryService;
-import com.team2.documents.query.service.CommercialInvoiceQueryService;
-import com.team2.documents.query.service.CollectionQueryService;
-import com.team2.documents.query.service.DocsRevisionQueryService;
-import com.team2.documents.query.service.PackingListQueryService;
-import com.team2.documents.query.service.ProductionOrderQueryService;
-import com.team2.documents.query.service.ProformaInvoiceQueryService;
-import com.team2.documents.query.service.ShipmentOrderQueryService;
-import com.team2.documents.query.service.ShipmentQueryService;
-import com.team2.documents.query.model.CollectionView;
-import com.team2.documents.query.model.ProductionOrderView;
-import com.team2.documents.query.model.PurchaseOrderView;
-import com.team2.documents.query.model.ShipmentView;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
 import com.team2.documents.command.application.service.ProformaInvoiceRejectionWorkflowService;
@@ -72,9 +54,9 @@ import com.team2.documents.command.application.service.PurchaseOrderModification
 import com.team2.documents.command.application.service.PurchaseOrderRejectionWorkflowService;
 import com.team2.documents.command.application.service.PurchaseOrderRegistrationService;
 
-@WebMvcTest({DocumentCommandController.class, com.team2.documents.query.controller.DocumentQueryController.class})
+@WebMvcTest(DocumentCommandController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class DocumentControllerTest {
+class DocumentCommandControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -122,46 +104,13 @@ class DocumentControllerTest {
     private ProformaInvoiceService proformaInvoiceService;
 
     @MockitoBean
-    private ProductionOrderCommandService productionOrderCommandService;
-
-    @MockitoBean
-    private ProductionOrderQueryService productionOrderQueryService;
+    private ApprovalRequestCommandService approvalRequestCommandService;
 
     @MockitoBean
     private ShipmentCommandService shipmentCommandService;
 
     @MockitoBean
-    private ShipmentQueryService shipmentQueryService;
-
-    @MockitoBean
     private CollectionCommandService collectionCommandService;
-
-    @MockitoBean
-    private CollectionQueryService collectionQueryService;
-
-    @MockitoBean
-    private com.team2.documents.query.service.PurchaseOrderQueryService purchaseOrderQueryService;
-
-    @MockitoBean
-    private ProformaInvoiceQueryService proformaInvoiceQueryService;
-
-    @MockitoBean
-    private CommercialInvoiceQueryService commercialInvoiceQueryService;
-
-    @MockitoBean
-    private PackingListQueryService packingListQueryService;
-
-    @MockitoBean
-    private ShipmentOrderQueryService shipmentOrderQueryService;
-
-    @MockitoBean
-    private ApprovalRequestQueryService approvalRequestQueryService;
-
-    @MockitoBean
-    private ApprovalRequestCommandService approvalRequestCommandService;
-
-    @MockitoBean
-    private DocsRevisionQueryService docsRevisionQueryService;
 
     @Test
     @DisplayName("PO 생성 API 호출 시 200 OK를 반환하고 Service를 호출한다")
@@ -281,192 +230,6 @@ class DocumentControllerTest {
     }
 
     @Test
-    @DisplayName("PO 단건 조회 API 호출 시 200 OK와 PO를 반환한다")
-    void getPurchaseOrderApi_whenPurchaseOrderExists_thenReturnsOkAndPurchaseOrder() throws Exception {
-        // given
-        PurchaseOrderView purchaseOrder = new PurchaseOrderView();
-        purchaseOrder.setPoId("PO2025-0001");
-        purchaseOrder.setStatus(PurchaseOrderStatus.DRAFT.name());
-        when(purchaseOrderQueryService.findById("PO2025-0001")).thenReturn(purchaseOrder);
-
-        // when & then
-        mockMvc.perform(get("/api/purchase-orders/{poId}", "PO2025-0001"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.poId").value("PO2025-0001"))
-                .andExpect(jsonPath("$.status").value("DRAFT"));
-
-        verify(purchaseOrderQueryService).findById("PO2025-0001");
-    }
-
-    @Test
-    @DisplayName("PO 초기 상태 조회 API 호출 시 200 OK와 상태값을 반환한다")
-    void determineInitialStatusApi_whenRequestIsValid_thenReturnsOkAndStatus() throws Exception {
-        // given
-        Long userId = 1L;
-        when(purchaseOrderQueryService.determineInitialStatus(userId))
-                .thenReturn(PurchaseOrderStatus.DRAFT);
-
-        // when & then
-        mockMvc.perform(get("/api/purchase-orders/initial-status/{userId}", userId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DRAFT"));
-
-        verify(purchaseOrderQueryService).determineInitialStatus(userId);
-    }
-
-    @Test
-    @DisplayName("생산지시서 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
-    void getProductionOrdersApi_whenProductionOrdersExist_thenReturnsOkAndList() throws Exception {
-        // given
-        ProductionOrderView productionOrder = new ProductionOrderView();
-        productionOrder.setProductionOrderId("PRD-2026-001");
-        productionOrder.setPoId("PO2025001");
-        productionOrder.setPoNo("PO-2026-001");
-        productionOrder.setOrderDate(java.time.LocalDate.of(2026, 3, 10));
-        productionOrder.setDueDate(java.time.LocalDate.of(2026, 4, 10));
-        productionOrder.setStatus("진행중");
-        productionOrder.setItems(java.util.List.of());
-        productionOrder.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 10, 9, 0));
-        productionOrder.setUpdatedAt(java.time.LocalDateTime.of(2026, 3, 15, 14, 0));
-        when(productionOrderQueryService.findAll()).thenReturn(java.util.List.of(productionOrder));
-
-        // when & then
-        mockMvc.perform(get("/api/production-orders"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].productionOrderId").value("PRD-2026-001"))
-                .andExpect(jsonPath("$[0].poId").value("PO2025001"))
-                .andExpect(jsonPath("$[0].status").value("진행중"));
-
-        verify(productionOrderQueryService).findAll();
-    }
-
-    @Test
-    @DisplayName("생산지시서 단건 조회 API 호출 시 200 OK와 생산지시서를 반환한다")
-    void getProductionOrderApi_whenProductionOrderExists_thenReturnsOkAndProductionOrder() throws Exception {
-        // given
-        ProductionOrderView productionOrder = new ProductionOrderView();
-        productionOrder.setProductionOrderId("PRD-2026-001");
-        productionOrder.setPoId("PO2025001");
-        productionOrder.setPoNo("PO-2026-001");
-        productionOrder.setOrderDate(java.time.LocalDate.of(2026, 3, 10));
-        productionOrder.setDueDate(java.time.LocalDate.of(2026, 4, 10));
-        productionOrder.setStatus("진행중");
-        productionOrder.setItems(java.util.List.of());
-        productionOrder.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 10, 9, 0));
-        productionOrder.setUpdatedAt(java.time.LocalDateTime.of(2026, 3, 15, 14, 0));
-        when(productionOrderQueryService.findById("PRD-2026-001")).thenReturn(productionOrder);
-
-        // when & then
-        mockMvc.perform(get("/api/production-orders/{id}", "PRD-2026-001"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productionOrderId").value("PRD-2026-001"))
-                .andExpect(jsonPath("$.poId").value("PO2025001"))
-                .andExpect(jsonPath("$.status").value("진행중"));
-
-        verify(productionOrderQueryService).findById("PRD-2026-001");
-    }
-
-    @Test
-    @DisplayName("출하현황 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
-    void getShipmentsApi_whenShipmentsExist_thenReturnsOkAndList() throws Exception {
-        // given
-        ShipmentView shipment = new ShipmentView();
-        shipment.setShipmentId(1L);
-        shipment.setPoId("PO2025-0001");
-        shipment.setShipmentStatus("READY");
-        when(shipmentQueryService.findAll()).thenReturn(java.util.List.of(shipment));
-
-        // when & then
-        mockMvc.perform(get("/api/shipments"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].shipmentId").value(1))
-                .andExpect(jsonPath("$[0].poId").value("PO2025-0001"))
-                .andExpect(jsonPath("$[0].shipmentStatus").value("READY"));
-
-        verify(shipmentQueryService).findAll();
-    }
-
-    @Test
-    @DisplayName("출하현황 단건 조회 API 호출 시 200 OK와 출하현황을 반환한다")
-    void getShipmentApi_whenShipmentExists_thenReturnsOkAndShipment() throws Exception {
-        // given
-        ShipmentView shipment = new ShipmentView();
-        shipment.setShipmentId(1L);
-        shipment.setPoId("PO2025-0001");
-        shipment.setShipmentStatus("READY");
-        when(shipmentQueryService.findById(1L)).thenReturn(shipment);
-
-        // when & then
-        mockMvc.perform(get("/api/shipments/{id}", 1L))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.shipmentId").value(1))
-                .andExpect(jsonPath("$.poId").value("PO2025-0001"))
-                .andExpect(jsonPath("$.shipmentStatus").value("READY"));
-
-        verify(shipmentQueryService).findById(1L);
-    }
-
-    @Test
-    @DisplayName("매출·수금 현황 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
-    void getCollectionsApi_whenCollectionsExist_thenReturnsOkAndList() throws Exception {
-        // given
-        CollectionView collection = new CollectionView();
-        collection.setCollectionId(1L);
-        collection.setPoId("PO2025001");
-        collection.setPoNo("PO-2026-001");
-        collection.setClientId(1L);
-        collection.setClientName("ABC Trading");
-        collection.setTotalAmount(new java.math.BigDecimal("15000.00"));
-        collection.setCollectedAmount(new java.math.BigDecimal("10000.00"));
-        collection.setRemainingAmount(new java.math.BigDecimal("5000.00"));
-        collection.setCurrencyCode("USD");
-        collection.setStatus("미수금");
-        collection.setCollectionDate(java.time.LocalDate.of(2026, 5, 15));
-        collection.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 5, 9, 0));
-        collection.setUpdatedAt(java.time.LocalDateTime.of(2026, 5, 15, 14, 0));
-        when(collectionQueryService.findAll()).thenReturn(java.util.List.of(collection));
-
-        // when & then
-        mockMvc.perform(get("/api/collections"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].poId").value("PO2025001"))
-                .andExpect(jsonPath("$[0].clientName").value("ABC Trading"))
-                .andExpect(jsonPath("$[0].status").value("미수금"));
-
-        verify(collectionQueryService).findAll();
-    }
-
-    @Test
-    @DisplayName("매출·수금 현황 단건 조회 API 호출 시 200 OK와 현황을 반환한다")
-    void getCollectionApi_whenCollectionExists_thenReturnsOkAndCollection() throws Exception {
-        // given
-        CollectionView collection = new CollectionView();
-        collection.setCollectionId(1L);
-        collection.setPoId("PO2025001");
-        collection.setPoNo("PO-2026-001");
-        collection.setClientId(1L);
-        collection.setClientName("ABC Trading");
-        collection.setTotalAmount(new java.math.BigDecimal("15000.00"));
-        collection.setCollectedAmount(new java.math.BigDecimal("10000.00"));
-        collection.setRemainingAmount(new java.math.BigDecimal("5000.00"));
-        collection.setCurrencyCode("USD");
-        collection.setStatus("미수금");
-        collection.setCollectionDate(java.time.LocalDate.of(2026, 5, 15));
-        collection.setCreatedAt(java.time.LocalDateTime.of(2026, 3, 5, 9, 0));
-        collection.setUpdatedAt(java.time.LocalDateTime.of(2026, 5, 15, 14, 0));
-        when(collectionQueryService.findById(1L)).thenReturn(collection);
-
-        // when & then
-        mockMvc.perform(get("/api/collections/{id}", 1L))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.poId").value("PO2025001"))
-                .andExpect(jsonPath("$.clientName").value("ABC Trading"))
-                .andExpect(jsonPath("$.status").value("미수금"));
-
-        verify(collectionQueryService).findById(1L);
-    }
-
-    @Test
     @DisplayName("출하현황 상태 변경 API 호출 시 200 OK와 변경된 출하현황을 반환한다")
     void updateShipmentStatusApi_whenRequestIsValid_thenReturnsOkAndUpdatedShipment() throws Exception {
         // given
@@ -493,8 +256,8 @@ class DocumentControllerTest {
         // given
         Collection collection = new Collection(
                 1L,
-                "PO2025001",
-                "PO-2026-001",
+                "PO260001",
+                "PO260001",
                 1L,
                 "ABC Trading",
                 java.math.BigDecimal.ZERO,
@@ -518,7 +281,7 @@ class DocumentControllerTest {
                                         java.time.LocalDate.of(2026, 6, 1),
                                         "2차 잔금 입금"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.poId").value("PO2025001"))
+                .andExpect(jsonPath("$.poId").value("PO260001"))
                 .andExpect(jsonPath("$.status").value("수금완료"))
                 .andExpect(jsonPath("$.collectionDate").value("2026-06-01"));
 

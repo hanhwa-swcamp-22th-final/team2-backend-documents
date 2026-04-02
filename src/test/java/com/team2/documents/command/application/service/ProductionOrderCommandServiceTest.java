@@ -33,7 +33,7 @@ class ProductionOrderCommandServiceTest {
     void findAll_whenProductionOrdersExist_thenReturnsAllProductionOrders() {
         // given
         ProductionOrder productionOrder = new ProductionOrder(
-                "PRD-2026-001", "PO2025001", null,
+                "MO260001", "PO260001", null,
                 LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 10),
                 "진행중", List.of(), null, null);
         when(productionOrderRepository.findAll()).thenReturn(List.of(productionOrder));
@@ -43,7 +43,7 @@ class ProductionOrderCommandServiceTest {
 
         // then
         assertEquals(1, productionOrders.size());
-        assertEquals("PRD-2026-001", productionOrders.get(0).getProductionOrderId());
+        assertEquals("MO260001", productionOrders.get(0).getProductionOrderId());
     }
 
     @Test
@@ -51,17 +51,17 @@ class ProductionOrderCommandServiceTest {
     void findById_whenProductionOrderExists_thenReturnsProductionOrder() {
         // given
         ProductionOrder productionOrder = new ProductionOrder(
-                "PRD-2026-001", "PO2025001", null,
+                "MO260001", "PO260001", null,
                 LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 10),
                 "진행중", List.of(), null, null);
-        when(productionOrderRepository.findByProductionOrderCode("PRD-2026-001")).thenReturn(Optional.of(productionOrder));
+        when(productionOrderRepository.findByProductionOrderCode("MO260001")).thenReturn(Optional.of(productionOrder));
 
         // when
-        ProductionOrder result = productionOrderCommandService.findById("PRD-2026-001");
+        ProductionOrder result = productionOrderCommandService.findById("MO260001");
 
         // then
-        assertEquals("PRD-2026-001", result.getProductionOrderId());
-        assertEquals("PO2025001", result.getPoId());
+        assertEquals("MO260001", result.getProductionOrderId());
+        assertEquals("PO260001", result.getPoId());
     }
 
     @Test
@@ -80,7 +80,7 @@ class ProductionOrderCommandServiceTest {
     void save_whenProductionOrderIsValid_thenReturnsSavedProductionOrder() {
         // given
         ProductionOrder productionOrder = new ProductionOrder(
-                "PRD-2026-001", "PO2025001", null,
+                "MO260001", "PO260001", null,
                 LocalDate.of(2026, 3, 10), LocalDate.of(2026, 4, 10),
                 "진행중", List.of(), null, null);
         when(productionOrderRepository.save(any(ProductionOrder.class))).thenReturn(productionOrder);
@@ -89,6 +89,6 @@ class ProductionOrderCommandServiceTest {
         ProductionOrder result = productionOrderCommandService.save(productionOrder);
 
         // then
-        assertEquals("PRD-2026-001", result.getProductionOrderId());
+        assertEquals("MO260001", result.getProductionOrderId());
     }
 }

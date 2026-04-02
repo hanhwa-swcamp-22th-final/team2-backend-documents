@@ -2,7 +2,7 @@ package com.team2.documents.command.domain.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,6 +61,11 @@ class PurchaseOrderRepositoryTest {
         purchaseOrderRepository.save(new PurchaseOrder("PO2025-0010", PurchaseOrderStatus.DRAFT));
         purchaseOrderRepository.save(new PurchaseOrder("PO2025-0011", PurchaseOrderStatus.CONFIRMED));
 
-        assertTrue(purchaseOrderRepository.findAll().size() >= 2);
+        assertThat(purchaseOrderRepository.findAll())
+                .extracting(PurchaseOrder::getPoId, PurchaseOrder::getStatus)
+                .contains(
+                        org.assertj.core.groups.Tuple.tuple("PO2025-0010", PurchaseOrderStatus.DRAFT),
+                        org.assertj.core.groups.Tuple.tuple("PO2025-0011", PurchaseOrderStatus.CONFIRMED)
+                );
     }
 }

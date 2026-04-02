@@ -2,7 +2,7 @@ package com.team2.documents.command.domain.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,9 +29,9 @@ class ProductionOrderRepositoryTest {
     @Test
     @DisplayName("생산지시서 엔티티를 H2에 저장하고 조회할 수 있다")
     void saveAndFindById_whenProductionOrderExists_thenReturnsEntity() {
-        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO2025001", PurchaseOrderStatus.DRAFT));
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO260001", PurchaseOrderStatus.DRAFT));
         productionOrderRepository.save(new ProductionOrder(
-                "PRD2025001",
+                "MO260001",
                 purchaseOrder.getPurchaseOrderId(),
                 purchaseOrder.getPoId(),
                 LocalDate.of(2026, 3, 10),
@@ -42,18 +42,18 @@ class ProductionOrderRepositoryTest {
                 LocalDateTime.now()
         ));
 
-        ProductionOrder result = productionOrderRepository.findById("PRD2025001").orElseThrow();
+        ProductionOrder result = productionOrderRepository.findById("MO260001").orElseThrow();
 
-        assertEquals("PRD2025001", result.getProductionOrderId());
-        assertEquals("PO2025001", result.getPoId());
+        assertEquals("MO260001", result.getProductionOrderId());
+        assertEquals("PO260001", result.getPoId());
     }
 
     @Test
     @DisplayName("생산지시서 엔티티를 수정할 수 있다")
     void update_whenProductionStatusChanges_thenPersistsUpdatedStatus() {
-        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO2025002", PurchaseOrderStatus.DRAFT));
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO260002", PurchaseOrderStatus.DRAFT));
         productionOrderRepository.save(new ProductionOrder(
-                "PRD2025002",
+                "MO260002",
                 purchaseOrder.getPurchaseOrderId(),
                 purchaseOrder.getPoId(),
                 LocalDate.of(2026, 3, 10),
@@ -64,7 +64,7 @@ class ProductionOrderRepositoryTest {
                 LocalDateTime.now()
         ));
 
-        ProductionOrder productionOrder = productionOrderRepository.findById("PRD2025002").orElseThrow();
+        ProductionOrder productionOrder = productionOrderRepository.findById("MO260002").orElseThrow();
         java.lang.reflect.Field statusField;
         try {
             statusField = ProductionOrder.class.getDeclaredField("status");
@@ -75,16 +75,16 @@ class ProductionOrderRepositoryTest {
         }
         productionOrderRepository.save(productionOrder);
 
-        ProductionOrder result = productionOrderRepository.findById("PRD2025002").orElseThrow();
+        ProductionOrder result = productionOrderRepository.findById("MO260002").orElseThrow();
         assertEquals("생산완료", result.getStatus());
     }
 
     @Test
     @DisplayName("생산지시서 엔티티를 삭제할 수 있다")
     void delete_whenProductionOrderExists_thenRemovesEntity() {
-        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO2025003", PurchaseOrderStatus.DRAFT));
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.save(new PurchaseOrder("PO260003", PurchaseOrderStatus.DRAFT));
         ProductionOrder productionOrder = productionOrderRepository.save(new ProductionOrder(
-                "PRD2025003",
+                "MO260003",
                 purchaseOrder.getPurchaseOrderId(),
                 purchaseOrder.getPoId(),
                 LocalDate.of(2026, 3, 10),
@@ -97,17 +97,22 @@ class ProductionOrderRepositoryTest {
 
         productionOrderRepository.delete(productionOrder);
 
-        assertFalse(productionOrderRepository.findById("PRD2025003").isPresent());
+        assertFalse(productionOrderRepository.findById("MO260003").isPresent());
     }
 
     @Test
     @DisplayName("생산지시서 엔티티 전체 목록을 조회할 수 있다")
     void findAll_whenProductionOrdersExist_thenReturnsAllEntities() {
-        PurchaseOrder purchaseOrder1 = purchaseOrderRepository.save(new PurchaseOrder("PO2025100", PurchaseOrderStatus.DRAFT));
-        PurchaseOrder purchaseOrder2 = purchaseOrderRepository.save(new PurchaseOrder("PO2025101", PurchaseOrderStatus.DRAFT));
-        productionOrderRepository.save(new ProductionOrder("PRD2025100", purchaseOrder1.getPurchaseOrderId(), purchaseOrder1.getPoId(), LocalDate.now(), null, "진행중", List.of(), LocalDateTime.now(), LocalDateTime.now()));
-        productionOrderRepository.save(new ProductionOrder("PRD2025101", purchaseOrder2.getPurchaseOrderId(), purchaseOrder2.getPoId(), LocalDate.now(), null, "진행중", List.of(), LocalDateTime.now(), LocalDateTime.now()));
+        PurchaseOrder purchaseOrder1 = purchaseOrderRepository.save(new PurchaseOrder("PO260100", PurchaseOrderStatus.DRAFT));
+        PurchaseOrder purchaseOrder2 = purchaseOrderRepository.save(new PurchaseOrder("PO260101", PurchaseOrderStatus.DRAFT));
+        productionOrderRepository.save(new ProductionOrder("MO260100", purchaseOrder1.getPurchaseOrderId(), purchaseOrder1.getPoId(), LocalDate.now(), null, "진행중", List.of(), LocalDateTime.now(), LocalDateTime.now()));
+        productionOrderRepository.save(new ProductionOrder("MO260101", purchaseOrder2.getPurchaseOrderId(), purchaseOrder2.getPoId(), LocalDate.now(), null, "진행중", List.of(), LocalDateTime.now(), LocalDateTime.now()));
 
-        assertTrue(productionOrderRepository.findAll().size() >= 2);
+        assertThat(productionOrderRepository.findAll())
+                .extracting(ProductionOrder::getProductionOrderId, ProductionOrder::getPoId)
+                .contains(
+                        org.assertj.core.groups.Tuple.tuple("MO260100", "PO260100"),
+                        org.assertj.core.groups.Tuple.tuple("MO260101", "PO260101")
+                );
     }
 }

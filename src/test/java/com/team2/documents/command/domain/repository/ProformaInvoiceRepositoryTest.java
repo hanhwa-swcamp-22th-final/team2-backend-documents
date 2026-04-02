@@ -2,7 +2,7 @@ package com.team2.documents.command.domain.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,6 +59,11 @@ class ProformaInvoiceRepositoryTest {
         proformaInvoiceRepository.save(new ProformaInvoice("PI2025-0010", ProformaInvoiceStatus.DRAFT));
         proformaInvoiceRepository.save(new ProformaInvoice("PI2025-0011", ProformaInvoiceStatus.CONFIRMED));
 
-        assertTrue(proformaInvoiceRepository.findAll().size() >= 2);
+        assertThat(proformaInvoiceRepository.findAll())
+                .extracting(ProformaInvoice::getPiId, ProformaInvoice::getStatus)
+                .contains(
+                        org.assertj.core.groups.Tuple.tuple("PI2025-0010", ProformaInvoiceStatus.DRAFT),
+                        org.assertj.core.groups.Tuple.tuple("PI2025-0011", ProformaInvoiceStatus.CONFIRMED)
+                );
     }
 }

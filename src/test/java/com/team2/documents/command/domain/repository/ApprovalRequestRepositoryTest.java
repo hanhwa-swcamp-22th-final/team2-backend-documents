@@ -2,7 +2,7 @@ package com.team2.documents.command.domain.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
 
@@ -105,6 +105,11 @@ class ApprovalRequestRepositoryTest {
         approvalRequestRepository.save(new ApprovalRequest(
                 ApprovalDocumentType.PI, "PI2025-0100", ApprovalRequestType.REGISTRATION, 2L, 1L, null));
 
-        assertTrue(approvalRequestRepository.findAll().size() >= 2);
+        assertThat(approvalRequestRepository.findAll())
+                .extracting(ApprovalRequest::getDocumentType, ApprovalRequest::getDocumentId, ApprovalRequest::getStatus)
+                .contains(
+                        org.assertj.core.groups.Tuple.tuple(ApprovalDocumentType.PO, "PO2025-0100", ApprovalStatus.PENDING),
+                        org.assertj.core.groups.Tuple.tuple(ApprovalDocumentType.PI, "PI2025-0100", ApprovalStatus.PENDING)
+                );
     }
 }

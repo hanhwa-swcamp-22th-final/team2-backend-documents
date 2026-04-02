@@ -34,22 +34,22 @@ class ProductionOrderQueryServiceTest {
     void findById_whenProductionOrderExists_thenReturnsProductionOrder() {
         // given
         ProductionOrderView productionOrder = new ProductionOrderView();
-        productionOrder.setProductionOrderId("PRD-2026-001");
-        productionOrder.setPoId("PO2025-0001");
-        productionOrder.setPoNo("PO-2026-001");
+        productionOrder.setProductionOrderId("MO260001");
+        productionOrder.setPoId("PO260001");
+        productionOrder.setPoNo("PO260001");
         productionOrder.setOrderDate(LocalDate.of(2026, 3, 10));
         productionOrder.setDueDate(LocalDate.of(2026, 4, 10));
         productionOrder.setStatus("진행중");
         productionOrder.setItems(List.of());
         productionOrder.setCreatedAt(LocalDateTime.of(2026, 3, 10, 9, 0));
         productionOrder.setUpdatedAt(LocalDateTime.of(2026, 3, 15, 14, 0));
-        when(productionOrderQueryMapper.findById("PRD-2026-001")).thenReturn(productionOrder);
+        when(productionOrderQueryMapper.findById("MO260001")).thenReturn(productionOrder);
 
         // when
-        ProductionOrderView result = productionOrderQueryService.findById("PRD-2026-001");
+        ProductionOrderView result = productionOrderQueryService.findById("MO260001");
 
         // then
-        assertEquals("PRD-2026-001", result.getProductionOrderId());
+        assertEquals("MO260001", result.getProductionOrderId());
     }
 
     @Test
@@ -68,9 +68,9 @@ class ProductionOrderQueryServiceTest {
     void findAll_whenProductionOrdersExist_thenReturnsAll() {
         // given
         ProductionOrderView productionOrder = new ProductionOrderView();
-        productionOrder.setProductionOrderId("PRD-2026-001");
-        productionOrder.setPoId("PO2025-0001");
-        productionOrder.setPoNo("PO-2026-001");
+        productionOrder.setProductionOrderId("MO260001");
+        productionOrder.setPoId("PO260001");
+        productionOrder.setPoNo("PO260001");
         productionOrder.setOrderDate(LocalDate.of(2026, 3, 10));
         productionOrder.setDueDate(LocalDate.of(2026, 4, 10));
         productionOrder.setStatus("진행중");

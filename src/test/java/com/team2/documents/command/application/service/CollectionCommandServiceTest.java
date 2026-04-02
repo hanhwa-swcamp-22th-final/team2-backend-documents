@@ -36,8 +36,8 @@ class CollectionCommandServiceTest {
         // given
         Collection collection = new Collection(
                 1L,
-                "PO2025001",
-                "PO-2026-001",
+                "PO260001",
+                "PO260001",
                 1L,
                 "ABC Trading",
                 new BigDecimal("15000.00"),
@@ -56,7 +56,7 @@ class CollectionCommandServiceTest {
 
         // then
         assertEquals(1, collections.size());
-        assertEquals("PO2025001", collections.get(0).getPoId());
+        assertEquals("PO260001", collections.get(0).getPoId());
         assertEquals("미수금", collections.get(0).getStatus());
     }
 
@@ -66,8 +66,8 @@ class CollectionCommandServiceTest {
         // given
         Collection collection = new Collection(
                 1L,
-                "PO2025001",
-                "PO-2026-001",
+                "PO260001",
+                "PO260001",
                 1L,
                 "ABC Trading",
                 new BigDecimal("15000.00"),
@@ -85,7 +85,7 @@ class CollectionCommandServiceTest {
         Collection result = collectionCommandService.findById(1L);
 
         // then
-        assertEquals("PO2025001", result.getPoId());
+        assertEquals("PO260001", result.getPoId());
         assertEquals("ABC Trading", result.getClientName());
         assertEquals("미수금", result.getStatus());
     }
@@ -96,8 +96,8 @@ class CollectionCommandServiceTest {
         // given
         Collection collection = new Collection(
                 1L,
-                "PO2025001",
-                "PO-2026-001",
+                "PO260001",
+                "PO260001",
                 1L,
                 "ABC Trading",
                 BigDecimal.ZERO,
@@ -126,8 +126,8 @@ class CollectionCommandServiceTest {
         // given
         Collection collection = new Collection(
                 1L,
-                "PO2025001",
-                "PO-2026-001",
+                "PO260001",
+                "PO260001",
                 1L,
                 "ABC Trading",
                 BigDecimal.ZERO,
@@ -174,8 +174,8 @@ class CollectionCommandServiceTest {
         // given
         Collection collection = new Collection(
                 1L,
-                "PO2025001",
-                "PO-2026-001",
+                "PO260001",
+                "PO260001",
                 1L,
                 "ABC Trading",
                 BigDecimal.ZERO,

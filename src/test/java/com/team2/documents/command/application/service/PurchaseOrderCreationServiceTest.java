@@ -83,8 +83,8 @@ class PurchaseOrderCreationServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         PurchaseOrderCreateRequest request = new PurchaseOrderCreateRequest(
-                "PO2026-0001",
-                "PI2026-0001",
+                "PO260001",
+                "PI260001",
                 LocalDate.of(2026, 4, 1),
                 10,
                 1,
@@ -125,13 +125,13 @@ class PurchaseOrderCreationServiceTest {
         assertTrue(created.getApprovalRequestedAt() == null);
         verify(docsSnapshotService).savePurchaseOrderSnapshot(created);
         verify(documentRevisionHistoryService).recordPurchaseOrderEvent(
-                "PO2026-0001",
+                "PO260001",
                 "CREATE",
                 userId,
                 PurchaseOrderStatus.DRAFT.name(),
                 "PO 초안을 생성했습니다."
         );
-        verify(documentLinkService).linkPurchaseOrderToProformaInvoice("PO2026-0001", "PI2026-0001");
+        verify(documentLinkService).linkPurchaseOrderToProformaInvoice("PO260001", "PI260001");
     }
 
     @Test
