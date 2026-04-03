@@ -5,6 +5,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,110 +76,195 @@ public class DocumentQueryController {
     }
 
     @GetMapping("/proforma-invoices")
-    public ResponseEntity<List<ProformaInvoiceResponse>> getProformaInvoices() {
-        return ResponseEntity.ok(proformaInvoiceQueryService.findAll().stream().map(this::toProformaInvoiceResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<ProformaInvoiceResponse>>> getProformaInvoices() {
+        List<EntityModel<ProformaInvoiceResponse>> models = proformaInvoiceQueryService.findAll().stream()
+                .map(this::toProformaInvoiceResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(r.piId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withSelfRel()));
     }
 
     @GetMapping("/proforma-invoices/{piId}")
-    public ResponseEntity<ProformaInvoiceResponse> getProformaInvoice(@PathVariable String piId) {
-        return ResponseEntity.ok(toProformaInvoiceResponse(proformaInvoiceQueryService.findById(piId)));
+    public ResponseEntity<EntityModel<ProformaInvoiceResponse>> getProformaInvoice(@PathVariable String piId) {
+        ProformaInvoiceResponse response = toProformaInvoiceResponse(proformaInvoiceQueryService.findById(piId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(piId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withRel("proforma-invoices")));
     }
 
     @GetMapping("/commercial-invoices")
-    public ResponseEntity<List<CommercialInvoiceResponse>> getCommercialInvoices() {
-        return ResponseEntity.ok(commercialInvoiceQueryService.findAll().stream().map(this::toCommercialInvoiceResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<CommercialInvoiceResponse>>> getCommercialInvoices() {
+        List<EntityModel<CommercialInvoiceResponse>> models = commercialInvoiceQueryService.findAll().stream()
+                .map(this::toCommercialInvoiceResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getCommercialInvoice(r.ciId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices()).withSelfRel()));
     }
 
     @GetMapping("/commercial-invoices/{ciId}")
-    public ResponseEntity<CommercialInvoiceResponse> getCommercialInvoice(@PathVariable String ciId) {
-        return ResponseEntity.ok(toCommercialInvoiceResponse(commercialInvoiceQueryService.findById(ciId)));
+    public ResponseEntity<EntityModel<CommercialInvoiceResponse>> getCommercialInvoice(@PathVariable String ciId) {
+        CommercialInvoiceResponse response = toCommercialInvoiceResponse(commercialInvoiceQueryService.findById(ciId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getCommercialInvoice(ciId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices()).withRel("commercial-invoices")));
     }
 
     @GetMapping("/packing-lists")
-    public ResponseEntity<List<PackingListResponse>> getPackingLists() {
-        return ResponseEntity.ok(packingListQueryService.findAll().stream().map(this::toPackingListResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<PackingListResponse>>> getPackingLists() {
+        List<EntityModel<PackingListResponse>> models = packingListQueryService.findAll().stream()
+                .map(this::toPackingListResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getPackingList(r.plId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getPackingLists()).withSelfRel()));
     }
 
     @GetMapping("/packing-lists/{plId}")
-    public ResponseEntity<PackingListResponse> getPackingList(@PathVariable String plId) {
-        return ResponseEntity.ok(toPackingListResponse(packingListQueryService.findById(plId)));
+    public ResponseEntity<EntityModel<PackingListResponse>> getPackingList(@PathVariable String plId) {
+        PackingListResponse response = toPackingListResponse(packingListQueryService.findById(plId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getPackingList(plId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getPackingLists()).withRel("packing-lists")));
     }
 
     @GetMapping("/shipment-orders")
-    public ResponseEntity<List<ShipmentOrderResponse>> getShipmentOrders() {
-        return ResponseEntity.ok(shipmentOrderQueryService.findAll().stream().map(this::toShipmentOrderResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<ShipmentOrderResponse>>> getShipmentOrders() {
+        List<EntityModel<ShipmentOrderResponse>> models = shipmentOrderQueryService.findAll().stream()
+                .map(this::toShipmentOrderResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getShipmentOrder(r.shipmentOrderId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getShipmentOrders()).withSelfRel()));
     }
 
     @GetMapping("/shipment-orders/{shipmentOrderId}")
-    public ResponseEntity<ShipmentOrderResponse> getShipmentOrder(
+    public ResponseEntity<EntityModel<ShipmentOrderResponse>> getShipmentOrder(
             @PathVariable String shipmentOrderId) {
-        return ResponseEntity.ok(toShipmentOrderResponse(shipmentOrderQueryService.findById(shipmentOrderId)));
+        ShipmentOrderResponse response = toShipmentOrderResponse(shipmentOrderQueryService.findById(shipmentOrderId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getShipmentOrder(shipmentOrderId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getShipmentOrders()).withRel("shipment-orders")));
     }
 
     @GetMapping("/purchase-orders")
-    public ResponseEntity<List<PurchaseOrderResponse>> getPurchaseOrders() {
-        return ResponseEntity.ok(purchaseOrderQueryService.findAll().stream().map(this::toPurchaseOrderResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<PurchaseOrderResponse>>> getPurchaseOrders() {
+        List<EntityModel<PurchaseOrderResponse>> models = purchaseOrderQueryService.findAll().stream()
+                .map(this::toPurchaseOrderResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(r.poId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withSelfRel()));
     }
 
     @GetMapping("/purchase-orders/{poId}")
-    public ResponseEntity<PurchaseOrderResponse> getPurchaseOrder(@PathVariable String poId) {
-        return ResponseEntity.ok(toPurchaseOrderResponse(purchaseOrderQueryService.findById(poId)));
+    public ResponseEntity<EntityModel<PurchaseOrderResponse>> getPurchaseOrder(@PathVariable String poId) {
+        PurchaseOrderResponse response = toPurchaseOrderResponse(purchaseOrderQueryService.findById(poId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(poId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
     }
 
     @GetMapping("/purchase-orders/initial-status/{userId}")
-    public ResponseEntity<PurchaseOrderInitialStatusResponse> determineInitialStatus(@PathVariable Long userId) {
-        return ResponseEntity.ok(new PurchaseOrderInitialStatusResponse(
-                purchaseOrderQueryService.determineInitialStatus(userId)));
+    public ResponseEntity<EntityModel<PurchaseOrderInitialStatusResponse>> determineInitialStatus(@PathVariable Long userId) {
+        PurchaseOrderInitialStatusResponse response = new PurchaseOrderInitialStatusResponse(
+                purchaseOrderQueryService.determineInitialStatus(userId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).determineInitialStatus(userId)).withSelfRel()));
     }
 
     @GetMapping("/approval-requests")
-    public ResponseEntity<List<ApprovalRequestResponse>> getApprovalRequests() {
-        return ResponseEntity.ok(approvalRequestQueryService.findAll().stream().map(this::toApprovalRequestResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<ApprovalRequestResponse>>> getApprovalRequests() {
+        List<EntityModel<ApprovalRequestResponse>> models = approvalRequestQueryService.findAll().stream()
+                .map(this::toApprovalRequestResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(r.approvalRequestId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withSelfRel()));
     }
 
     @GetMapping("/approval-requests/{approvalRequestId}")
-    public ResponseEntity<ApprovalRequestResponse> getApprovalRequest(@PathVariable Long approvalRequestId) {
-        return ResponseEntity.ok(toApprovalRequestResponse(approvalRequestQueryService.findById(approvalRequestId)));
+    public ResponseEntity<EntityModel<ApprovalRequestResponse>> getApprovalRequest(@PathVariable Long approvalRequestId) {
+        ApprovalRequestResponse response = toApprovalRequestResponse(approvalRequestQueryService.findById(approvalRequestId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(approvalRequestId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
     }
 
     @GetMapping("/approval-requests/document/{documentType}/{documentId}/status/{status}")
-    public ResponseEntity<ApprovalRequestResponse> getApprovalRequestByDocumentAndStatus(
+    public ResponseEntity<EntityModel<ApprovalRequestResponse>> getApprovalRequestByDocumentAndStatus(
             @PathVariable String documentType,
             @PathVariable String documentId,
             @PathVariable String status) {
-        return ResponseEntity.ok(
-                toApprovalRequestResponse(approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(documentType, documentId, status)));
+        ApprovalRequestResponse response = toApprovalRequestResponse(
+                approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(documentType, documentId, status));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequestByDocumentAndStatus(documentType, documentId, status)).withSelfRel()));
     }
 
     @GetMapping("/production-orders")
-    public ResponseEntity<List<ProductionOrderResponse>> getProductionOrders() {
-        return ResponseEntity.ok(productionOrderQueryService.findAll().stream().map(this::toProductionOrderResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<ProductionOrderResponse>>> getProductionOrders() {
+        List<EntityModel<ProductionOrderResponse>> models = productionOrderQueryService.findAll().stream()
+                .map(this::toProductionOrderResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getProductionOrder(r.productionOrderId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getProductionOrders()).withSelfRel()));
     }
 
     @GetMapping("/production-orders/{productionOrderId}")
-    public ResponseEntity<ProductionOrderResponse> getProductionOrder(
+    public ResponseEntity<EntityModel<ProductionOrderResponse>> getProductionOrder(
             @PathVariable String productionOrderId) {
-        return ResponseEntity.ok(toProductionOrderResponse(productionOrderQueryService.findById(productionOrderId)));
+        ProductionOrderResponse response = toProductionOrderResponse(productionOrderQueryService.findById(productionOrderId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getProductionOrder(productionOrderId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getProductionOrders()).withRel("production-orders")));
     }
 
     @GetMapping("/shipments")
-    public ResponseEntity<List<ShipmentResponse>> getShipments() {
-        return ResponseEntity.ok(shipmentQueryService.findAll().stream().map(this::toShipmentResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<ShipmentResponse>>> getShipments() {
+        List<EntityModel<ShipmentResponse>> models = shipmentQueryService.findAll().stream()
+                .map(this::toShipmentResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getShipment(r.shipmentId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getShipments()).withSelfRel()));
     }
 
     @GetMapping("/shipments/{shipmentId}")
-    public ResponseEntity<ShipmentResponse> getShipment(@PathVariable Long shipmentId) {
-        return ResponseEntity.ok(toShipmentResponse(shipmentQueryService.findById(shipmentId)));
+    public ResponseEntity<EntityModel<ShipmentResponse>> getShipment(@PathVariable Long shipmentId) {
+        ShipmentResponse response = toShipmentResponse(shipmentQueryService.findById(shipmentId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getShipment(shipmentId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getShipments()).withRel("shipments")));
     }
 
     @GetMapping("/collections")
-    public ResponseEntity<List<CollectionResponse>> getCollections() {
-        return ResponseEntity.ok(collectionQueryService.findAll().stream().map(this::toCollectionResponse).toList());
+    public ResponseEntity<CollectionModel<EntityModel<CollectionResponse>>> getCollections() {
+        List<EntityModel<CollectionResponse>> models = collectionQueryService.findAll().stream()
+                .map(this::toCollectionResponse)
+                .map(r -> EntityModel.of(r,
+                        linkTo(methodOn(DocumentQueryController.class).getCollection(r.collectionId())).withSelfRel()))
+                .toList();
+        return ResponseEntity.ok(CollectionModel.of(models,
+                linkTo(methodOn(DocumentQueryController.class).getCollections()).withSelfRel()));
     }
 
     @GetMapping("/collections/{collectionId}")
-    public ResponseEntity<CollectionResponse> getCollection(@PathVariable Long collectionId) {
-        return ResponseEntity.ok(toCollectionResponse(collectionQueryService.findById(collectionId)));
+    public ResponseEntity<EntityModel<CollectionResponse>> getCollection(@PathVariable Long collectionId) {
+        CollectionResponse response = toCollectionResponse(collectionQueryService.findById(collectionId));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getCollection(collectionId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getCollections()).withRel("collections")));
     }
 
     private PurchaseOrderResponse toPurchaseOrderResponse(PurchaseOrderView purchaseOrder) {

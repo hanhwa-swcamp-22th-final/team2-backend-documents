@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.springframework.hateoas.EntityModel;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +47,7 @@ import com.team2.documents.command.application.service.PurchaseOrderDocumentGene
 import com.team2.documents.command.application.service.PurchaseOrderProductionOrderGenerationService;
 import com.team2.documents.command.application.service.PurchaseOrderRejectionWorkflowService;
 import com.team2.documents.command.application.service.PurchaseOrderRegistrationService;
+import com.team2.documents.query.controller.DocumentQueryController;
 
 @RestController
 @RequestMapping("/api")
@@ -101,73 +105,99 @@ public class DocumentCommandController {
     }
 
     @PostMapping("/purchase-orders")
-    public ResponseEntity<PurchaseOrderCreateResponse> create(@RequestBody PurchaseOrderCreateRequest request) {
+    public ResponseEntity<EntityModel<PurchaseOrderCreateResponse>> create(@RequestBody PurchaseOrderCreateRequest request) {
         com.team2.documents.command.domain.entity.PurchaseOrder purchaseOrder = purchaseOrderCreationService.create(request);
-        return ResponseEntity.ok(new PurchaseOrderCreateResponse("PO 생성 요청이 처리되었습니다.", purchaseOrder.getPoId()));
+        PurchaseOrderCreateResponse response = new PurchaseOrderCreateResponse("PO 생성 요청이 처리되었습니다.", purchaseOrder.getPoId());
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(purchaseOrder.getPoId())).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
     }
 
     @PostMapping("/proforma-invoices")
-    public ResponseEntity<ProformaInvoiceCreateResponse> createProformaInvoice(@RequestBody ProformaInvoiceCreateRequest request) {
+    public ResponseEntity<EntityModel<ProformaInvoiceCreateResponse>> createProformaInvoice(@RequestBody ProformaInvoiceCreateRequest request) {
         com.team2.documents.command.domain.entity.ProformaInvoice proformaInvoice = proformaInvoiceCreationService.create(request);
-        return ResponseEntity.ok(new ProformaInvoiceCreateResponse("PI 생성 요청이 처리되었습니다.", proformaInvoice.getPiId()));
+        ProformaInvoiceCreateResponse response = new ProformaInvoiceCreateResponse("PI 생성 요청이 처리되었습니다.", proformaInvoice.getPiId());
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(proformaInvoice.getPiId())).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withRel("proforma-invoices")));
     }
 
     @PostMapping("/proforma-invoices/request-registration")
-    public ResponseEntity<ProformaInvoiceRegistrationResponse> requestRegistration(
+    public ResponseEntity<EntityModel<ProformaInvoiceRegistrationResponse>> requestRegistration(
             @RequestBody ProformaInvoiceRegistrationRequest request) {
         proformaInvoiceService.requestRegistration(request.piId(), request.userId());
-        return ResponseEntity.ok(new ProformaInvoiceRegistrationResponse("PI 등록 요청이 처리되었습니다."));
+        ProformaInvoiceRegistrationResponse response = new ProformaInvoiceRegistrationResponse("PI 등록 요청이 처리되었습니다.");
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(request.piId())).withRel("proforma-invoice")));
     }
 
     @PostMapping("/purchase-orders/request-registration")
-    public ResponseEntity<PurchaseOrderRegistrationResponse> requestPurchaseOrderRegistration(
+    public ResponseEntity<EntityModel<PurchaseOrderRegistrationResponse>> requestPurchaseOrderRegistration(
             @RequestBody PurchaseOrderRegistrationRequest request) {
         purchaseOrderRegistrationService.requestRegistration(request.poId(), request.userId());
-        return ResponseEntity.ok(new PurchaseOrderRegistrationResponse("PO 등록 요청이 처리되었습니다."));
+        PurchaseOrderRegistrationResponse response = new PurchaseOrderRegistrationResponse("PO 등록 요청이 처리되었습니다.");
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(request.poId())).withRel("purchase-order")));
     }
 
     @PostMapping("/purchase-orders/request-modification")
-    public ResponseEntity<PurchaseOrderModificationResponse> requestPurchaseOrderModification(
+    public ResponseEntity<EntityModel<PurchaseOrderModificationResponse>> requestPurchaseOrderModification(
             @RequestBody PurchaseOrderModificationRequest request) {
         purchaseOrderModificationRequestService.requestModification(request.poId(), request.userId());
-        return ResponseEntity.ok(new PurchaseOrderModificationResponse("PO 수정 요청이 처리되었습니다."));
+        PurchaseOrderModificationResponse response = new PurchaseOrderModificationResponse("PO 수정 요청이 처리되었습니다.");
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(request.poId())).withRel("purchase-order")));
     }
 
     @PostMapping("/purchase-orders/request-deletion")
-    public ResponseEntity<PurchaseOrderDeletionResponse> requestPurchaseOrderDeletion(
+    public ResponseEntity<EntityModel<PurchaseOrderDeletionResponse>> requestPurchaseOrderDeletion(
             @RequestBody PurchaseOrderDeletionRequest request) {
         purchaseOrderDeletionRequestService.requestDeletion(request.poId(), request.userId());
-        return ResponseEntity.ok(new PurchaseOrderDeletionResponse("PO 삭제 요청이 처리되었습니다."));
+        PurchaseOrderDeletionResponse response = new PurchaseOrderDeletionResponse("PO 삭제 요청이 처리되었습니다.");
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
     }
 
     @PutMapping("/shipments/{shipmentId}")
-    public ResponseEntity<ShipmentResponse> updateShipmentStatus(@PathVariable Long shipmentId,
+    public ResponseEntity<EntityModel<ShipmentResponse>> updateShipmentStatus(@PathVariable Long shipmentId,
                                                                  @RequestBody ShipmentStatusUpdateRequest request) {
-        return ResponseEntity.ok(toShipmentResponse(shipmentCommandService.updateStatus(shipmentId, request.status())));
+        ShipmentResponse response = toShipmentResponse(shipmentCommandService.updateStatus(shipmentId, request.status()));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getShipment(shipmentId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getShipments()).withRel("shipments")));
     }
 
     @PutMapping("/collections/{collectionId}")
-    public ResponseEntity<CollectionResponse> updateCollection(@PathVariable Long collectionId,
+    public ResponseEntity<EntityModel<CollectionResponse>> updateCollection(@PathVariable Long collectionId,
                                                                @RequestBody CollectionUpdateRequest request) {
-        return ResponseEntity.ok(toCollectionResponse(collectionCommandService.complete(
+        CollectionResponse response = toCollectionResponse(collectionCommandService.complete(
                 collectionId,
                 request.status(),
                 request.collectionCompletedDate()
-        )));
+        ));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getCollection(collectionId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getCollections()).withRel("collections")));
     }
 
     @PostMapping("/approval-requests")
-    public ResponseEntity<ApprovalRequestResponse> createApprovalRequest(
+    public ResponseEntity<EntityModel<ApprovalRequestResponse>> createApprovalRequest(
             @RequestBody ApprovalRequestCreateRequest request) {
-        return ResponseEntity.ok(toApprovalRequestResponse(approvalRequestCommandService.create(request)));
+        ApprovalRequestResponse response = toApprovalRequestResponse(approvalRequestCommandService.create(request));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(response.approvalRequestId())).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
     }
 
     @PutMapping("/approval-requests/{approvalRequestId}")
-    public ResponseEntity<ApprovalRequestResponse> updateApprovalRequest(
+    public ResponseEntity<EntityModel<ApprovalRequestResponse>> updateApprovalRequest(
             @PathVariable Long approvalRequestId,
             @RequestBody ApprovalRequestUpdateRequest request) {
-        return ResponseEntity.ok(toApprovalRequestResponse(
-                approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment())));
+        ApprovalRequestResponse response = toApprovalRequestResponse(
+                approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment()));
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(approvalRequestId)).withSelfRel(),
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
     }
 
     @PostMapping("/purchase-orders/{poId}/validate-modifiable")
