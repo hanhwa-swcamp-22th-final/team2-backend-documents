@@ -1,7 +1,6 @@
 package com.team2.documents.command.application.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
@@ -11,47 +10,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.team2.documents.command.domain.entity.PurchaseOrder;
-import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
+import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
+import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
 
 @ExtendWith(MockitoExtension.class)
 class PurchaseOrderRejectionWorkflowServiceTest {
 
     @Mock
-    private PurchaseOrderCommandService purchaseOrderCommandService;
-
-    @Mock
-    private DocumentRevisionHistoryService documentRevisionHistoryService;
+    private ApprovalRequestCommandService approvalRequestCommandService;
 
     @InjectMocks
     private PurchaseOrderRejectionWorkflowService purchaseOrderRejectionWorkflowService;
 
     @Test
-    @DisplayName("PO 반려 시 PO 상태가 REJECTED로 변경된다")
-    void reject_whenApprovalPending_thenRejectsPurchaseOrder() {
-        // given
+    @DisplayName("PO 반려 시 대기 중인 결재 요청을 반려 처리한다")
+    void reject_whenCalled_thenRejectsPendingApprovalRequest() {
         String poId = "PO2025-0001";
-        PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.APPROVAL_PENDING);
+        when(approvalRequestCommandService.updatePendingDocument(ApprovalDocumentType.PO, poId, ApprovalStatus.REJECTED))
+                .thenReturn(null);
 
-        when(purchaseOrderCommandService.findById(poId)).thenReturn(purchaseOrder);
-
-        // when
         purchaseOrderRejectionWorkflowService.reject(poId);
 
-        // then
-        assertEquals(PurchaseOrderStatus.REJECTED, purchaseOrder.getStatus());
-    }
-
-    @Test
-    @DisplayName("결재대기 상태가 아닌 PO를 워크플로우 반려하면 예외가 발생한다")
-    void reject_whenPurchaseOrderIsNotApprovalPending_thenThrowsException() {
-        // given
-        String poId = "PO2025-0002";
-        PurchaseOrder purchaseOrder = new PurchaseOrder(poId, PurchaseOrderStatus.CONFIRMED);
-        when(purchaseOrderCommandService.findById(poId)).thenReturn(purchaseOrder);
-
-        // when & then
-        assertThrows(IllegalStateException.class,
-                () -> purchaseOrderRejectionWorkflowService.reject(poId));
+        verify(approvalRequestCommandService)
+                .updatePendingDocument(ApprovalDocumentType.PO, poId, ApprovalStatus.REJECTED);
     }
 }

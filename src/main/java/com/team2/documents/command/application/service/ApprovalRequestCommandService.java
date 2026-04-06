@@ -66,6 +66,20 @@ public class ApprovalRequestCommandService {
         return update(approvalRequestId, targetApprovalStatus, null);
     }
 
+    public ApprovalRequest updatePendingDocument(ApprovalDocumentType documentType,
+                                                 String documentId,
+                                                 ApprovalStatus targetApprovalStatus) {
+        return updatePendingDocument(documentType, documentId, targetApprovalStatus, null);
+    }
+
+    public ApprovalRequest updatePendingDocument(ApprovalDocumentType documentType,
+                                                 String documentId,
+                                                 ApprovalStatus targetApprovalStatus,
+                                                 String comment) {
+        ApprovalRequest approvalRequest = findPendingByDocument(documentType, documentId);
+        return update(approvalRequest.getApprovalRequestId(), targetApprovalStatus, comment);
+    }
+
     public ApprovalRequest update(Long approvalRequestId, ApprovalStatus targetApprovalStatus, String comment) {
         ApprovalRequest approvalRequest = approvalRequestRepository.findById(approvalRequestId)
                 .orElseThrow(() -> new IllegalArgumentException("결재 요청 정보를 찾을 수 없습니다."));
