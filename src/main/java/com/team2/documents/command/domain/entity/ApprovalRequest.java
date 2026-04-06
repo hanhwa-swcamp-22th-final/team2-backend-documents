@@ -3,6 +3,7 @@ package com.team2.documents.command.domain.entity;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
+import com.team2.documents.command.domain.entity.converter.ApprovalRequestTypeConverter;
+import com.team2.documents.command.domain.entity.converter.ApprovalStatusConverter;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.ApprovalStatus;
@@ -34,7 +37,7 @@ public class ApprovalRequest {
     @Column(name = "approval_document_id", nullable = false, length = 30)
     private String documentId;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ApprovalRequestTypeConverter.class)
     @Column(name = "approval_request_type", nullable = false)
     private ApprovalRequestType requestType;
 
@@ -56,7 +59,7 @@ public class ApprovalRequest {
     @Column(name = "approval_reviewed_at")
     private LocalDateTime reviewedAt;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ApprovalStatusConverter.class)
     @Column(name = "approval_status", nullable = false)
     private ApprovalStatus status;
 

@@ -35,6 +35,12 @@ public class Collection {
     @Column(name = "client_id", nullable = false)
     private Long clientId;
 
+    @Column(name = "manager_id")
+    private Long managerId;
+
+    @Column(name = "currency_id")
+    private Integer currencyId;
+
     @Transient
     private String clientName;
 
@@ -52,6 +58,9 @@ public class Collection {
 
     @Column(name = "collection_status")
     private String status;
+
+    @Column(name = "collection_issue_date")
+    private LocalDate collectionIssueDate;
 
     @Column(name = "collection_completed_date")
     private LocalDate collectionDate;
@@ -132,6 +141,18 @@ public class Collection {
 
     public String getClientName() {
         return clientName;
+    }
+
+    public Long getManagerId() {
+        return managerId;
+    }
+
+    public Integer getCurrencyId() {
+        return currencyId;
+    }
+
+    public LocalDate getCollectionIssueDate() {
+        return collectionIssueDate;
     }
 
     public BigDecimal getTotalAmount() {

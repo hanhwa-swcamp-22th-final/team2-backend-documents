@@ -8,9 +8,8 @@ import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,6 +18,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
+import com.team2.documents.command.domain.entity.converter.PurchaseOrderStatusConverter;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import lombok.Setter;
 
@@ -50,7 +50,7 @@ public class PurchaseOrder {
     @Column(name = "manager_id", nullable = false)
     private Long managerId;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = PurchaseOrderStatusConverter.class)
     @Column(name = "po_status", nullable = false)
     private PurchaseOrderStatus status;
 
