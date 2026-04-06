@@ -1,0 +1,12 @@
+package com.team2.documents.command.application.dto;
+
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "이메일 발송 응답")
+public record EmailSendResponse(
+        @Schema(description = "발송 상태 (SENT / FAILED)") String status,
+        @Schema(description = "결과 메시지") String message,
+        @Schema(description = "S3에 업로드된 PDF 키 목록") List<String> s3Keys
+) {}

@@ -13,4 +13,6 @@ public interface ProductionOrderRepository extends JpaRepository<ProductionOrder
     default Optional<ProductionOrder> findById(String productionOrderCode) {
         return findByProductionOrderCode(productionOrderCode);
     }
+
+    Optional<ProductionOrder> findByPoId(Long poId);
 }

@@ -9,4 +9,6 @@ import com.team2.documents.command.domain.entity.CommercialInvoice;
 public interface CommercialInvoiceJpaRepository extends JpaRepository<CommercialInvoice, Long> {
 
     Optional<CommercialInvoice> findByCiCode(String ciCode);
+
+    Optional<CommercialInvoice> findByPoId(Long poId);
 }

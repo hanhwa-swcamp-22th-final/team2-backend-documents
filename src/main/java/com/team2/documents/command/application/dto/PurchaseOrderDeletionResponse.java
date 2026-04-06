@@ -1,4 +1,9 @@
 package com.team2.documents.command.application.dto;
 
-public record PurchaseOrderDeletionResponse(String message) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Purchase Order 삭제 응답 DTO")
+public record PurchaseOrderDeletionResponse(
+        @Schema(description = "처리 결과 메시지", example = "PO 삭제 요청이 처리되었습니다.")
+        String message) {
 }

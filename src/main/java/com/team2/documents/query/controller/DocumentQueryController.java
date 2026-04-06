@@ -9,11 +9,15 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.team2.documents.infrastructure.s3.S3Service;
 
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.ApprovalRequestView;
@@ -38,6 +42,14 @@ import com.team2.documents.query.service.ShipmentOrderQueryService;
 import com.team2.documents.query.service.ShipmentQueryService;
 import com.team2.documents.query.service.CollectionQueryService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Tag(name = "문서 Query", description = "PI, PO, CI, PL, 선적지시서, 생산지시서, 출하, 수금, 결재 조회 API")
 @RestController
 @RequestMapping("/api")
 public class DocumentQueryController {
@@ -52,6 +64,7 @@ public class DocumentQueryController {
     private final CollectionQueryService collectionQueryService;
     private final ApprovalRequestQueryService approvalRequestQueryService;
     private final DocsRevisionQueryService docsRevisionQueryService;
+    private final S3Service s3Service;
 
     public DocumentQueryController(PurchaseOrderQueryService purchaseOrderQueryService,
                                    ProformaInvoiceQueryService proformaInvoiceQueryService,
@@ -62,7 +75,8 @@ public class DocumentQueryController {
                                    ShipmentQueryService shipmentQueryService,
                                    CollectionQueryService collectionQueryService,
                                    ApprovalRequestQueryService approvalRequestQueryService,
-                                   DocsRevisionQueryService docsRevisionQueryService) {
+                                   DocsRevisionQueryService docsRevisionQueryService,
+                                   S3Service s3Service) {
         this.purchaseOrderQueryService = purchaseOrderQueryService;
         this.proformaInvoiceQueryService = proformaInvoiceQueryService;
         this.commercialInvoiceQueryService = commercialInvoiceQueryService;
@@ -73,8 +87,13 @@ public class DocumentQueryController {
         this.collectionQueryService = collectionQueryService;
         this.approvalRequestQueryService = approvalRequestQueryService;
         this.docsRevisionQueryService = docsRevisionQueryService;
+        this.s3Service = s3Service;
     }
 
+    @Operation(summary = "Proforma Invoice 전체 조회", description = "모든 견적송장(PI) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/proforma-invoices")
     public ResponseEntity<CollectionModel<EntityModel<ProformaInvoiceResponse>>> getProformaInvoices() {
         List<EntityModel<ProformaInvoiceResponse>> models = proformaInvoiceQueryService.findAll().stream()
@@ -86,14 +105,24 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withSelfRel()));
     }
 
+    @Operation(summary = "Proforma Invoice 단건 조회", description = "PI ID로 견적송장을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "PI를 찾을 수 없음")
+    })
     @GetMapping("/proforma-invoices/{piId}")
-    public ResponseEntity<EntityModel<ProformaInvoiceResponse>> getProformaInvoice(@PathVariable String piId) {
+    public ResponseEntity<EntityModel<ProformaInvoiceResponse>> getProformaInvoice(
+            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable String piId) {
         ProformaInvoiceResponse response = toProformaInvoiceResponse(proformaInvoiceQueryService.findById(piId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(piId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withRel("proforma-invoices")));
     }
 
+    @Operation(summary = "Commercial Invoice 전체 조회", description = "모든 상업송장(CI) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/commercial-invoices")
     public ResponseEntity<CollectionModel<EntityModel<CommercialInvoiceResponse>>> getCommercialInvoices() {
         List<EntityModel<CommercialInvoiceResponse>> models = commercialInvoiceQueryService.findAll().stream()
@@ -105,14 +134,24 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices()).withSelfRel()));
     }
 
+    @Operation(summary = "Commercial Invoice 단건 조회", description = "CI ID로 상업송장을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "CI를 찾을 수 없음")
+    })
     @GetMapping("/commercial-invoices/{ciId}")
-    public ResponseEntity<EntityModel<CommercialInvoiceResponse>> getCommercialInvoice(@PathVariable String ciId) {
+    public ResponseEntity<EntityModel<CommercialInvoiceResponse>> getCommercialInvoice(
+            @Parameter(description = "CI 문서 ID", example = "CI-2026-0001") @PathVariable String ciId) {
         CommercialInvoiceResponse response = toCommercialInvoiceResponse(commercialInvoiceQueryService.findById(ciId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getCommercialInvoice(ciId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices()).withRel("commercial-invoices")));
     }
 
+    @Operation(summary = "Packing List 전체 조회", description = "모든 패킹리스트(PL) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/packing-lists")
     public ResponseEntity<CollectionModel<EntityModel<PackingListResponse>>> getPackingLists() {
         List<EntityModel<PackingListResponse>> models = packingListQueryService.findAll().stream()
@@ -124,14 +163,24 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getPackingLists()).withSelfRel()));
     }
 
+    @Operation(summary = "Packing List 단건 조회", description = "PL ID로 패킹리스트를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "PL을 찾을 수 없음")
+    })
     @GetMapping("/packing-lists/{plId}")
-    public ResponseEntity<EntityModel<PackingListResponse>> getPackingList(@PathVariable String plId) {
+    public ResponseEntity<EntityModel<PackingListResponse>> getPackingList(
+            @Parameter(description = "PL 문서 ID", example = "PL-2026-0001") @PathVariable String plId) {
         PackingListResponse response = toPackingListResponse(packingListQueryService.findById(plId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPackingList(plId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getPackingLists()).withRel("packing-lists")));
     }
 
+    @Operation(summary = "선적지시서 전체 조회", description = "모든 선적지시서(Shipment Order) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/shipment-orders")
     public ResponseEntity<CollectionModel<EntityModel<ShipmentOrderResponse>>> getShipmentOrders() {
         List<EntityModel<ShipmentOrderResponse>> models = shipmentOrderQueryService.findAll().stream()
@@ -143,15 +192,24 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getShipmentOrders()).withSelfRel()));
     }
 
+    @Operation(summary = "선적지시서 단건 조회", description = "선적지시서 ID로 선적지시서를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "선적지시서를 찾을 수 없음")
+    })
     @GetMapping("/shipment-orders/{shipmentOrderId}")
     public ResponseEntity<EntityModel<ShipmentOrderResponse>> getShipmentOrder(
-            @PathVariable String shipmentOrderId) {
+            @Parameter(description = "선적지시서 ID", example = "SO-2026-0001") @PathVariable String shipmentOrderId) {
         ShipmentOrderResponse response = toShipmentOrderResponse(shipmentOrderQueryService.findById(shipmentOrderId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getShipmentOrder(shipmentOrderId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getShipmentOrders()).withRel("shipment-orders")));
     }
 
+    @Operation(summary = "Purchase Order 전체 조회", description = "모든 발주서(PO) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/purchase-orders")
     public ResponseEntity<CollectionModel<EntityModel<PurchaseOrderResponse>>> getPurchaseOrders() {
         List<EntityModel<PurchaseOrderResponse>> models = purchaseOrderQueryService.findAll().stream()
@@ -163,22 +221,38 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withSelfRel()));
     }
 
+    @Operation(summary = "Purchase Order 단건 조회", description = "PO ID로 발주서를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "PO를 찾을 수 없음")
+    })
     @GetMapping("/purchase-orders/{poId}")
-    public ResponseEntity<EntityModel<PurchaseOrderResponse>> getPurchaseOrder(@PathVariable String poId) {
+    public ResponseEntity<EntityModel<PurchaseOrderResponse>> getPurchaseOrder(
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
         PurchaseOrderResponse response = toPurchaseOrderResponse(purchaseOrderQueryService.findById(poId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(poId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
     }
 
+    @Operation(summary = "PO 초기 상태 조회", description = "사용자 직급에 따라 PO 생성 시 초기 상태를 결정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
     @GetMapping("/purchase-orders/initial-status/{userId}")
-    public ResponseEntity<EntityModel<PurchaseOrderInitialStatusResponse>> determineInitialStatus(@PathVariable Long userId) {
+    public ResponseEntity<EntityModel<PurchaseOrderInitialStatusResponse>> determineInitialStatus(
+            @Parameter(description = "사용자 ID", example = "1") @PathVariable Long userId) {
         PurchaseOrderInitialStatusResponse response = new PurchaseOrderInitialStatusResponse(
                 purchaseOrderQueryService.determineInitialStatus(userId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).determineInitialStatus(userId)).withSelfRel()));
     }
 
+    @Operation(summary = "결재 요청 전체 조회", description = "모든 결재 요청 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/approval-requests")
     public ResponseEntity<CollectionModel<EntityModel<ApprovalRequestResponse>>> getApprovalRequests() {
         List<EntityModel<ApprovalRequestResponse>> models = approvalRequestQueryService.findAll().stream()
@@ -190,25 +264,40 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withSelfRel()));
     }
 
+    @Operation(summary = "결재 요청 단건 조회", description = "결재 요청 ID로 결재 요청을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "결재 요청을 찾을 수 없음")
+    })
     @GetMapping("/approval-requests/{approvalRequestId}")
-    public ResponseEntity<EntityModel<ApprovalRequestResponse>> getApprovalRequest(@PathVariable Long approvalRequestId) {
+    public ResponseEntity<EntityModel<ApprovalRequestResponse>> getApprovalRequest(
+            @Parameter(description = "결재 요청 ID", example = "1") @PathVariable Long approvalRequestId) {
         ApprovalRequestResponse response = toApprovalRequestResponse(approvalRequestQueryService.findById(approvalRequestId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(approvalRequestId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
     }
 
+    @Operation(summary = "문서 유형/ID/상태별 결재 요청 조회", description = "문서 유형, 문서 ID, 결재 상태로 결재 요청을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "결재 요청을 찾을 수 없음")
+    })
     @GetMapping("/approval-requests/document/{documentType}/{documentId}/status/{status}")
     public ResponseEntity<EntityModel<ApprovalRequestResponse>> getApprovalRequestByDocumentAndStatus(
-            @PathVariable String documentType,
-            @PathVariable String documentId,
-            @PathVariable String status) {
+            @Parameter(description = "문서 유형 (PI, PO 등)", example = "PO") @PathVariable String documentType,
+            @Parameter(description = "문서 ID", example = "PO-2026-0001") @PathVariable String documentId,
+            @Parameter(description = "결재 상태", example = "PENDING") @PathVariable String status) {
         ApprovalRequestResponse response = toApprovalRequestResponse(
                 approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(documentType, documentId, status));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequestByDocumentAndStatus(documentType, documentId, status)).withSelfRel()));
     }
 
+    @Operation(summary = "생산지시서 전체 조회", description = "모든 생산지시서(Production Order) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/production-orders")
     public ResponseEntity<CollectionModel<EntityModel<ProductionOrderResponse>>> getProductionOrders() {
         List<EntityModel<ProductionOrderResponse>> models = productionOrderQueryService.findAll().stream()
@@ -220,15 +309,24 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getProductionOrders()).withSelfRel()));
     }
 
+    @Operation(summary = "생산지시서 단건 조회", description = "생산지시서 ID로 생산지시서를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "생산지시서를 찾을 수 없음")
+    })
     @GetMapping("/production-orders/{productionOrderId}")
     public ResponseEntity<EntityModel<ProductionOrderResponse>> getProductionOrder(
-            @PathVariable String productionOrderId) {
+            @Parameter(description = "생산지시서 ID", example = "PRD-2026-0001") @PathVariable String productionOrderId) {
         ProductionOrderResponse response = toProductionOrderResponse(productionOrderQueryService.findById(productionOrderId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProductionOrder(productionOrderId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getProductionOrders()).withRel("production-orders")));
     }
 
+    @Operation(summary = "출하 전체 조회", description = "모든 출하(Shipment) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/shipments")
     public ResponseEntity<CollectionModel<EntityModel<ShipmentResponse>>> getShipments() {
         List<EntityModel<ShipmentResponse>> models = shipmentQueryService.findAll().stream()
@@ -240,14 +338,24 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getShipments()).withSelfRel()));
     }
 
+    @Operation(summary = "출하 단건 조회", description = "출하 ID로 출하를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "출하를 찾을 수 없음")
+    })
     @GetMapping("/shipments/{shipmentId}")
-    public ResponseEntity<EntityModel<ShipmentResponse>> getShipment(@PathVariable Long shipmentId) {
+    public ResponseEntity<EntityModel<ShipmentResponse>> getShipment(
+            @Parameter(description = "출하 ID", example = "1") @PathVariable Long shipmentId) {
         ShipmentResponse response = toShipmentResponse(shipmentQueryService.findById(shipmentId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getShipment(shipmentId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getShipments()).withRel("shipments")));
     }
 
+    @Operation(summary = "수금 전체 조회", description = "모든 수금(Collection) 목록을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/collections")
     public ResponseEntity<CollectionModel<EntityModel<CollectionResponse>>> getCollections() {
         List<EntityModel<CollectionResponse>> models = collectionQueryService.findAll().stream()
@@ -259,8 +367,14 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getCollections()).withSelfRel()));
     }
 
+    @Operation(summary = "수금 단건 조회", description = "수금 ID로 수금을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "수금을 찾을 수 없음")
+    })
     @GetMapping("/collections/{collectionId}")
-    public ResponseEntity<EntityModel<CollectionResponse>> getCollection(@PathVariable Long collectionId) {
+    public ResponseEntity<EntityModel<CollectionResponse>> getCollection(
+            @Parameter(description = "수금 ID", example = "1") @PathVariable Long collectionId) {
         CollectionResponse response = toCollectionResponse(collectionQueryService.findById(collectionId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getCollection(collectionId)).withSelfRel(),
@@ -468,193 +582,218 @@ public class DocumentQueryController {
         );
     }
 
+    @Schema(description = "Purchase Order 품목 응답")
     public record PurchaseOrderItemResponse(
-            Long poItemId,
-            Long poId,
-            Integer itemId,
-            String itemName,
-            Integer quantity,
-            String unit,
-            BigDecimal unitPrice,
-            BigDecimal amount,
-            String remark
+            @Schema(description = "PO 품목 ID") Long poItemId,
+            @Schema(description = "PO 내부 ID") Long poId,
+            @Schema(description = "품목 ID") Integer itemId,
+            @Schema(description = "품목명") String itemName,
+            @Schema(description = "수량") Integer quantity,
+            @Schema(description = "단위") String unit,
+            @Schema(description = "단가") BigDecimal unitPrice,
+            @Schema(description = "금액") BigDecimal amount,
+            @Schema(description = "비고") String remark
     ) {
     }
 
+    @Schema(description = "Purchase Order 응답")
     public record PurchaseOrderResponse(
-            Long purchaseOrderId,
-            String poId,
-            String piId,
-            LocalDate issueDate,
-            Integer clientId,
-            Integer currencyId,
-            Long managerId,
-            String status,
-            LocalDate deliveryDate,
-            String incotermsCode,
-            String namedPlace,
-            LocalDate sourceDeliveryDate,
-            boolean deliveryDateOverride,
-            BigDecimal totalAmount,
-            String clientName,
-            String clientAddress,
-            String country,
-            String currencyCode,
-            String managerName,
-            String approvalStatus,
-            String requestStatus,
-            String approvalAction,
-            String approvalRequestedBy,
-            LocalDateTime approvalRequestedAt,
-            String approvalReview,
-            String itemsSnapshot,
-            String linkedDocuments,
-            String revisionHistory,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt,
-            List<PurchaseOrderItemResponse> items
+            @Schema(description = "PO 내부 ID") Long purchaseOrderId,
+            @Schema(description = "PO 문서 ID") String poId,
+            @Schema(description = "연결된 PI 문서 ID") String piId,
+            @Schema(description = "발행일") LocalDate issueDate,
+            @Schema(description = "거래처 ID") Integer clientId,
+            @Schema(description = "통화 ID") Integer currencyId,
+            @Schema(description = "담당자 ID") Long managerId,
+            @Schema(description = "PO 상태") String status,
+            @Schema(description = "납기일") LocalDate deliveryDate,
+            @Schema(description = "인코텀즈 코드") String incotermsCode,
+            @Schema(description = "지정 장소") String namedPlace,
+            @Schema(description = "원본 납기일") LocalDate sourceDeliveryDate,
+            @Schema(description = "납기일 수동 변경 여부") boolean deliveryDateOverride,
+            @Schema(description = "총 금액") BigDecimal totalAmount,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "거래처 주소") String clientAddress,
+            @Schema(description = "국가") String country,
+            @Schema(description = "통화 코드") String currencyCode,
+            @Schema(description = "담당자명") String managerName,
+            @Schema(description = "결재 상태") String approvalStatus,
+            @Schema(description = "요청 상태") String requestStatus,
+            @Schema(description = "결재 액션") String approvalAction,
+            @Schema(description = "결재 요청자") String approvalRequestedBy,
+            @Schema(description = "결재 요청일시") LocalDateTime approvalRequestedAt,
+            @Schema(description = "결재 검토 내용") String approvalReview,
+            @Schema(description = "품목 스냅샷 (JSON)") String itemsSnapshot,
+            @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
+            @Schema(description = "수정 이력") String revisionHistory,
+            @Schema(description = "생성일시") LocalDateTime createdAt,
+            @Schema(description = "수정일시") LocalDateTime updatedAt,
+            @Schema(description = "PO 품목 목록") List<PurchaseOrderItemResponse> items
     ) {
     }
 
+    @Schema(description = "Proforma Invoice 품목 응답")
     public record ProformaInvoiceItemResponse(
-            Integer itemId,
-            String itemName,
-            Integer quantity,
-            String unit,
-            BigDecimal unitPrice,
-            BigDecimal amount,
-            String remark
+            @Schema(description = "품목 ID") Integer itemId,
+            @Schema(description = "품목명") String itemName,
+            @Schema(description = "수량") Integer quantity,
+            @Schema(description = "단위") String unit,
+            @Schema(description = "단가") BigDecimal unitPrice,
+            @Schema(description = "금액") BigDecimal amount,
+            @Schema(description = "비고") String remark
     ) {
     }
 
+    @Schema(description = "Proforma Invoice 응답")
     public record ProformaInvoiceResponse(
-            String piId,
-            String status,
-            LocalDate issueDate,
-            Integer clientId,
-            Integer currencyId,
-            Long managerId,
-            LocalDate deliveryDate,
-            String incotermsCode,
-            String namedPlace,
-            BigDecimal totalAmount,
-            String clientName,
-            String clientAddress,
-            String country,
-            String currencyCode,
-            String managerName,
-            String approvalStatus,
-            String requestStatus,
-            String approvalAction,
-            String approvalRequestedBy,
-            LocalDateTime approvalRequestedAt,
-            String approvalReview,
-            String itemsSnapshot,
-            String linkedDocuments,
-            String revisionHistory,
-            List<ProformaInvoiceItemResponse> items
+            @Schema(description = "PI 문서 ID") String piId,
+            @Schema(description = "PI 상태") String status,
+            @Schema(description = "발행일") LocalDate issueDate,
+            @Schema(description = "거래처 ID") Integer clientId,
+            @Schema(description = "통화 ID") Integer currencyId,
+            @Schema(description = "담당자 ID") Long managerId,
+            @Schema(description = "납기일") LocalDate deliveryDate,
+            @Schema(description = "인코텀즈 코드") String incotermsCode,
+            @Schema(description = "지정 장소") String namedPlace,
+            @Schema(description = "총 금액") BigDecimal totalAmount,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "거래처 주소") String clientAddress,
+            @Schema(description = "국가") String country,
+            @Schema(description = "통화 코드") String currencyCode,
+            @Schema(description = "담당자명") String managerName,
+            @Schema(description = "결재 상태") String approvalStatus,
+            @Schema(description = "요청 상태") String requestStatus,
+            @Schema(description = "결재 액션") String approvalAction,
+            @Schema(description = "결재 요청자") String approvalRequestedBy,
+            @Schema(description = "결재 요청일시") LocalDateTime approvalRequestedAt,
+            @Schema(description = "결재 검토 내용") String approvalReview,
+            @Schema(description = "품목 스냅샷 (JSON)") String itemsSnapshot,
+            @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
+            @Schema(description = "수정 이력") String revisionHistory,
+            @Schema(description = "PI 품목 목록") List<ProformaInvoiceItemResponse> items
     ) {
     }
 
+    @Schema(description = "Commercial Invoice 응답")
     public record CommercialInvoiceResponse(
-            Long commercialInvoiceId,
-            String ciId,
-            Long poId,
-            LocalDate invoiceDate,
-            Integer clientId,
-            Integer currencyId,
-            BigDecimal totalAmount,
-            String status,
-            LocalDateTime createdAt
+            @Schema(description = "CI 내부 ID") Long commercialInvoiceId,
+            @Schema(description = "CI 문서 ID") String ciId,
+            @Schema(description = "PO 내부 ID") Long poId,
+            @Schema(description = "송장 발행일") LocalDate invoiceDate,
+            @Schema(description = "거래처 ID") Integer clientId,
+            @Schema(description = "통화 ID") Integer currencyId,
+            @Schema(description = "총 금액") BigDecimal totalAmount,
+            @Schema(description = "CI 상태") String status,
+            @Schema(description = "생성일시") LocalDateTime createdAt
     ) {
     }
 
+    @Schema(description = "Packing List 응답")
     public record PackingListResponse(
-            Long packingListId,
-            String plId,
-            Long poId,
-            LocalDate invoiceDate,
-            Integer clientId,
-            BigDecimal grossWeight,
-            String status,
-            LocalDateTime createdAt
+            @Schema(description = "PL 내부 ID") Long packingListId,
+            @Schema(description = "PL 문서 ID") String plId,
+            @Schema(description = "PO 내부 ID") Long poId,
+            @Schema(description = "송장 발행일") LocalDate invoiceDate,
+            @Schema(description = "거래처 ID") Integer clientId,
+            @Schema(description = "총 중량") BigDecimal grossWeight,
+            @Schema(description = "PL 상태") String status,
+            @Schema(description = "생성일시") LocalDateTime createdAt
     ) {
     }
 
+    @Schema(description = "선적지시서 응답")
     public record ShipmentOrderResponse(
-            String shipmentOrderId,
-            String poId,
-            LocalDate issueDate,
-            Integer clientId,
-            Long managerId,
-            String status,
-            LocalDate dueDate,
-            String clientName,
-            String country,
-            String managerName,
-            String itemName,
-            String linkedDocuments,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            @Schema(description = "선적지시서 ID") String shipmentOrderId,
+            @Schema(description = "PO 문서 ID") String poId,
+            @Schema(description = "발행일") LocalDate issueDate,
+            @Schema(description = "거래처 ID") Integer clientId,
+            @Schema(description = "담당자 ID") Long managerId,
+            @Schema(description = "선적지시서 상태") String status,
+            @Schema(description = "납기일") LocalDate dueDate,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "국가") String country,
+            @Schema(description = "담당자명") String managerName,
+            @Schema(description = "품목명") String itemName,
+            @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
+            @Schema(description = "생성일시") LocalDateTime createdAt,
+            @Schema(description = "수정일시") LocalDateTime updatedAt
     ) {
     }
 
+    @Schema(description = "결재 요청 응답")
     public record ApprovalRequestResponse(
-            Long approvalRequestId,
-            String documentType,
-            String documentId,
-            String requestType,
-            Long requesterId,
-            Long approverId,
-            String comment,
-            String reviewSnapshot,
-            LocalDateTime requestedAt,
-            LocalDateTime reviewedAt,
-            String status
+            @Schema(description = "결재 요청 ID") Long approvalRequestId,
+            @Schema(description = "문서 유형") String documentType,
+            @Schema(description = "문서 ID") String documentId,
+            @Schema(description = "요청 유형") String requestType,
+            @Schema(description = "요청자 ID") Long requesterId,
+            @Schema(description = "결재자 ID") Long approverId,
+            @Schema(description = "코멘트") String comment,
+            @Schema(description = "검토 스냅샷") String reviewSnapshot,
+            @Schema(description = "요청일시") LocalDateTime requestedAt,
+            @Schema(description = "검토일시") LocalDateTime reviewedAt,
+            @Schema(description = "결재 상태") String status
     ) {
     }
 
+    @Schema(description = "생산지시서 응답")
     public record ProductionOrderResponse(
-            String productionOrderId,
-            String poId,
-            Integer clientId,
-            Long managerId,
-            String poNo,
-            LocalDate orderDate,
-            LocalDate dueDate,
-            String status,
-            String clientName,
-            String country,
-            String managerName,
-            String itemName,
-            String linkedDocuments,
-            List<String> items,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            @Schema(description = "생산지시서 ID") String productionOrderId,
+            @Schema(description = "PO 문서 ID") String poId,
+            @Schema(description = "거래처 ID") Integer clientId,
+            @Schema(description = "담당자 ID") Long managerId,
+            @Schema(description = "PO 문서 번호") String poNo,
+            @Schema(description = "주문일") LocalDate orderDate,
+            @Schema(description = "납기일") LocalDate dueDate,
+            @Schema(description = "생산지시서 상태") String status,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "국가") String country,
+            @Schema(description = "담당자명") String managerName,
+            @Schema(description = "품목명") String itemName,
+            @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
+            @Schema(description = "품목 목록") List<String> items,
+            @Schema(description = "생성일시") LocalDateTime createdAt,
+            @Schema(description = "수정일시") LocalDateTime updatedAt
     ) {
     }
 
+    @Schema(description = "출하 응답")
     public record ShipmentResponse(
-            Long shipmentId,
-            String poId,
-            String shipmentStatus
+            @Schema(description = "출하 ID") Long shipmentId,
+            @Schema(description = "PO 문서 ID") String poId,
+            @Schema(description = "출하 상태") String shipmentStatus
     ) {
     }
 
+    @Operation(summary = "PDF 다운로드", description = "S3에 저장된 PDF를 다운로드합니다 (Activity 서비스 재전송용)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "PDF 다운로드 성공"),
+            @ApiResponse(responseCode = "404", description = "파일을 찾을 수 없음")
+    })
+    @GetMapping("/documents/pdf/download")
+    public ResponseEntity<byte[]> downloadPdf(
+            @Parameter(description = "S3 키") @RequestParam String s3Key) {
+        byte[] pdf = s3Service.download(s3Key);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+    @Schema(description = "수금 응답")
     public record CollectionResponse(
-            Long collectionId,
-            String poId,
-            String poNo,
-            Long clientId,
-            String clientName,
-            BigDecimal totalAmount,
-            BigDecimal collectedAmount,
-            BigDecimal remainingAmount,
-            String currencyCode,
-            String status,
-            LocalDate collectionDate,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            @Schema(description = "수금 ID") Long collectionId,
+            @Schema(description = "PO 문서 ID") String poId,
+            @Schema(description = "PO 문서 번호") String poNo,
+            @Schema(description = "거래처 ID") Long clientId,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "총 금액") BigDecimal totalAmount,
+            @Schema(description = "수금 완료 금액") BigDecimal collectedAmount,
+            @Schema(description = "미수금 금액") BigDecimal remainingAmount,
+            @Schema(description = "통화 코드") String currencyCode,
+            @Schema(description = "수금 상태") String status,
+            @Schema(description = "수금일") LocalDate collectionDate,
+            @Schema(description = "생성일시") LocalDateTime createdAt,
+            @Schema(description = "수정일시") LocalDateTime updatedAt
     ) {
     }
 }
