@@ -70,8 +70,8 @@ class ProductionOrderIntegrationTest {
 
         mockMvc.perform(get("/api/production-orders"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].productionOrderId").value("MO260001"))
-                .andExpect(jsonPath("$[0].poId").value("PO260003"))
-                .andExpect(jsonPath("$[0].status").value("진행중"));
+                .andExpect(jsonPath("$._embedded.*[0].productionOrderId").value("MO260001"))
+                .andExpect(jsonPath("$._embedded.*[0].poId").value("PO260003"))
+                .andExpect(jsonPath("$._embedded.*[0].status").value("진행중"));
     }
 }

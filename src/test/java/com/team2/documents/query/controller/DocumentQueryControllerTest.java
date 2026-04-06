@@ -16,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.team2.documents.infrastructure.s3.S3Service;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.CollectionView;
@@ -70,6 +71,9 @@ class DocumentQueryControllerTest {
     @MockitoBean
     private DocsRevisionQueryService docsRevisionQueryService;
 
+    @MockitoBean
+    private S3Service s3Service;
+
     @Test
     @DisplayName("PO 단건 조회 API 호출 시 200 OK와 PO를 반환한다")
     void getPurchaseOrderApi_whenPurchaseOrderExists_thenReturnsOkAndPurchaseOrder() throws Exception {
@@ -111,9 +115,9 @@ class DocumentQueryControllerTest {
 
         mockMvc.perform(get("/api/production-orders"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].productionOrderId").value("MO260001"))
-                .andExpect(jsonPath("$[0].poId").value("PO260001"))
-                .andExpect(jsonPath("$[0].status").value("진행중"));
+                .andExpect(jsonPath("$._embedded.*[0].productionOrderId").value("MO260001"))
+                .andExpect(jsonPath("$._embedded.*[0].poId").value("PO260001"))
+                .andExpect(jsonPath("$._embedded.*[0].status").value("진행중"));
 
         verify(productionOrderQueryService).findAll();
     }
@@ -148,9 +152,9 @@ class DocumentQueryControllerTest {
 
         mockMvc.perform(get("/api/shipments"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].shipmentId").value(1))
-                .andExpect(jsonPath("$[0].poId").value("PO2025-0001"))
-                .andExpect(jsonPath("$[0].shipmentStatus").value("READY"));
+                .andExpect(jsonPath("$._embedded.*[0].shipmentId").value(1))
+                .andExpect(jsonPath("$._embedded.*[0].poId").value("PO2025-0001"))
+                .andExpect(jsonPath("$._embedded.*[0].shipmentStatus").value("READY"));
 
         verify(shipmentQueryService).findAll();
     }
@@ -191,9 +195,9 @@ class DocumentQueryControllerTest {
 
         mockMvc.perform(get("/api/collections"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].poId").value("PO260001"))
-                .andExpect(jsonPath("$[0].clientName").value("ABC Trading"))
-                .andExpect(jsonPath("$[0].status").value("미수금"));
+                .andExpect(jsonPath("$._embedded.*[0].poId").value("PO260001"))
+                .andExpect(jsonPath("$._embedded.*[0].clientName").value("ABC Trading"))
+                .andExpect(jsonPath("$._embedded.*[0].status").value("미수금"));
 
         verify(collectionQueryService).findAll();
     }

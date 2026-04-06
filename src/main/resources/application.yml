@@ -34,7 +34,6 @@ auth:
   service:
     url: ${AUTH_SERVICE_URL:http://localhost:8011}
 
-<<<<<<< HEAD
 cloud:
   aws:
     s3:
@@ -47,13 +46,12 @@ cloud:
 activity:
   service:
     url: ${ACTIVITY_SERVICE_URL:http://localhost:8083}
-=======
+
 currency:
   api:
     enabled: ${CURRENCY_API_ENABLED:true}
     fallback-enabled: ${CURRENCY_API_FALLBACK_ENABLED:true}
     primary-base-url: ${CURRENCY_API_PRIMARY_BASE_URL:https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api}
->>>>>>> d240874 (feat: apply PI exchange-rate conversion and fix pi item mapping)
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml

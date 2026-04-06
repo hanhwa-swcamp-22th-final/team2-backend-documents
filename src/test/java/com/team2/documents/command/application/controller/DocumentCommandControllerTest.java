@@ -53,6 +53,7 @@ import com.team2.documents.command.application.service.PurchaseOrderModification
 import com.team2.documents.command.application.service.PurchaseOrderModificationRequestService;
 import com.team2.documents.command.application.service.PurchaseOrderRejectionWorkflowService;
 import com.team2.documents.command.application.service.PurchaseOrderRegistrationService;
+import com.team2.documents.command.application.service.EmailSendService;
 
 @WebMvcTest(DocumentCommandController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -111,6 +112,9 @@ class DocumentCommandControllerTest {
 
     @MockitoBean
     private CollectionCommandService collectionCommandService;
+
+    @MockitoBean
+    private EmailSendService emailSendService;
 
     @Test
     @DisplayName("PO 생성 API 호출 시 200 OK를 반환하고 Service를 호출한다")
