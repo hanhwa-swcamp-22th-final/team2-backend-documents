@@ -50,6 +50,7 @@ public class Collection {
     @Transient
     private String currencyCode;
 
+    @Column(name = "collection_status")
     private String status;
 
     @Column(name = "collection_completed_date")
