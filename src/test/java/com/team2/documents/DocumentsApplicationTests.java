@@ -30,7 +30,7 @@ import com.team2.documents.command.domain.repository.UserPositionRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class DocumentsApplicationTests {
+class           DocumentsApplicationTests {
 
     @MockitoBean
     private ApprovalRequestRepository approvalRequestRepository;

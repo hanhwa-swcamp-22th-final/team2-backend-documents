@@ -24,30 +24,35 @@ public class ProformaInvoiceCreationService {
     private final DocumentNumberGeneratorService documentNumberGeneratorService;
     private final DocsSnapshotService docsSnapshotService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
+    private final ExchangeRateService exchangeRateService;
     private final ObjectMapper objectMapper;
 
     public ProformaInvoiceCreationService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                           DocumentNumberGeneratorService documentNumberGeneratorService,
                                           DocsSnapshotService docsSnapshotService,
                                           DocumentRevisionHistoryService documentRevisionHistoryService,
+                                          ExchangeRateService exchangeRateService,
                                           ObjectMapper objectMapper) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.docsSnapshotService = docsSnapshotService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
+        this.exchangeRateService = exchangeRateService;
         this.objectMapper = objectMapper;
     }
 
     public ProformaInvoice create(ProformaInvoiceCreateRequest request) {
+        LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();
+        String currencyCode = request.currencyCode();
         String piId = request.piId() == null || request.piId().isBlank()
                 ? documentNumberGeneratorService.nextProformaInvoiceId()
                 : request.piId();
-        List<ProformaInvoiceItem> items = toEntities(request.items());
-        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), items);
+        List<ProformaInvoiceItem> items = toEntities(request.items(), issueDate, currencyCode);
+        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), items, issueDate, currencyCode);
 
         ProformaInvoice proformaInvoice = new ProformaInvoice(
                 piId,
-                request.issueDate() == null ? LocalDate.now() : request.issueDate(),
+                issueDate,
                 request.clientId() == null ? 0 : request.clientId(),
                 request.currencyId() == null ? 0 : request.currencyId(),
                 request.managerId() == null ? (request.userId() == null ? 0L : request.userId()) : request.managerId(),
@@ -59,7 +64,7 @@ public class ProformaInvoiceCreationService {
                 request.clientName(),
                 request.clientAddress(),
                 request.country(),
-                request.currencyCode(),
+                currencyCode,
                 request.managerName(),
                 null,
                 null,
@@ -84,37 +89,57 @@ public class ProformaInvoiceCreationService {
         return saved;
     }
 
-    private List<ProformaInvoiceItem> toEntities(List<ProformaInvoiceItemCreateRequest> items) {
+    private List<ProformaInvoiceItem> toEntities(List<ProformaInvoiceItemCreateRequest> items,
+                                                 LocalDate issueDate,
+                                                 String currencyCode) {
         if (items == null) {
             return List.of();
         }
         return items.stream()
-                .map(item -> new ProformaInvoiceItem(
-                        item.itemId(),
-                        item.itemName() == null ? "" : item.itemName(),
-                        item.quantity(),
-                        item.unit(),
-                        item.unitPrice(),
-                        calculateItemAmount(item),
-                        item.remark()
-                ))
+                .map(item -> toEntity(item, issueDate, currencyCode))
                 .toList();
     }
 
-    private BigDecimal calculateTotalAmount(BigDecimal requestedTotal, List<ProformaInvoiceItem> items) {
+    private ProformaInvoiceItem toEntity(ProformaInvoiceItemCreateRequest item,
+                                         LocalDate issueDate,
+                                         String currencyCode) {
+        BigDecimal convertedUnitPrice = convertAmount(issueDate, currencyCode, item.unitPrice());
+        BigDecimal convertedAmount = calculateItemAmount(item, issueDate, currencyCode, convertedUnitPrice);
+        return new ProformaInvoiceItem(
+                item.itemId(),
+                item.itemName() == null ? "" : item.itemName(),
+                item.quantity(),
+                item.unit(),
+                convertedUnitPrice,
+                convertedAmount,
+                item.remark()
+        );
+    }
+
+    private BigDecimal calculateTotalAmount(BigDecimal requestedTotal,
+                                            List<ProformaInvoiceItem> items,
+                                            LocalDate issueDate,
+                                            String currencyCode) {
         if (requestedTotal != null) {
-            return requestedTotal;
+            return convertAmount(issueDate, currencyCode, requestedTotal);
         }
         return items.stream().map(ProformaInvoiceItem::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal calculateItemAmount(ProformaInvoiceItemCreateRequest item) {
+    private BigDecimal calculateItemAmount(ProformaInvoiceItemCreateRequest item,
+                                           LocalDate issueDate,
+                                           String currencyCode,
+                                           BigDecimal convertedUnitPrice) {
         if (item.amount() != null) {
-            return item.amount();
+            return convertAmount(issueDate, currencyCode, item.amount());
         }
-        BigDecimal unitPrice = item.unitPrice() == null ? BigDecimal.ZERO : item.unitPrice();
+        BigDecimal unitPrice = convertedUnitPrice == null ? BigDecimal.ZERO : convertedUnitPrice;
         BigDecimal quantity = BigDecimal.valueOf(item.quantity() == null ? 0 : item.quantity());
         return unitPrice.multiply(quantity);
+    }
+
+    private BigDecimal convertAmount(LocalDate issueDate, String currencyCode, BigDecimal amount) {
+        return exchangeRateService.convertFromKrw(issueDate, currencyCode, amount);
     }
 
     private String serializeItemsSnapshot(List<ProformaInvoiceItem> items) {

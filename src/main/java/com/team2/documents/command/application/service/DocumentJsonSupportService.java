@@ -1,6 +1,5 @@
 package com.team2.documents.command.application.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,39 +20,6 @@ public class DocumentJsonSupportService {
 
     public DocumentJsonSupportService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-    }
-
-    public String emptyArray() {
-        return "[]";
-    }
-
-    public String createRevisionHistory(String action,
-                                        Long actorUserId,
-                                        String status,
-                                        String message,
-                                        LocalDateTime at) {
-        return appendRevision("[]", action, actorUserId, status, message, at, Map.of());
-    }
-
-    public String appendRevision(String revisionHistory,
-                                 String action,
-                                 Long actorUserId,
-                                 String status,
-                                 String message,
-                                 LocalDateTime at,
-                                 Map<String, Object> changes) {
-        List<Map<String, Object>> history = parseList(revisionHistory);
-        Map<String, Object> entry = new LinkedHashMap<>();
-        entry.put("action", action);
-        entry.put("actorUserId", actorUserId);
-        entry.put("status", status);
-        entry.put("message", message);
-        entry.put("at", (at == null ? LocalDateTime.now() : at).toString());
-        if (changes != null && !changes.isEmpty()) {
-            entry.put("changes", changes);
-        }
-        history.add(entry);
-        return write(history);
     }
 
     public String appendLinkedDocument(String linkedDocuments,

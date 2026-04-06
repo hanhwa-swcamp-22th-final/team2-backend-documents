@@ -40,6 +40,9 @@ class ProformaInvoiceCreationServiceTest {
     private DocumentRevisionHistoryService documentRevisionHistoryService;
 
     @Mock
+    private ExchangeRateService exchangeRateService;
+
+    @Mock
     private ObjectMapper objectMapper;
 
     @InjectMocks
@@ -49,6 +52,7 @@ class ProformaInvoiceCreationServiceTest {
     @DisplayName("PI 생성 시 스냅샷과 docs_revision 이력이 저장된다")
     void createProformaInvoice_whenRequestContainsItems_thenStoresConsistentMetadata() throws JsonProcessingException {
         when(objectMapper.writeValueAsString(any())).thenReturn("[{\"itemName\":\"Bolt\"}]");
+        when(exchangeRateService.convertFromKrw(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(2));
         when(proformaInvoiceCommandService.save(any(ProformaInvoice.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -94,5 +98,48 @@ class ProformaInvoiceCreationServiceTest {
                 ProformaInvoiceStatus.DRAFT.name(),
                 "PI 초안을 생성했습니다."
         );
+    }
+
+    @Test
+    @DisplayName("PI 생성 시 외화 기준이면 KRW 단가를 발행일 환율로 환산한다")
+    void createProformaInvoice_whenCurrencyIsUsd_thenConvertsUnitPriceAndAmount() throws JsonProcessingException {
+        when(objectMapper.writeValueAsString(any())).thenReturn("[{\"itemName\":\"Bolt\"}]");
+        when(proformaInvoiceCommandService.save(any(ProformaInvoice.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(exchangeRateService.convertFromKrw(LocalDate.of(2026, 4, 6), "USD", new BigDecimal("10000")))
+                .thenReturn(new BigDecimal("7.30"));
+
+        ProformaInvoiceCreateRequest request = new ProformaInvoiceCreateRequest(
+                "PI260002",
+                LocalDate.of(2026, 4, 6),
+                10,
+                1,
+                2L,
+                LocalDate.of(2026, 4, 20),
+                "FOB",
+                "Busan",
+                null,
+                "ABC Trading",
+                "Seoul",
+                "KR",
+                "USD",
+                "Kim",
+                2L,
+                List.of(new ProformaInvoiceItemCreateRequest(
+                        100,
+                        "Bolt",
+                        2,
+                        "EA",
+                        new BigDecimal("10000"),
+                        null,
+                        "urgent"
+                ))
+        );
+
+        ProformaInvoice created = proformaInvoiceCreationService.create(request);
+
+        assertEquals(new BigDecimal("7.30"), created.getItems().getFirst().getUnitPrice());
+        assertEquals(new BigDecimal("14.60"), created.getItems().getFirst().getAmount());
+        assertEquals(new BigDecimal("14.60"), created.getTotalAmount());
     }
 }
