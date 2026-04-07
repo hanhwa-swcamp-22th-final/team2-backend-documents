@@ -87,7 +87,7 @@ class PurchaseOrderQueryMapperTest {
         assertThat(result.getPurchaseOrderId()).isEqualTo(saved.getPurchaseOrderId());
         assertThat(result.getPoId()).isEqualTo("PO260001");
         assertThat(result.getPiId()).isEqualTo("PI260001");
-        assertThat(result.getStatus()).isEqualTo("DRAFT");
+        assertThat(result.getStatus()).isEqualTo("draft");
         assertThat(result.getClientName()).isEqualTo("ABC Trading");
         assertThat(result.getItems()).hasSize(1);
         assertThat(result.getItems().get(0).getItemName()).isEqualTo("Bolt");
