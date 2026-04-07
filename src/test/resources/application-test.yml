@@ -1,7 +1,4 @@
 spring:
-  cloud:
-    compatibility-verifier:
-      enabled: false
   datasource:
     url: jdbc:h2:mem:testdb;MODE=MariaDB
     username: sa
