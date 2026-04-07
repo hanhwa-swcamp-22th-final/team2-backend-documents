@@ -9,6 +9,7 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +18,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.team2.documents.infrastructure.s3.S3Service;
-
+import com.team2.documents.command.domain.entity.CommercialInvoice;
+import com.team2.documents.command.domain.entity.PackingList;
+import com.team2.documents.command.domain.entity.ProductionOrder;
+import com.team2.documents.command.domain.entity.ProformaInvoice;
+import com.team2.documents.command.domain.entity.PurchaseOrder;
+import com.team2.documents.command.domain.entity.ShipmentOrder;
+import com.team2.documents.command.domain.repository.CommercialInvoiceJpaRepository;
+import com.team2.documents.command.domain.repository.PackingListJpaRepository;
+import com.team2.documents.command.domain.repository.ProductionOrderRepository;
+import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
+import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
+import com.team2.documents.command.domain.repository.ShipmentOrderJpaRepository;
+import com.team2.documents.infrastructure.pdf.PdfGenerationService;
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.ApprovalRequestView;
 import com.team2.documents.query.model.CollectionView;
@@ -64,7 +76,13 @@ public class DocumentQueryController {
     private final CollectionQueryService collectionQueryService;
     private final ApprovalRequestQueryService approvalRequestQueryService;
     private final DocsRevisionQueryService docsRevisionQueryService;
-    private final S3Service s3Service;
+    private final PdfGenerationService pdfGenerationService;
+    private final PurchaseOrderRepository purchaseOrderRepository;
+    private final ProformaInvoiceRepository proformaInvoiceRepository;
+    private final CommercialInvoiceJpaRepository commercialInvoiceJpaRepository;
+    private final PackingListJpaRepository packingListJpaRepository;
+    private final ShipmentOrderJpaRepository shipmentOrderJpaRepository;
+    private final ProductionOrderRepository productionOrderRepository;
 
     public DocumentQueryController(PurchaseOrderQueryService purchaseOrderQueryService,
                                    ProformaInvoiceQueryService proformaInvoiceQueryService,
@@ -76,7 +94,13 @@ public class DocumentQueryController {
                                    CollectionQueryService collectionQueryService,
                                    ApprovalRequestQueryService approvalRequestQueryService,
                                    DocsRevisionQueryService docsRevisionQueryService,
-                                   S3Service s3Service) {
+                                   PdfGenerationService pdfGenerationService,
+                                   PurchaseOrderRepository purchaseOrderRepository,
+                                   ProformaInvoiceRepository proformaInvoiceRepository,
+                                   CommercialInvoiceJpaRepository commercialInvoiceJpaRepository,
+                                   PackingListJpaRepository packingListJpaRepository,
+                                   ShipmentOrderJpaRepository shipmentOrderJpaRepository,
+                                   ProductionOrderRepository productionOrderRepository) {
         this.purchaseOrderQueryService = purchaseOrderQueryService;
         this.proformaInvoiceQueryService = proformaInvoiceQueryService;
         this.commercialInvoiceQueryService = commercialInvoiceQueryService;
@@ -87,7 +111,13 @@ public class DocumentQueryController {
         this.collectionQueryService = collectionQueryService;
         this.approvalRequestQueryService = approvalRequestQueryService;
         this.docsRevisionQueryService = docsRevisionQueryService;
-        this.s3Service = s3Service;
+        this.pdfGenerationService = pdfGenerationService;
+        this.purchaseOrderRepository = purchaseOrderRepository;
+        this.proformaInvoiceRepository = proformaInvoiceRepository;
+        this.commercialInvoiceJpaRepository = commercialInvoiceJpaRepository;
+        this.packingListJpaRepository = packingListJpaRepository;
+        this.shipmentOrderJpaRepository = shipmentOrderJpaRepository;
+        this.productionOrderRepository = productionOrderRepository;
     }
 
     @Operation(summary = "Proforma Invoice 전체 조회", description = "모든 견적송장(PI) 목록을 조회합니다.")
@@ -765,18 +795,57 @@ public class DocumentQueryController {
     ) {
     }
 
-    @Operation(summary = "PDF 다운로드", description = "S3에 저장된 PDF를 다운로드합니다 (Activity 서비스 재전송용)")
+    @Operation(summary = "PDF 다운로드", description = "문서 데이터를 기준으로 PDF를 즉시 생성해 다운로드합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PDF 다운로드 성공"),
-            @ApiResponse(responseCode = "404", description = "파일을 찾을 수 없음")
+            @ApiResponse(responseCode = "404", description = "문서를 찾을 수 없음")
     })
     @GetMapping("/documents/pdf/download")
     public ResponseEntity<byte[]> downloadPdf(
-            @Parameter(description = "S3 키") @RequestParam String s3Key) {
-        byte[] pdf = s3Service.download(s3Key);
+            @Parameter(description = "문서 유형", example = "PO") @RequestParam String docType,
+            @Parameter(description = "문서 ID", example = "PO260001") @RequestParam String documentId) {
+        byte[] pdf = generatePdf(docType, documentId);
         return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + documentId + ".pdf\"")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
+    }
+
+    private byte[] generatePdf(String docType, String documentId) {
+        return switch (docType.toUpperCase()) {
+            case "PO" -> {
+                PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPoCode(documentId)
+                        .orElseThrow(() -> new com.team2.documents.common.error.ResourceNotFoundException("PO를 찾을 수 없습니다."));
+                yield pdfGenerationService.generatePurchaseOrderPdf(purchaseOrder, purchaseOrder.getItems());
+            }
+            case "PI" -> {
+                ProformaInvoice proformaInvoice = proformaInvoiceRepository.findByPiCode(documentId)
+                        .orElseThrow(() -> new com.team2.documents.common.error.ResourceNotFoundException("PI를 찾을 수 없습니다."));
+                yield pdfGenerationService.generateProformaInvoicePdf(proformaInvoice, proformaInvoice.getItems());
+            }
+            case "CI" -> {
+                CommercialInvoice commercialInvoice = commercialInvoiceJpaRepository.findByCiCode(documentId)
+                        .orElseThrow(() -> new com.team2.documents.common.error.ResourceNotFoundException("CI를 찾을 수 없습니다."));
+                yield pdfGenerationService.generateCommercialInvoicePdf(commercialInvoice);
+            }
+            case "PL" -> {
+                PackingList packingList = packingListJpaRepository.findByPlCode(documentId)
+                        .orElseThrow(() -> new com.team2.documents.common.error.ResourceNotFoundException("PL을 찾을 수 없습니다."));
+                yield pdfGenerationService.generatePackingListPdf(packingList);
+            }
+            case "SO", "SHIPPING_ORDER" -> {
+                ShipmentOrder shipmentOrder = shipmentOrderJpaRepository.findByShipmentOrderCode(documentId)
+                        .orElseThrow(() -> new com.team2.documents.common.error.ResourceNotFoundException("SO를 찾을 수 없습니다."));
+                yield pdfGenerationService.generateShipmentOrderPdf(shipmentOrder);
+            }
+            case "MO", "PRODUCTION_ORDER" -> {
+                ProductionOrder productionOrder = productionOrderRepository.findByProductionOrderCode(documentId)
+                        .orElseThrow(() -> new com.team2.documents.common.error.ResourceNotFoundException("MO를 찾을 수 없습니다."));
+                yield pdfGenerationService.generateProductionOrderPdf(productionOrder);
+            }
+            default -> throw new IllegalArgumentException("지원하지 않는 문서 유형입니다: " + docType);
+        };
     }
 
     @Schema(description = "수금 응답")

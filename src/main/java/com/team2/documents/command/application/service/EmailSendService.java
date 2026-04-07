@@ -1,7 +1,5 @@
 package com.team2.documents.command.application.service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +24,6 @@ import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderJpaRepository;
 import com.team2.documents.infrastructure.client.ActivityFeignClient;
 import com.team2.documents.infrastructure.pdf.PdfGenerationService;
-import com.team2.documents.infrastructure.s3.S3Service;
 
 import jakarta.activation.DataSource;
 import jakarta.mail.internet.MimeMessage;
@@ -46,19 +43,14 @@ public class EmailSendService {
     private final ShipmentOrderJpaRepository shipmentOrderJpaRepository;
     private final ProductionOrderRepository productionOrderRepository;
     private final PdfGenerationService pdfGenerationService;
-    private final S3Service s3Service;
     private final JavaMailSender javaMailSender;
     private final ActivityFeignClient activityFeignClient;
 
-    private static final DateTimeFormatter TIMESTAMP_FMT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-
     public EmailSendResponse sendEmail(Long userId, EmailSendRequest request) {
-        List<String> s3Keys = new ArrayList<>();
         List<String> attachmentFilenames = new ArrayList<>();
         List<byte[]> pdfDataList = new ArrayList<>();
 
         String poId = request.poId();
-        String timestamp = LocalDateTime.now().format(TIMESTAMP_FMT);
 
         PurchaseOrder po = null;
         if (poId != null && !poId.isBlank()) {
@@ -74,30 +66,28 @@ public class EmailSendService {
                 }
 
                 String filename = docType + ".pdf";
-                String s3Key = "emails/" + timestamp + "/" + filename;
-                s3Service.upload(s3Key, pdfData, "application/pdf");
-
-                s3Keys.add(s3Key);
                 attachmentFilenames.add(filename);
                 pdfDataList.add(pdfData);
             } catch (Exception e) {
-                log.error("Failed to generate/upload PDF for docType={}", docType, e);
+                log.error("Failed to generate PDF for docType={}", docType, e);
             }
         }
 
-        if (s3Keys.isEmpty()) {
-            logToActivity(request, userId, "FAILED", s3Keys, attachmentFilenames);
-            return new EmailSendResponse("FAILED", "No documents could be generated", s3Keys);
+        if (attachmentFilenames.isEmpty()) {
+            logToActivity(request, userId, "FAILED", attachmentFilenames);
+            return new EmailSendResponse("FAILED", "No documents could be generated", attachmentFilenames);
         }
 
         try {
             sendMimeMessage(request, attachmentFilenames, pdfDataList);
-            logToActivity(request, userId, "SENT", s3Keys, attachmentFilenames);
-            return new EmailSendResponse("SENT", "Email sent successfully with " + s3Keys.size() + " attachment(s)", s3Keys);
+            logToActivity(request, userId, "SENT", attachmentFilenames);
+            return new EmailSendResponse("SENT",
+                    "Email sent successfully with " + attachmentFilenames.size() + " attachment(s)",
+                    attachmentFilenames);
         } catch (Exception e) {
             log.error("Failed to send email to {}", request.emailRecipientEmail(), e);
-            logToActivity(request, userId, "FAILED", s3Keys, attachmentFilenames);
-            return new EmailSendResponse("FAILED", "Failed to send email: " + e.getMessage(), s3Keys);
+            logToActivity(request, userId, "FAILED", attachmentFilenames);
+            return new EmailSendResponse("FAILED", "Failed to send email: " + e.getMessage(), attachmentFilenames);
         }
     }
 
@@ -169,7 +159,7 @@ public class EmailSendService {
     }
 
     private void logToActivity(EmailSendRequest request, Long userId, String status,
-                               List<String> s3Keys, List<String> attachmentFilenames) {
+                               List<String> attachmentFilenames) {
         try {
             EmailLogInternalRequest logRequest = new EmailLogInternalRequest(
                     request.clientId(),
@@ -180,7 +170,7 @@ public class EmailSendService {
                     userId,
                     status,
                     request.docTypes(),
-                    s3Keys,
+                    List.of(),
                     attachmentFilenames
             );
             activityFeignClient.createEmailLog(logRequest);

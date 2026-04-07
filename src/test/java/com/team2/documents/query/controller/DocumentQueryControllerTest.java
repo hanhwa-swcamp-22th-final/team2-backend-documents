@@ -19,8 +19,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.team2.documents.infrastructure.s3.S3Service;
+import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
+import com.team2.documents.command.domain.repository.CommercialInvoiceJpaRepository;
+import com.team2.documents.command.domain.repository.PackingListJpaRepository;
+import com.team2.documents.command.domain.repository.ProductionOrderRepository;
+import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
+import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
+import com.team2.documents.command.domain.repository.ShipmentOrderJpaRepository;
+import com.team2.documents.infrastructure.pdf.PdfGenerationService;
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.CollectionView;
 import com.team2.documents.query.model.CommercialInvoiceView;
@@ -78,21 +85,44 @@ class DocumentQueryControllerTest {
     private DocsRevisionQueryService docsRevisionQueryService;
 
     @MockitoBean
-    private S3Service s3Service;
+    private PdfGenerationService pdfGenerationService;
+
+    @MockitoBean
+    private PurchaseOrderRepository purchaseOrderRepository;
+
+    @MockitoBean
+    private ProformaInvoiceRepository proformaInvoiceRepository;
+
+    @MockitoBean
+    private CommercialInvoiceJpaRepository commercialInvoiceJpaRepository;
+
+    @MockitoBean
+    private PackingListJpaRepository packingListJpaRepository;
+
+    @MockitoBean
+    private ShipmentOrderJpaRepository shipmentOrderJpaRepository;
+
+    @MockitoBean
+    private ProductionOrderRepository productionOrderRepository;
 
     @Test
-    @DisplayName("PDF 다운로드 API 호출 시 application/pdf와 바이트 응답을 반환한다")
+    @DisplayName("PDF 다운로드 API 호출 시 문서 PDF를 즉시 생성해 반환한다")
     void downloadPdf_whenS3KeyExists_thenReturnsPdfBytes() throws Exception {
+        PurchaseOrder purchaseOrder = new PurchaseOrder("PO260001", PurchaseOrderStatus.CONFIRMED);
         byte[] pdfBytes = "%PDF-1.4 sample".getBytes();
-        when(s3Service.download("emails/20260407-090000/PO.pdf")).thenReturn(pdfBytes);
+        when(purchaseOrderRepository.findByPoCode("PO260001")).thenReturn(java.util.Optional.of(purchaseOrder));
+        when(pdfGenerationService.generatePurchaseOrderPdf(purchaseOrder, purchaseOrder.getItems())).thenReturn(pdfBytes);
 
         mockMvc.perform(get("/api/documents/pdf/download")
-                        .param("s3Key", "emails/20260407-090000/PO.pdf"))
+                        .param("docType", "PO")
+                        .param("documentId", "PO260001"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/pdf"))
+                .andExpect(header().string("Content-Disposition", "inline; filename=\"PO260001.pdf\""))
                 .andExpect(content().bytes(pdfBytes));
 
-        verify(s3Service).download("emails/20260407-090000/PO.pdf");
+        verify(purchaseOrderRepository).findByPoCode("PO260001");
+        verify(pdfGenerationService).generatePurchaseOrderPdf(purchaseOrder, purchaseOrder.getItems());
     }
 
     @Test
