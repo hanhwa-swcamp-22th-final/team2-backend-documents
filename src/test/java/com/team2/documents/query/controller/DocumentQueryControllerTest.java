@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,9 +23,12 @@ import com.team2.documents.infrastructure.s3.S3Service;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.CollectionView;
+import com.team2.documents.query.model.CommercialInvoiceView;
+import com.team2.documents.query.model.PackingListView;
 import com.team2.documents.query.model.ProductionOrderView;
 import com.team2.documents.query.model.PurchaseOrderView;
 import com.team2.documents.query.model.ShipmentView;
+import com.team2.documents.query.model.ShipmentOrderView;
 import com.team2.documents.query.service.ApprovalRequestQueryService;
 import com.team2.documents.query.service.CollectionQueryService;
 import com.team2.documents.query.service.CommercialInvoiceQueryService;
@@ -106,6 +110,106 @@ class DocumentQueryControllerTest {
                 .andExpect(jsonPath("$.status").value("DRAFT"));
 
         verify(purchaseOrderQueryService).findById("PO2025-0001");
+    }
+
+    @Test
+    @DisplayName("CI 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
+    void getCommercialInvoicesApi_whenCommercialInvoicesExist_thenReturnsOkAndList() throws Exception {
+        CommercialInvoiceView commercialInvoice = new CommercialInvoiceView();
+        commercialInvoice.setCiId("CI260001");
+        commercialInvoice.setStatus("CONFIRMED");
+        when(commercialInvoiceQueryService.findAll()).thenReturn(List.of(commercialInvoice));
+
+        mockMvc.perform(get("/api/commercial-invoices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.*[0].ciId").value("CI260001"))
+                .andExpect(jsonPath("$._embedded.*[0].status").value("CONFIRMED"));
+
+        verify(commercialInvoiceQueryService).findAll();
+    }
+
+    @Test
+    @DisplayName("CI 단건 조회 API 호출 시 200 OK와 CI를 반환한다")
+    void getCommercialInvoiceApi_whenCommercialInvoiceExists_thenReturnsOkAndCommercialInvoice() throws Exception {
+        CommercialInvoiceView commercialInvoice = new CommercialInvoiceView();
+        commercialInvoice.setCiId("CI260001");
+        commercialInvoice.setStatus("CONFIRMED");
+        when(commercialInvoiceQueryService.findById("CI260001")).thenReturn(commercialInvoice);
+
+        mockMvc.perform(get("/api/commercial-invoices/{ciId}", "CI260001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ciId").value("CI260001"))
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
+
+        verify(commercialInvoiceQueryService).findById("CI260001");
+    }
+
+    @Test
+    @DisplayName("PL 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
+    void getPackingListsApi_whenPackingListsExist_thenReturnsOkAndList() throws Exception {
+        PackingListView packingList = new PackingListView();
+        packingList.setPlId("PL260001");
+        packingList.setStatus("CREATED");
+        when(packingListQueryService.findAll()).thenReturn(List.of(packingList));
+
+        mockMvc.perform(get("/api/packing-lists"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.*[0].plId").value("PL260001"))
+                .andExpect(jsonPath("$._embedded.*[0].status").value("CREATED"));
+
+        verify(packingListQueryService).findAll();
+    }
+
+    @Test
+    @DisplayName("PL 단건 조회 API 호출 시 200 OK와 PL을 반환한다")
+    void getPackingListApi_whenPackingListExists_thenReturnsOkAndPackingList() throws Exception {
+        PackingListView packingList = new PackingListView();
+        packingList.setPlId("PL260001");
+        packingList.setStatus("CREATED");
+        when(packingListQueryService.findById("PL260001")).thenReturn(packingList);
+
+        mockMvc.perform(get("/api/packing-lists/{plId}", "PL260001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.plId").value("PL260001"))
+                .andExpect(jsonPath("$.status").value("CREATED"));
+
+        verify(packingListQueryService).findById("PL260001");
+    }
+
+    @Test
+    @DisplayName("SO 목록 조회 API 호출 시 200 OK와 목록을 반환한다")
+    void getShipmentOrdersApi_whenShipmentOrdersExist_thenReturnsOkAndList() throws Exception {
+        ShipmentOrderView shipmentOrder = new ShipmentOrderView();
+        shipmentOrder.setShipmentOrderId("SO260001");
+        shipmentOrder.setPoId("PO260001");
+        shipmentOrder.setStatus("READY");
+        when(shipmentOrderQueryService.findAll()).thenReturn(List.of(shipmentOrder));
+
+        mockMvc.perform(get("/api/shipment-orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.*[0].shipmentOrderId").value("SO260001"))
+                .andExpect(jsonPath("$._embedded.*[0].poId").value("PO260001"))
+                .andExpect(jsonPath("$._embedded.*[0].status").value("READY"));
+
+        verify(shipmentOrderQueryService).findAll();
+    }
+
+    @Test
+    @DisplayName("SO 단건 조회 API 호출 시 200 OK와 SO를 반환한다")
+    void getShipmentOrderApi_whenShipmentOrderExists_thenReturnsOkAndShipmentOrder() throws Exception {
+        ShipmentOrderView shipmentOrder = new ShipmentOrderView();
+        shipmentOrder.setShipmentOrderId("SO260001");
+        shipmentOrder.setPoId("PO260001");
+        shipmentOrder.setStatus("READY");
+        when(shipmentOrderQueryService.findById("SO260001")).thenReturn(shipmentOrder);
+
+        mockMvc.perform(get("/api/shipment-orders/{shipmentOrderId}", "SO260001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.shipmentOrderId").value("SO260001"))
+                .andExpect(jsonPath("$.poId").value("PO260001"))
+                .andExpect(jsonPath("$.status").value("READY"));
+
+        verify(shipmentOrderQueryService).findById("SO260001");
     }
 
     @Test
