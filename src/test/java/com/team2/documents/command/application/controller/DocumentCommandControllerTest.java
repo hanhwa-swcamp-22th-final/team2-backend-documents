@@ -27,6 +27,8 @@ import com.team2.documents.command.application.dto.PurchaseOrderDeletionRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderModificationRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderRegistrationRequest;
 import com.team2.documents.command.application.dto.CollectionUpdateRequest;
+import com.team2.documents.command.application.dto.EmailSendRequest;
+import com.team2.documents.command.application.dto.EmailSendResponse;
 import com.team2.documents.command.application.dto.ShipmentStatusUpdateRequest;
 import com.team2.documents.command.domain.entity.Collection;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
@@ -115,6 +117,37 @@ class DocumentCommandControllerTest {
 
     @MockitoBean
     private EmailSendService emailSendService;
+
+    @Test
+    @DisplayName("이메일 발송 API 호출 시 200 OK와 발송 결과를 반환한다")
+    void sendEmailApi_whenRequestIsValid_thenReturnsOkAndResponse() throws Exception {
+        EmailSendRequest request = new EmailSendRequest(
+                1L,
+                "PO2025-0001",
+                "Trade docs",
+                "Alice",
+                "alice@example.com",
+                java.util.List.of("PO", "PI")
+        );
+        EmailSendResponse response = new EmailSendResponse(
+                "SENT",
+                "Email sent successfully with 2 attachment(s)",
+                java.util.List.of("emails/20260407-090000/PO.pdf", "emails/20260407-090000/PI.pdf")
+        );
+        when(emailSendService.sendEmail(2L, request)).thenReturn(response);
+
+        mockMvc.perform(post("/api/emails/send")
+                        .header("X-User-Id", 2L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SENT"))
+                .andExpect(jsonPath("$.message").value("Email sent successfully with 2 attachment(s)"))
+                .andExpect(jsonPath("$.s3Keys[0]").value("emails/20260407-090000/PO.pdf"))
+                .andExpect(jsonPath("$.s3Keys[1]").value("emails/20260407-090000/PI.pdf"));
+
+        verify(emailSendService).sendEmail(2L, request);
+    }
 
     @Test
     @DisplayName("PO 생성 API 호출 시 200 OK를 반환하고 Service를 호출한다")

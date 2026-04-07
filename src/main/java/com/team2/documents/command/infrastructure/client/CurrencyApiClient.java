@@ -1,6 +1,7 @@
 package com.team2.documents.command.infrastructure.client;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Locale;
 
@@ -8,16 +9,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.team2.documents.config.CurrencyApiProperties;
 
 @Component
 public class CurrencyApiClient {
 
     private final RestClient restClient;
     private final CurrencyApiProperties currencyApiProperties;
+    private final Clock clock;
 
-    public CurrencyApiClient(RestClient.Builder restClientBuilder, CurrencyApiProperties currencyApiProperties) {
+    public CurrencyApiClient(RestClient.Builder restClientBuilder,
+                             CurrencyApiProperties currencyApiProperties,
+                             Clock clock) {
         this.restClient = restClientBuilder.build();
         this.currencyApiProperties = currencyApiProperties;
+        this.clock = clock;
     }
 
     public BigDecimal getRate(LocalDate date, String baseCurrencyCode, String targetCurrencyCode) {
@@ -29,7 +35,7 @@ public class CurrencyApiClient {
             return BigDecimal.ONE;
         }
 
-        String dateSegment = date == null ? "latest" : date.toString();
+        String dateSegment = resolveDateSegment(date);
         try {
             return extractRate(fetchPrimary(dateSegment, base), base, target);
         } catch (RuntimeException primaryException) {
@@ -80,6 +86,17 @@ public class CurrencyApiClient {
         if (!currencyApiProperties.isEnabled()) {
             throw new IllegalStateException("currency.api.enabled 설정이 필요합니다.");
         }
+    }
+
+    private String resolveDateSegment(LocalDate date) {
+        if (date == null) {
+            return "latest";
+        }
+        LocalDate today = LocalDate.now(clock);
+        if (!date.isBefore(today)) {
+            return "latest";
+        }
+        return date.toString();
     }
 
     private String normalizeCurrencyCode(String currencyCode) {
