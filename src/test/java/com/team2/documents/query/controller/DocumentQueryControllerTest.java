@@ -3,6 +3,8 @@ package com.team2.documents.query.controller;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -73,6 +75,21 @@ class DocumentQueryControllerTest {
 
     @MockitoBean
     private S3Service s3Service;
+
+    @Test
+    @DisplayName("PDF 다운로드 API 호출 시 application/pdf와 바이트 응답을 반환한다")
+    void downloadPdf_whenS3KeyExists_thenReturnsPdfBytes() throws Exception {
+        byte[] pdfBytes = "%PDF-1.4 sample".getBytes();
+        when(s3Service.download("emails/20260407-090000/PO.pdf")).thenReturn(pdfBytes);
+
+        mockMvc.perform(get("/api/documents/pdf/download")
+                        .param("s3Key", "emails/20260407-090000/PO.pdf"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"))
+                .andExpect(content().bytes(pdfBytes));
+
+        verify(s3Service).download("emails/20260407-090000/PO.pdf");
+    }
 
     @Test
     @DisplayName("PO 단건 조회 API 호출 시 200 OK와 PO를 반환한다")
