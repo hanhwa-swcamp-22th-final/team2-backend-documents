@@ -8,8 +8,10 @@ import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -121,6 +123,7 @@ public class DocumentCommandController {
         this.emailSendService = emailSendService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Purchase Order 생성", description = "새로운 발주서(PO)를 생성합니다. 품목 목록을 포함하여 요청할 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PO 생성 성공"),
@@ -135,6 +138,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Proforma Invoice 생성", description = "새로운 견적송장(PI)을 생성합니다. 품목 목록을 포함하여 요청할 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PI 생성 성공"),
@@ -149,6 +153,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withRel("proforma-invoices")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Proforma Invoice 등록 요청", description = "PI의 등록을 요청합니다. 결재 프로세스가 시작됩니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PI 등록 요청 성공"),
@@ -164,6 +169,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(request.piId())).withRel("proforma-invoice")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Purchase Order 등록 요청", description = "PO의 등록을 요청합니다. 결재 프로세스가 시작됩니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PO 등록 요청 성공"),
@@ -179,6 +185,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(request.poId())).withRel("purchase-order")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Purchase Order 수정 요청", description = "PO의 수정을 요청합니다. 결재 프로세스가 시작됩니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PO 수정 요청 성공"),
@@ -195,6 +202,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(request.poId())).withRel("purchase-order")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Purchase Order 삭제 요청", description = "PO의 삭제를 요청합니다. 결재 프로세스가 시작됩니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PO 삭제 요청 성공"),
@@ -211,6 +219,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SHIPPING')")
     @Operation(summary = "출하 상태 변경", description = "출하(Shipment)의 상태를 변경합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "출하 상태 변경 성공"),
@@ -227,6 +236,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getShipments()).withRel("shipments")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "수금 완료 처리", description = "수금(Collection)의 상태를 완료로 변경합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수금 상태 변경 성공"),
@@ -247,6 +257,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getCollections()).withRel("collections")));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "결재 요청 생성", description = "새로운 결재 요청을 생성합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "결재 요청 생성 성공"),
@@ -261,6 +272,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "결재 요청 상태 변경", description = "결재 요청의 상태를 변경합니다 (승인/반려).")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "결재 요청 상태 변경 성공"),
@@ -278,6 +290,7 @@ public class DocumentCommandController {
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "PO 수정 가능 여부 검증", description = "해당 PO가 수정 가능한 상태인지 검증합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 가능"),
@@ -291,6 +304,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "PO 삭제 가능 여부 검증", description = "해당 PO가 삭제 가능한 상태인지 검증합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 가능"),
@@ -304,6 +318,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "PO 관련 문서 자동 생성", description = "PO 확정 시 CI, PL, 선적지시서 등 관련 문서를 자동으로 생성합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "문서 생성 성공"),
@@ -316,6 +331,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','PRODUCTION')")
     @Operation(summary = "생산지시서 자동 생성", description = "PO 기반으로 생산지시서를 자동 생성합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "생산지시서 생성 성공"),
@@ -328,6 +344,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Purchase Order 승인", description = "PO를 승인 처리합니다. 승인 시 관련 문서가 자동 생성될 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PO 승인 성공"),
@@ -341,6 +358,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Purchase Order 반려", description = "PO를 반려 처리합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PO 반려 성공"),
@@ -354,6 +372,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Proforma Invoice 승인", description = "PI를 승인 처리합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PI 승인 성공"),
@@ -367,6 +386,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Proforma Invoice 반려", description = "PI를 반려 처리합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "PI 반려 성공"),
@@ -380,6 +400,7 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "문서 첨부 이메일 발송", description = "선택한 문서 유형의 PDF를 생성하여 이메일로 발송합니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "이메일 발송 결과"),
@@ -387,8 +408,9 @@ public class DocumentCommandController {
     })
     @PostMapping("/emails/send")
     public ResponseEntity<EmailSendResponse> sendEmail(
-            @RequestHeader("X-User-Id") Long userId,
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody EmailSendRequest request) {
+        Long userId = Long.parseLong(jwt.getSubject());
         EmailSendResponse response = emailSendService.sendEmail(userId, request);
         return ResponseEntity.ok(response);
     }
