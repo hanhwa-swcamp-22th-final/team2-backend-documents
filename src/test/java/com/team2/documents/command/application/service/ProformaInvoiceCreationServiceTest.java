@@ -1,6 +1,7 @@
 package com.team2.documents.command.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -70,6 +71,7 @@ class ProformaInvoiceCreationServiceTest {
                 "Seoul",
                 "KR",
                 "USD",
+                BigDecimal.ONE,
                 "Kim",
                 2L,
                 List.of(new ProformaInvoiceItemCreateRequest(
@@ -106,7 +108,7 @@ class ProformaInvoiceCreationServiceTest {
         when(objectMapper.writeValueAsString(any())).thenReturn("[{\"itemName\":\"Bolt\"}]");
         when(proformaInvoiceCommandService.save(any(ProformaInvoice.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(exchangeRateService.convertFromKrw(LocalDate.of(2026, 4, 6), "USD", new BigDecimal("10000")))
+        when(exchangeRateService.convertFromKrw("USD", new BigDecimal("0.00073"), new BigDecimal("10000")))
                 .thenReturn(new BigDecimal("7.30"));
 
         ProformaInvoiceCreateRequest request = new ProformaInvoiceCreateRequest(
@@ -123,6 +125,7 @@ class ProformaInvoiceCreationServiceTest {
                 "Seoul",
                 "KR",
                 "USD",
+                new BigDecimal("0.00073"),
                 "Kim",
                 2L,
                 List.of(new ProformaInvoiceItemCreateRequest(
@@ -141,5 +144,67 @@ class ProformaInvoiceCreationServiceTest {
         assertEquals(new BigDecimal("7.30"), created.getItems().getFirst().getUnitPrice());
         assertEquals(new BigDecimal("14.60"), created.getItems().getFirst().getAmount());
         assertEquals(new BigDecimal("14.60"), created.getTotalAmount());
+    }
+
+    @Test
+    @DisplayName("외화 PI 생성 시 exchangeRate가 없으면 예외가 발생한다")
+    void createProformaInvoice_whenCurrencyIsUsdAndExchangeRateMissing_thenThrows() {
+        ProformaInvoiceCreateRequest request = new ProformaInvoiceCreateRequest(
+                "PI260003",
+                LocalDate.of(2026, 4, 6),
+                10,
+                1,
+                2L,
+                LocalDate.of(2026, 4, 20),
+                "FOB",
+                "Busan",
+                null,
+                "ABC Trading",
+                "Seoul",
+                "KR",
+                "USD",
+                null,
+                "Kim",
+                2L,
+                List.of()
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> proformaInvoiceCreationService.create(request)
+        );
+
+        assertEquals("외화 PI 생성에는 exchangeRate가 필요합니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("외화 PI 생성 시 exchangeRate가 0 이하면 예외가 발생한다")
+    void createProformaInvoice_whenExchangeRateIsNotPositive_thenThrows() {
+        ProformaInvoiceCreateRequest request = new ProformaInvoiceCreateRequest(
+                "PI260004",
+                LocalDate.of(2026, 4, 6),
+                10,
+                1,
+                2L,
+                LocalDate.of(2026, 4, 20),
+                "FOB",
+                "Busan",
+                null,
+                "ABC Trading",
+                "Seoul",
+                "KR",
+                "USD",
+                BigDecimal.ZERO,
+                "Kim",
+                2L,
+                List.of()
+        );
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> proformaInvoiceCreationService.create(request)
+        );
+
+        assertEquals("exchangeRate는 0보다 커야 합니다.", exception.getMessage());
     }
 }

@@ -9,6 +9,9 @@ spring:
           jwk-set-uri: ${JWKS_URI:http://backend-auth:8011/.well-known/jwks.json}
   application:
     name: team2-backend-documents
+  cloud:
+    compatibility-verifier:
+      enabled: false
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
@@ -30,6 +33,7 @@ spring:
     password: ${MAIL_PASSWORD}
     properties:
       mail:
+        debug: ${MAIL_DEBUG:false}
         smtp:
           auth: ${MAIL_SMTP_AUTH:true}
           starttls:
@@ -51,12 +55,6 @@ cloud:
 activity:
   service:
     url: ${ACTIVITY_SERVICE_URL:http://localhost:8083}
-
-currency:
-  api:
-    enabled: ${CURRENCY_API_ENABLED:true}
-    fallback-enabled: ${CURRENCY_API_FALLBACK_ENABLED:true}
-    primary-base-url: ${CURRENCY_API_PRIMARY_BASE_URL:https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api}
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml

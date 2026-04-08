@@ -30,6 +30,9 @@ class ApprovalRequestDocumentWorkflowServiceTest {
     @Mock
     private PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService;
 
+    @Mock
+    private DocumentAutoMailService documentAutoMailService;
+
     @InjectMocks
     private ApprovalRequestDocumentWorkflowService approvalRequestDocumentWorkflowService;
 
@@ -44,6 +47,19 @@ class ApprovalRequestDocumentWorkflowServiceTest {
         assertEquals(PurchaseOrderStatus.CONFIRMED, purchaseOrder.getStatus());
         verify(purchaseOrderCommandService).save(purchaseOrder);
         verify(purchaseOrderDocumentGenerationService).generateOnConfirmation("PO260001");
+    }
+
+    @Test
+    @DisplayName("PI 승인 시 바이어에게 자동 메일을 발송한다")
+    void approveDocument_whenProformaInvoicePending_thenSendsAutoMail() {
+        ProformaInvoice proformaInvoice = new ProformaInvoice("PI260001", ProformaInvoiceStatus.APPROVAL_PENDING);
+        when(proformaInvoiceCommandService.findById("PI260001")).thenReturn(proformaInvoice);
+
+        approvalRequestDocumentWorkflowService.approveDocument(ApprovalDocumentType.PI, "PI260001");
+
+        assertEquals(ProformaInvoiceStatus.CONFIRMED, proformaInvoice.getStatus());
+        verify(proformaInvoiceCommandService).save(proformaInvoice);
+        verify(documentAutoMailService).sendApprovedPiToBuyer(proformaInvoice);
     }
 
     @Test

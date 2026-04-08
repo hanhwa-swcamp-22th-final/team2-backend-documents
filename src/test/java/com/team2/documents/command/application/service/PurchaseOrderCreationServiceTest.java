@@ -22,8 +22,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderItemCreateRequest;
+import com.team2.documents.command.domain.entity.Collection;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
+import com.team2.documents.command.domain.entity.Shipment;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
+import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
+import com.team2.documents.command.domain.repository.CollectionRepository;
+import com.team2.documents.command.domain.repository.ShipmentRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PurchaseOrderCreationServiceTest {
@@ -42,6 +47,12 @@ class PurchaseOrderCreationServiceTest {
 
     @Mock
     private DocumentRevisionHistoryService documentRevisionHistoryService;
+
+    @Mock
+    private ShipmentRepository shipmentRepository;
+
+    @Mock
+    private CollectionRepository collectionRepository;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -63,12 +74,14 @@ class PurchaseOrderCreationServiceTest {
         stubJsonSerialization();
         when(documentNumberGeneratorService.nextPurchaseOrderId()).thenReturn("PO260001");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> savedPurchaseOrder(invocation.getArgument(0)));
 
         purchaseOrderCreationService.create(userId);
 
         verify(purchaseOrderCommandService).save(argThat(purchaseOrder ->
                 PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())));
+        verify(shipmentRepository).save(any(Shipment.class));
+        verify(collectionRepository).save(any(Collection.class));
         verify(docsSnapshotService).savePurchaseOrderSnapshot(any(PurchaseOrder.class));
     }
 
@@ -80,7 +93,7 @@ class PurchaseOrderCreationServiceTest {
         when(objectMapper.writeValueAsString(any()))
                 .thenReturn("[{\"itemName\":\"Bolt\"}]", "[]", "[{\"action\":\"CREATE\"}]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> savedPurchaseOrder(invocation.getArgument(0)));
 
         PurchaseOrderCreateRequest request = new PurchaseOrderCreateRequest(
                 "PO260001",
@@ -124,6 +137,18 @@ class PurchaseOrderCreationServiceTest {
         assertEquals(PurchaseOrderStatus.DRAFT, created.getStatus());
         assertTrue(created.getApprovalRequestedAt() == null);
         verify(docsSnapshotService).savePurchaseOrderSnapshot(created);
+        verify(shipmentRepository).save(argThat(shipment ->
+                shipment.getPurchaseOrderId().equals(created.getPurchaseOrderId())
+                        && shipment.getPoId().equals("PO260001")
+                        && shipment.getShipmentStatus() == ShipmentStatus.READY));
+        verify(collectionRepository).save(argThat(collection ->
+                collection.getPurchaseOrderId().equals(created.getPurchaseOrderId())
+                        && collection.getClientId().equals(10L)
+                        && collection.getManagerId().equals(2L)
+                        && collection.getCurrencyId().equals(1)
+                        && collection.getTotalAmount().compareTo(new BigDecimal("30.00")) == 0
+                        && "미수금".equals(collection.getStatus())
+                        && LocalDate.of(2026, 4, 1).equals(collection.getCollectionIssueDate())));
         verify(documentRevisionHistoryService).recordPurchaseOrderEvent(
                 "PO260001",
                 "CREATE",
@@ -142,7 +167,7 @@ class PurchaseOrderCreationServiceTest {
         when(documentNumberGeneratorService.nextPurchaseOrderId()).thenReturn("PO260001");
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> savedPurchaseOrder(invocation.getArgument(0)));
 
         // null poId, null issueDate, null clientId, null currencyId, null managerId, null items
         PurchaseOrderCreateRequest request = new PurchaseOrderCreateRequest(
@@ -170,7 +195,7 @@ class PurchaseOrderCreationServiceTest {
         Long userId = 1L;
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> savedPurchaseOrder(invocation.getArgument(0)));
 
         // item with null amount, null unitPrice, null quantity
         PurchaseOrderCreateRequest request = new PurchaseOrderCreateRequest(
@@ -198,7 +223,7 @@ class PurchaseOrderCreationServiceTest {
         Long userId = 1L;
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> savedPurchaseOrder(invocation.getArgument(0)));
 
         PurchaseOrderCreateRequest request = new PurchaseOrderCreateRequest(
                 "PO-001", null, null, null, null, 99L,
@@ -220,7 +245,7 @@ class PurchaseOrderCreationServiceTest {
         Long userId = 1L;
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> savedPurchaseOrder(invocation.getArgument(0)));
 
         PurchaseOrderCreateRequest request = new PurchaseOrderCreateRequest(
                 "PO-001", null, null, null, null, null,
@@ -299,7 +324,7 @@ class PurchaseOrderCreationServiceTest {
         // given
         when(objectMapper.writeValueAsString(any())).thenReturn("[]");
         when(purchaseOrderCommandService.save(any(PurchaseOrder.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> savedPurchaseOrder(invocation.getArgument(0)));
 
         // managerId = null, userId = null
         PurchaseOrderCreateRequest request = new PurchaseOrderCreateRequest(
@@ -340,5 +365,12 @@ class PurchaseOrderCreationServiceTest {
         } catch (JsonProcessingException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    private PurchaseOrder savedPurchaseOrder(PurchaseOrder purchaseOrder) {
+        if (purchaseOrder.getPurchaseOrderId() == null) {
+            purchaseOrder.setPurchaseOrderId(1L);
+        }
+        return purchaseOrder;
     }
 }

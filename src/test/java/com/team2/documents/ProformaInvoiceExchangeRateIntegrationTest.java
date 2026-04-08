@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.application.dto.ProformaInvoiceCreateRequest;
 import com.team2.documents.command.application.dto.ProformaInvoiceItemCreateRequest;
-import com.team2.documents.command.application.service.ExchangeRateService;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.ProformaInvoiceItem;
 import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
@@ -47,9 +46,6 @@ class ProformaInvoiceExchangeRateIntegrationTest {
     @Autowired
     private ProformaInvoiceRepository proformaInvoiceRepository;
 
-    @Autowired
-    private ExchangeRateService exchangeRateService;
-
     @MockitoBean
     private UserPositionRepository userPositionRepository;
 
@@ -62,10 +58,11 @@ class ProformaInvoiceExchangeRateIntegrationTest {
     }
 
     @Test
-    @DisplayName("PI 생성 API는 발행일 기준 외부 환율로 KRW 품목단가를 외화로 환산해 저장한다")
+    @DisplayName("PI 생성 API는 프론트에서 전달한 환율로 KRW 품목단가를 외화로 환산해 저장한다")
     @Transactional
-    void createProformaInvoice_convertsKrwUnitPriceUsingExternalExchangeRate() throws Exception {
+    void createProformaInvoice_convertsKrwUnitPriceUsingFrontendExchangeRate() throws Exception {
         LocalDate issueDate = LocalDate.of(2026, 4, 6);
+        BigDecimal exchangeRate = new BigDecimal("0.00073");
 
         ProformaInvoiceCreateRequest request = new ProformaInvoiceCreateRequest(
                 "PI260900",
@@ -81,6 +78,7 @@ class ProformaInvoiceExchangeRateIntegrationTest {
                 "Seoul",
                 "KR",
                 "USD",
+                exchangeRate,
                 "Kim",
                 2L,
                 List.of(new ProformaInvoiceItemCreateRequest(
@@ -103,8 +101,8 @@ class ProformaInvoiceExchangeRateIntegrationTest {
         ProformaInvoice saved = proformaInvoiceRepository.findByPiCode("PI260900").orElseThrow();
         ProformaInvoiceItem savedItem = saved.getItems().getFirst();
 
-        BigDecimal expectedUnitPrice = exchangeRateService.convertFromKrw(issueDate, "USD", new BigDecimal("10000"));
-        BigDecimal expectedTotalAmount = exchangeRateService.convertFromKrw(issueDate, "USD", new BigDecimal("20000"));
+        BigDecimal expectedUnitPrice = new BigDecimal("10000").multiply(exchangeRate).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal expectedTotalAmount = new BigDecimal("20000").multiply(exchangeRate).setScale(2, java.math.RoundingMode.HALF_UP);
 
         assertThat(savedItem.getUnitPrice()).isEqualByComparingTo(expectedUnitPrice);
         assertThat(savedItem.getAmount()).isEqualByComparingTo(expectedTotalAmount);

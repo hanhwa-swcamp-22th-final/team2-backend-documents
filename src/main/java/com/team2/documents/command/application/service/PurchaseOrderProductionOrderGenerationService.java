@@ -16,17 +16,20 @@ public class PurchaseOrderProductionOrderGenerationService {
     private final DocumentNumberGeneratorService documentNumberGeneratorService;
     private final DocumentLinkService documentLinkService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
+    private final DocumentAutoMailService documentAutoMailService;
 
     public PurchaseOrderProductionOrderGenerationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                                          ProductionOrderCommandService productionOrderCommandService,
                                                          DocumentNumberGeneratorService documentNumberGeneratorService,
                                                          DocumentLinkService documentLinkService,
-                                                         DocumentRevisionHistoryService documentRevisionHistoryService) {
+                                                         DocumentRevisionHistoryService documentRevisionHistoryService,
+                                                         DocumentAutoMailService documentAutoMailService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.productionOrderCommandService = productionOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.documentLinkService = documentLinkService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
+        this.documentAutoMailService = documentAutoMailService;
     }
 
     public void generate(String poId) {
@@ -36,7 +39,7 @@ public class PurchaseOrderProductionOrderGenerationService {
         }
 
         String productionOrderId = documentNumberGeneratorService.nextProductionOrderId();
-        productionOrderCommandService.save(new ProductionOrder(
+        ProductionOrder productionOrder = new ProductionOrder(
                 productionOrderId,
                 purchaseOrder.getPurchaseOrderId(),
                 poId,
@@ -52,7 +55,8 @@ public class PurchaseOrderProductionOrderGenerationService {
                 "[{\"id\":\"" + poId + "\",\"type\":\"PO\",\"status\":\"" + purchaseOrder.getStatus().name() + "\"}]",
                 java.time.LocalDateTime.now(),
                 java.time.LocalDateTime.now()
-        ));
+        );
+        productionOrderCommandService.save(productionOrder);
         documentLinkService.linkProductionOrder(poId, productionOrderId);
         documentRevisionHistoryService.recordPurchaseOrderEvent(
                 poId,
@@ -61,5 +65,6 @@ public class PurchaseOrderProductionOrderGenerationService {
                 purchaseOrder.getStatus().name(),
                 "생산지시서를 선택 생성했습니다."
         );
+        documentAutoMailService.sendProductionOrderToProductionTeam(purchaseOrder, productionOrder);
     }
 }

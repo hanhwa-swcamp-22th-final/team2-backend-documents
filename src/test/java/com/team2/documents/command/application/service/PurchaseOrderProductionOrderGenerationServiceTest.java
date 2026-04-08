@@ -35,6 +35,9 @@ class PurchaseOrderProductionOrderGenerationServiceTest {
     @Mock
     private DocumentRevisionHistoryService documentRevisionHistoryService;
 
+    @Mock
+    private DocumentAutoMailService documentAutoMailService;
+
     @InjectMocks
     private PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService;
 
@@ -54,6 +57,10 @@ class PurchaseOrderProductionOrderGenerationServiceTest {
         // then
         verify(productionOrderCommandService).save(any(com.team2.documents.command.domain.entity.ProductionOrder.class));
         verify(documentLinkService).linkProductionOrder(poId, "MO260001");
+        verify(documentAutoMailService).sendProductionOrderToProductionTeam(
+                org.mockito.ArgumentMatchers.eq(purchaseOrder),
+                any(com.team2.documents.command.domain.entity.ProductionOrder.class)
+        );
     }
 
     @Test

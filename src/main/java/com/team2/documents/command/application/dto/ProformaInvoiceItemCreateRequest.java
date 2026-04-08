@@ -13,9 +13,9 @@ public record ProformaInvoiceItemCreateRequest(
         Integer quantity,
         @Schema(description = "단위", example = "EA")
         String unit,
-        @Schema(description = "단가", example = "50.00")
+        @Schema(description = "단가. 외화 문서여도 프론트에서는 KRW 기준 단가를 전달합니다.", example = "50.00")
         BigDecimal unitPrice,
-        @Schema(description = "금액", example = "5000.00")
+        @Schema(description = "금액. 외화 문서여도 프론트에서는 KRW 기준 금액을 전달합니다. null이면 단가 * 수량으로 계산합니다.", example = "5000.00")
         BigDecimal amount,
         @Schema(description = "비고", example = "긴급 납품")
         String remark

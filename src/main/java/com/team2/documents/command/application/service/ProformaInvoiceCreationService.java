@@ -3,6 +3,7 @@ package com.team2.documents.command.application.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -44,11 +45,13 @@ public class ProformaInvoiceCreationService {
     public ProformaInvoice create(ProformaInvoiceCreateRequest request) {
         LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();
         String currencyCode = request.currencyCode();
+        BigDecimal exchangeRate = request.exchangeRate();
+        validateExchangeRate(currencyCode, exchangeRate);
         String piId = request.piId() == null || request.piId().isBlank()
                 ? documentNumberGeneratorService.nextProformaInvoiceId()
                 : request.piId();
-        List<ProformaInvoiceItem> items = toEntities(request.items(), issueDate, currencyCode);
-        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), items, issueDate, currencyCode);
+        List<ProformaInvoiceItem> items = toEntities(request.items(), currencyCode, exchangeRate);
+        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), items, currencyCode, exchangeRate);
 
         ProformaInvoice proformaInvoice = new ProformaInvoice(
                 piId,
@@ -89,22 +92,35 @@ public class ProformaInvoiceCreationService {
         return saved;
     }
 
+    private void validateExchangeRate(String currencyCode, BigDecimal exchangeRate) {
+        String normalizedCurrencyCode = normalizeCurrencyCode(currencyCode);
+        if ("KRW".equals(normalizedCurrencyCode)) {
+            return;
+        }
+        if (exchangeRate == null) {
+            throw new IllegalArgumentException("외화 PI 생성에는 exchangeRate가 필요합니다.");
+        }
+        if (exchangeRate.signum() <= 0) {
+            throw new IllegalArgumentException("exchangeRate는 0보다 커야 합니다.");
+        }
+    }
+
     private List<ProformaInvoiceItem> toEntities(List<ProformaInvoiceItemCreateRequest> items,
-                                                 LocalDate issueDate,
-                                                 String currencyCode) {
+                                                 String currencyCode,
+                                                 BigDecimal exchangeRate) {
         if (items == null) {
             return List.of();
         }
         return items.stream()
-                .map(item -> toEntity(item, issueDate, currencyCode))
+                .map(item -> toEntity(item, currencyCode, exchangeRate))
                 .toList();
     }
 
     private ProformaInvoiceItem toEntity(ProformaInvoiceItemCreateRequest item,
-                                         LocalDate issueDate,
-                                         String currencyCode) {
-        BigDecimal convertedUnitPrice = convertAmount(issueDate, currencyCode, item.unitPrice());
-        BigDecimal convertedAmount = calculateItemAmount(item, issueDate, currencyCode, convertedUnitPrice);
+                                         String currencyCode,
+                                         BigDecimal exchangeRate) {
+        BigDecimal convertedUnitPrice = convertAmount(currencyCode, exchangeRate, item.unitPrice());
+        BigDecimal convertedAmount = calculateItemAmount(item, currencyCode, exchangeRate, convertedUnitPrice);
         return new ProformaInvoiceItem(
                 item.itemId(),
                 item.itemName() == null ? "" : item.itemName(),
@@ -118,28 +134,35 @@ public class ProformaInvoiceCreationService {
 
     private BigDecimal calculateTotalAmount(BigDecimal requestedTotal,
                                             List<ProformaInvoiceItem> items,
-                                            LocalDate issueDate,
-                                            String currencyCode) {
+                                            String currencyCode,
+                                            BigDecimal exchangeRate) {
         if (requestedTotal != null) {
-            return convertAmount(issueDate, currencyCode, requestedTotal);
+            return convertAmount(currencyCode, exchangeRate, requestedTotal);
         }
         return items.stream().map(ProformaInvoiceItem::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private BigDecimal calculateItemAmount(ProformaInvoiceItemCreateRequest item,
-                                           LocalDate issueDate,
                                            String currencyCode,
+                                           BigDecimal exchangeRate,
                                            BigDecimal convertedUnitPrice) {
         if (item.amount() != null) {
-            return convertAmount(issueDate, currencyCode, item.amount());
+            return convertAmount(currencyCode, exchangeRate, item.amount());
         }
         BigDecimal unitPrice = convertedUnitPrice == null ? BigDecimal.ZERO : convertedUnitPrice;
         BigDecimal quantity = BigDecimal.valueOf(item.quantity() == null ? 0 : item.quantity());
         return unitPrice.multiply(quantity);
     }
 
-    private BigDecimal convertAmount(LocalDate issueDate, String currencyCode, BigDecimal amount) {
-        return exchangeRateService.convertFromKrw(issueDate, currencyCode, amount);
+    private BigDecimal convertAmount(String currencyCode, BigDecimal exchangeRate, BigDecimal amount) {
+        return exchangeRateService.convertFromKrw(currencyCode, exchangeRate, amount);
+    }
+
+    private String normalizeCurrencyCode(String currencyCode) {
+        if (currencyCode == null || currencyCode.isBlank()) {
+            return "KRW";
+        }
+        return currencyCode.trim().toUpperCase(Locale.ROOT);
     }
 
     private String serializeItemsSnapshot(List<ProformaInvoiceItem> items) {

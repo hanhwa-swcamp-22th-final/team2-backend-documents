@@ -3,6 +3,7 @@ package com.team2.documents.command.application.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,8 @@ public class EmailSendService {
     private final PdfGenerationService pdfGenerationService;
     private final JavaMailSender javaMailSender;
     private final ActivityFeignClient activityFeignClient;
+    @Value("${MAIL_USERNAME:}")
+    private String mailUsername;
 
     public EmailSendResponse sendEmail(Long userId, EmailSendRequest request) {
         List<String> attachmentFilenames = new ArrayList<>();
@@ -141,6 +144,9 @@ public class EmailSendService {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+        if (mailUsername != null && !mailUsername.isBlank()) {
+            helper.setFrom(mailUsername);
+        }
         helper.setTo(request.emailRecipientEmail());
         helper.setSubject(request.emailTitle());
 

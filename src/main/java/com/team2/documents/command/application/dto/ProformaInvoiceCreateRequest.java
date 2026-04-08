@@ -23,7 +23,7 @@ public record ProformaInvoiceCreateRequest(
         String incotermsCode,
         @Schema(description = "지정 장소", example = "부산항")
         String namedPlace,
-        @Schema(description = "총 금액", example = "10000.00")
+        @Schema(description = "총 금액. 외화 문서여도 프론트에서는 KRW 기준 금액을 전달합니다.", example = "10000.00")
         BigDecimal totalAmount,
         @Schema(description = "거래처명", example = "ABC Trading Co.")
         String clientName,
@@ -31,8 +31,10 @@ public record ProformaInvoiceCreateRequest(
         String clientAddress,
         @Schema(description = "국가", example = "USA")
         String country,
-        @Schema(description = "통화 코드", example = "USD")
+        @Schema(description = "문서 통화 코드", example = "USD")
         String currencyCode,
+        @Schema(description = "KRW -> 대상 통화 환율. 예: 1 KRW = 0.00073 USD. currencyCode가 KRW가 아니면 필수입니다.", example = "0.00073")
+        BigDecimal exchangeRate,
         @Schema(description = "담당자명", example = "홍길동")
         String managerName,
         @Schema(description = "요청 사용자 ID", example = "1")

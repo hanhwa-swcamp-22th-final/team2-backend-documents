@@ -161,7 +161,7 @@ class DocumentCommandControllerTest {
     void createProformaInvoiceApi_whenRequestIsValid_thenReturnsOkAndCallsService() throws Exception {
         ProformaInvoiceCreateRequest request = new ProformaInvoiceCreateRequest(
                 "PI260001", null, null, null, null, null, null, null,
-                null, null, null, null, null, null, 2L, java.util.List.of()
+                null, null, null, null, null, null, null, 2L, java.util.List.of()
         );
         when(proformaInvoiceCreationService.create(org.mockito.ArgumentMatchers.any(ProformaInvoiceCreateRequest.class)))
                 .thenReturn(new ProformaInvoice("PI260001", com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus.DRAFT));

@@ -16,14 +16,17 @@ public class ApprovalRequestDocumentWorkflowService {
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final ProformaInvoiceCommandService proformaInvoiceCommandService;
     private final PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService;
+    private final DocumentAutoMailService documentAutoMailService;
 
     public ApprovalRequestDocumentWorkflowService(
             PurchaseOrderCommandService purchaseOrderCommandService,
             ProformaInvoiceCommandService proformaInvoiceCommandService,
-            PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService) {
+            PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService,
+            DocumentAutoMailService documentAutoMailService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.purchaseOrderDocumentGenerationService = purchaseOrderDocumentGenerationService;
+        this.documentAutoMailService = documentAutoMailService;
     }
 
     public void approveDocument(ApprovalDocumentType documentType, String documentId) {
@@ -44,6 +47,7 @@ public class ApprovalRequestDocumentWorkflowService {
         }
         proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
         proformaInvoiceCommandService.save(proformaInvoice);
+        documentAutoMailService.sendApprovedPiToBuyer(proformaInvoice);
     }
 
     public void rejectDocument(ApprovalDocumentType documentType, String documentId) {

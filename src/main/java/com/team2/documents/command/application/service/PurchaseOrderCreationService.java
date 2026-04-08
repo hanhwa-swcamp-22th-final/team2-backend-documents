@@ -12,9 +12,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderItemCreateRequest;
+import com.team2.documents.command.domain.entity.Collection;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.PurchaseOrderItem;
+import com.team2.documents.command.domain.entity.Shipment;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
+import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
+import com.team2.documents.command.domain.repository.CollectionRepository;
+import com.team2.documents.command.domain.repository.ShipmentRepository;
 
 @Service
 @Transactional
@@ -25,6 +30,8 @@ public class PurchaseOrderCreationService {
     private final DocumentLinkService documentLinkService;
     private final DocsSnapshotService docsSnapshotService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
+    private final ShipmentRepository shipmentRepository;
+    private final CollectionRepository collectionRepository;
     private final ObjectMapper objectMapper;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
@@ -32,12 +39,16 @@ public class PurchaseOrderCreationService {
                                         DocumentLinkService documentLinkService,
                                         DocsSnapshotService docsSnapshotService,
                                         DocumentRevisionHistoryService documentRevisionHistoryService,
+                                        ShipmentRepository shipmentRepository,
+                                        CollectionRepository collectionRepository,
                                         ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.documentLinkService = documentLinkService;
         this.docsSnapshotService = docsSnapshotService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
+        this.shipmentRepository = shipmentRepository;
+        this.collectionRepository = collectionRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -84,6 +95,7 @@ public class PurchaseOrderCreationService {
         );
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
+        createInitialViews(saved);
         docsSnapshotService.savePurchaseOrderSnapshot(saved);
         documentRevisionHistoryService.recordPurchaseOrderEvent(
                 saved.getPoId(),
@@ -96,6 +108,35 @@ public class PurchaseOrderCreationService {
             documentLinkService.linkPurchaseOrderToProformaInvoice(saved.getPoId(), saved.getPiId());
         }
         return saved;
+    }
+
+    private void createInitialViews(PurchaseOrder purchaseOrder) {
+        shipmentRepository.save(new Shipment(
+                purchaseOrder.getPurchaseOrderId(),
+                purchaseOrder.getPurchaseOrderId(),
+                purchaseOrder.getPoId(),
+                ShipmentStatus.READY
+        ));
+
+        Collection collection = new Collection(
+                null,
+                purchaseOrder.getPurchaseOrderId(),
+                purchaseOrder.getPoId(),
+                purchaseOrder.getClientId() == null ? null : purchaseOrder.getClientId().longValue(),
+                purchaseOrder.getClientName(),
+                purchaseOrder.getTotalAmount(),
+                BigDecimal.ZERO,
+                purchaseOrder.getTotalAmount(),
+                purchaseOrder.getCurrencyCode(),
+                "미수금",
+                null,
+                null,
+                null
+        );
+        collection.setManagerId(purchaseOrder.getManagerId());
+        collection.setCurrencyId(purchaseOrder.getCurrencyId());
+        collection.setCollectionIssueDate(purchaseOrder.getIssueDate());
+        collectionRepository.save(collection);
     }
 
     public void create(Long userId) {
