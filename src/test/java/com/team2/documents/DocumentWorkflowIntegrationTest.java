@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@org.springframework.security.test.context.support.WithMockUser(username = "test-admin", roles = {"ADMIN"})
 class DocumentWorkflowIntegrationTest {
 
     @Autowired

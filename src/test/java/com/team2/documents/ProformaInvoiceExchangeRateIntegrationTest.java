@@ -32,6 +32,7 @@ import com.team2.documents.command.domain.repository.UserPositionRepository;
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@org.springframework.security.test.context.support.WithMockUser(username = "test-admin", roles = {"ADMIN"})
 class ProformaInvoiceExchangeRateIntegrationTest {
 
     @Autowired
