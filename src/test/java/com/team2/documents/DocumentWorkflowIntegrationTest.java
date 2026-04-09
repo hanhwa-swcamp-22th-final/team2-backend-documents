@@ -32,6 +32,7 @@ import com.team2.documents.command.domain.entity.DocsRevision;
 import com.team2.documents.command.domain.entity.PackingList;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.PositionLevel;
+import com.team2.documents.command.application.service.AutoEmailRecipientResolver;
 import com.team2.documents.command.domain.repository.CommercialInvoiceJpaRepository;
 import com.team2.documents.command.domain.repository.DocsRevisionRepository;
 import com.team2.documents.command.domain.repository.PackingListJpaRepository;
@@ -70,8 +71,25 @@ class DocumentWorkflowIntegrationTest {
     @MockitoBean
     private UserPositionRepository userPositionRepository;
 
+    /**
+     * AutoEmailRecipientResolver 는 team2_auth.users 를 cross-schema 쿼리한다 (MSA 원칙 위배).
+     * H2 테스트 DB 에는 team2_auth 스키마가 없으므로 Bean 을 mock 으로 교체한다.
+     * 추후 Feign 호출로 리팩토링 되면 이 mock 은 제거 가능.
+     */
+    @MockitoBean
+    private AutoEmailRecipientResolver autoEmailRecipientResolver;
+
     @BeforeEach
     void cleanDatabase() {
+        // AutoEmailRecipientResolver mock 기본 반환값
+        when(autoEmailRecipientResolver.findBuyerEmailsByClientId(org.mockito.ArgumentMatchers.anyInt()))
+                .thenReturn(java.util.List.of("buyer@test.example"));
+        when(autoEmailRecipientResolver.findPrimaryBuyerNameByClientId(org.mockito.ArgumentMatchers.anyInt()))
+                .thenReturn("Test Buyer");
+        when(autoEmailRecipientResolver.findProductionTeamEmails())
+                .thenReturn(java.util.List.of("production@test.example"));
+        when(autoEmailRecipientResolver.findShippingTeamEmails())
+                .thenReturn(java.util.List.of("shipping@test.example"));
         jdbcTemplate.execute("DELETE FROM docs_revision");
         jdbcTemplate.execute("DELETE FROM shipment_orders");
         jdbcTemplate.execute("DELETE FROM packing_lists");

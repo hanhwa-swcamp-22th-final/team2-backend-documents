@@ -144,7 +144,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/proforma-invoices/{piId}")
     public ResponseEntity<EntityModel<ProformaInvoiceResponse>> getProformaInvoice(
-            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable String piId) {
+            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable("piId") String piId) {
         ProformaInvoiceResponse response = toProformaInvoiceResponse(proformaInvoiceQueryService.findById(piId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(piId)).withSelfRel(),
@@ -173,7 +173,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/commercial-invoices/{ciId}")
     public ResponseEntity<EntityModel<CommercialInvoiceResponse>> getCommercialInvoice(
-            @Parameter(description = "CI 문서 ID", example = "CI-2026-0001") @PathVariable String ciId) {
+            @Parameter(description = "CI 문서 ID", example = "CI-2026-0001") @PathVariable("ciId") String ciId) {
         CommercialInvoiceResponse response = toCommercialInvoiceResponse(commercialInvoiceQueryService.findById(ciId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getCommercialInvoice(ciId)).withSelfRel(),
@@ -202,7 +202,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/packing-lists/{plId}")
     public ResponseEntity<EntityModel<PackingListResponse>> getPackingList(
-            @Parameter(description = "PL 문서 ID", example = "PL-2026-0001") @PathVariable String plId) {
+            @Parameter(description = "PL 문서 ID", example = "PL-2026-0001") @PathVariable("plId") String plId) {
         PackingListResponse response = toPackingListResponse(packingListQueryService.findById(plId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPackingList(plId)).withSelfRel(),
@@ -231,7 +231,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/shipment-orders/{shipmentOrderId}")
     public ResponseEntity<EntityModel<ShipmentOrderResponse>> getShipmentOrder(
-            @Parameter(description = "선적지시서 ID", example = "SO-2026-0001") @PathVariable String shipmentOrderId) {
+            @Parameter(description = "선적지시서 ID", example = "SO-2026-0001") @PathVariable("shipmentOrderId") String shipmentOrderId) {
         ShipmentOrderResponse response = toShipmentOrderResponse(shipmentOrderQueryService.findById(shipmentOrderId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getShipmentOrder(shipmentOrderId)).withSelfRel(),
@@ -260,7 +260,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/purchase-orders/{poId}")
     public ResponseEntity<EntityModel<PurchaseOrderResponse>> getPurchaseOrder(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         PurchaseOrderResponse response = toPurchaseOrderResponse(purchaseOrderQueryService.findById(poId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(poId)).withSelfRel(),
@@ -274,7 +274,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/purchase-orders/initial-status/{userId}")
     public ResponseEntity<EntityModel<PurchaseOrderInitialStatusResponse>> determineInitialStatus(
-            @Parameter(description = "사용자 ID", example = "1") @PathVariable Long userId) {
+            @Parameter(description = "사용자 ID", example = "1") @PathVariable("userId") Long userId) {
         PurchaseOrderInitialStatusResponse response = new PurchaseOrderInitialStatusResponse(
                 purchaseOrderQueryService.determineInitialStatus(userId));
         return ResponseEntity.ok(EntityModel.of(response,
@@ -303,7 +303,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/approval-requests/{approvalRequestId}")
     public ResponseEntity<EntityModel<ApprovalRequestResponse>> getApprovalRequest(
-            @Parameter(description = "결재 요청 ID", example = "1") @PathVariable Long approvalRequestId) {
+            @Parameter(description = "결재 요청 ID", example = "1") @PathVariable("approvalRequestId") Long approvalRequestId) {
         ApprovalRequestResponse response = toApprovalRequestResponse(approvalRequestQueryService.findById(approvalRequestId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(approvalRequestId)).withSelfRel(),
@@ -317,9 +317,9 @@ public class DocumentQueryController {
     })
     @GetMapping("/approval-requests/document/{documentType}/{documentId}/status/{status}")
     public ResponseEntity<EntityModel<ApprovalRequestResponse>> getApprovalRequestByDocumentAndStatus(
-            @Parameter(description = "문서 유형 (PI, PO 등)", example = "PO") @PathVariable String documentType,
-            @Parameter(description = "문서 ID", example = "PO-2026-0001") @PathVariable String documentId,
-            @Parameter(description = "결재 상태", example = "PENDING") @PathVariable String status) {
+            @Parameter(description = "문서 유형 (PI, PO 등)", example = "PO") @PathVariable("documentType") String documentType,
+            @Parameter(description = "문서 ID", example = "PO-2026-0001") @PathVariable("documentId") String documentId,
+            @Parameter(description = "결재 상태", example = "PENDING") @PathVariable("status") String status) {
         ApprovalRequestResponse response = toApprovalRequestResponse(
                 approvalRequestQueryService.findByDocumentTypeAndDocumentIdAndStatus(documentType, documentId, status));
         return ResponseEntity.ok(EntityModel.of(response,
@@ -348,7 +348,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/production-orders/{productionOrderId}")
     public ResponseEntity<EntityModel<ProductionOrderResponse>> getProductionOrder(
-            @Parameter(description = "생산지시서 ID", example = "PRD-2026-0001") @PathVariable String productionOrderId) {
+            @Parameter(description = "생산지시서 ID", example = "PRD-2026-0001") @PathVariable("productionOrderId") String productionOrderId) {
         ProductionOrderResponse response = toProductionOrderResponse(productionOrderQueryService.findById(productionOrderId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProductionOrder(productionOrderId)).withSelfRel(),
@@ -377,7 +377,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/shipments/{shipmentId}")
     public ResponseEntity<EntityModel<ShipmentResponse>> getShipment(
-            @Parameter(description = "출하 ID", example = "1") @PathVariable Long shipmentId) {
+            @Parameter(description = "출하 ID", example = "1") @PathVariable("shipmentId") Long shipmentId) {
         ShipmentResponse response = toShipmentResponse(shipmentQueryService.findById(shipmentId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getShipment(shipmentId)).withSelfRel(),
@@ -406,7 +406,7 @@ public class DocumentQueryController {
     })
     @GetMapping("/collections/{collectionId}")
     public ResponseEntity<EntityModel<CollectionResponse>> getCollection(
-            @Parameter(description = "수금 ID", example = "1") @PathVariable Long collectionId) {
+            @Parameter(description = "수금 ID", example = "1") @PathVariable("collectionId") Long collectionId) {
         CollectionResponse response = toCollectionResponse(collectionQueryService.findById(collectionId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getCollection(collectionId)).withSelfRel(),
@@ -804,8 +804,8 @@ public class DocumentQueryController {
     })
     @GetMapping("/documents/pdf/download")
     public ResponseEntity<byte[]> downloadPdf(
-            @Parameter(description = "문서 유형", example = "PO") @RequestParam String docType,
-            @Parameter(description = "문서 ID", example = "PO260001") @RequestParam String documentId) {
+            @Parameter(description = "문서 유형", example = "PO") @RequestParam("docType") String docType,
+            @Parameter(description = "문서 ID", example = "PO260001") @RequestParam("documentId") String documentId) {
         byte[] pdf = generatePdf(docType, documentId);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,

@@ -228,7 +228,7 @@ public class DocumentCommandController {
     })
     @PutMapping("/shipments/{shipmentId}")
     public ResponseEntity<EntityModel<ShipmentResponse>> updateShipmentStatus(
-            @Parameter(description = "출하 ID", example = "1") @PathVariable Long shipmentId,
+            @Parameter(description = "출하 ID", example = "1") @PathVariable("shipmentId") Long shipmentId,
             @RequestBody ShipmentStatusUpdateRequest request) {
         ShipmentResponse response = toShipmentResponse(shipmentCommandService.updateStatus(shipmentId, request.status()));
         return ResponseEntity.ok(EntityModel.of(response,
@@ -245,7 +245,7 @@ public class DocumentCommandController {
     })
     @PutMapping("/collections/{collectionId}")
     public ResponseEntity<EntityModel<CollectionResponse>> updateCollection(
-            @Parameter(description = "수금 ID", example = "1") @PathVariable Long collectionId,
+            @Parameter(description = "수금 ID", example = "1") @PathVariable("collectionId") Long collectionId,
             @RequestBody CollectionUpdateRequest request) {
         CollectionResponse response = toCollectionResponse(collectionCommandService.complete(
                 collectionId,
@@ -281,7 +281,7 @@ public class DocumentCommandController {
     })
     @PutMapping("/approval-requests/{approvalRequestId}")
     public ResponseEntity<EntityModel<ApprovalRequestResponse>> updateApprovalRequest(
-            @Parameter(description = "결재 요청 ID", example = "1") @PathVariable Long approvalRequestId,
+            @Parameter(description = "결재 요청 ID", example = "1") @PathVariable("approvalRequestId") Long approvalRequestId,
             @RequestBody ApprovalRequestUpdateRequest request) {
         ApprovalRequestResponse response = toApprovalRequestResponse(
                 approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment()));
@@ -299,7 +299,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/purchase-orders/{poId}/validate-modifiable")
     public ResponseEntity<Void> validateModifiable(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         purchaseOrderModificationService.validateModifiable(poId);
         return ResponseEntity.ok().build();
     }
@@ -313,7 +313,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/purchase-orders/{poId}/validate-deletable")
     public ResponseEntity<Void> validateDeletable(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         purchaseOrderModificationService.validateDeletable(poId);
         return ResponseEntity.ok().build();
     }
@@ -326,7 +326,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/purchase-orders/{poId}/generate-documents")
     public ResponseEntity<Void> generateDocuments(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         purchaseOrderDocumentGenerationService.generateOnConfirmation(poId);
         return ResponseEntity.ok().build();
     }
@@ -339,7 +339,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/purchase-orders/{poId}/generate-production-order")
     public ResponseEntity<Void> generateProductionOrder(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         purchaseOrderProductionOrderGenerationService.generate(poId);
         return ResponseEntity.ok().build();
     }
@@ -353,7 +353,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/purchase-orders/{poId}/approve")
     public ResponseEntity<Void> approvePurchaseOrder(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         purchaseOrderApprovalWorkflowService.approve(poId);
         return ResponseEntity.ok().build();
     }
@@ -367,7 +367,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/purchase-orders/{poId}/reject")
     public ResponseEntity<Void> rejectPurchaseOrder(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable String poId) {
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         purchaseOrderRejectionWorkflowService.reject(poId);
         return ResponseEntity.ok().build();
     }
@@ -381,7 +381,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/proforma-invoices/{piId}/approve")
     public ResponseEntity<Void> approveProformaInvoice(
-            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable String piId) {
+            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable("piId") String piId) {
         proformaInvoiceApprovalWorkflowService.approve(piId);
         return ResponseEntity.ok().build();
     }
@@ -395,7 +395,7 @@ public class DocumentCommandController {
     })
     @PostMapping("/proforma-invoices/{piId}/reject")
     public ResponseEntity<Void> rejectProformaInvoice(
-            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable String piId) {
+            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable("piId") String piId) {
         proformaInvoiceRejectionWorkflowService.reject(piId);
         return ResponseEntity.ok().build();
     }
