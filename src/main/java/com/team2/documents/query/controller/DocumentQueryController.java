@@ -12,6 +12,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,6 +65,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Tag(name = "문서 Query", description = "PI, PO, CI, PL, 선적지시서, 생산지시서, 출하, 수금, 결재 조회 API")
 @RestController
 @RequestMapping("/api")
+@PreAuthorize("isAuthenticated()")
 public class DocumentQueryController {
 
     private final PurchaseOrderQueryService purchaseOrderQueryService;

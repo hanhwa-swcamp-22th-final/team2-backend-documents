@@ -1,5 +1,5 @@
 server:
-  port: 8084
+  port: 8014
 
 spring:
   security:
@@ -21,11 +21,11 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
-        format_sql: true
+        format_sql: ${JPA_FORMAT_SQL:false}
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT:587}
@@ -54,7 +54,29 @@ cloud:
 
 activity:
   service:
-    url: ${ACTIVITY_SERVICE_URL:http://localhost:8083}
+    url: ${ACTIVITY_SERVICE_URL:http://localhost:8013}
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 10000
+  circuitbreaker:
+    enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 8s
+        minimumNumberOfCalls: 5
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
