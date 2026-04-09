@@ -46,10 +46,37 @@ public class EmailSendService {
     private final PdfGenerationService pdfGenerationService;
     private final JavaMailSender javaMailSender;
     private final ActivityFeignClient activityFeignClient;
-    @Value("${MAIL_USERNAME:}")
+    @Value("${spring.mail.username:}")
     private String mailUsername;
 
+    /**
+     * 사용자 트리거 호출 — 기본 경로. 발송 + Activity 로그 기록.
+     * Frontend / Documents 자체 자동 발송 흐름에서 호출.
+     */
     public EmailSendResponse sendEmail(Long userId, EmailSendRequest request) {
+        return sendEmail(userId, request, true);
+    }
+
+    /**
+     * 발송만 수행 — Activity 로그 기록은 건너뜀.
+     * Activity 의 재전송 흐름(resend)에서 호출. Activity 는 자기 EmailLog 의 상태를 직접 갱신하므로
+     * Documents 가 별도로 로그를 INSERT 하면 중복 row 가 생김. 이 변형은 그 문제를 방지한다.
+     */
+    public EmailSendResponse sendEmailWithoutLogging(Long userId, EmailSendRequest request) {
+        return sendEmail(userId, request, false);
+    }
+
+    /**
+     * 핵심 구현 — shouldLog 로 Activity 연동 여부를 분기한다.
+     *
+     * <p>Write Ownership 원칙:
+     * <ul>
+     *   <li>사용자 트리거 (CI/PL 상세 → 메일 발송 버튼) → shouldLog=true : Documents 가 Activity 에 새 로그 기록
+     *   <li>Activity 재전송 (EmailLog resend) → shouldLog=false : Activity 가 기존 로그를 update 만 수행
+     * </ul>
+     * 두 경로가 서로 다른 write owner 를 가지므로 이중 write 로 인한 중복 row 가 발생하지 않는다.
+     */
+    public EmailSendResponse sendEmail(Long userId, EmailSendRequest request, boolean shouldLog) {
         List<String> attachmentFilenames = new ArrayList<>();
         List<byte[]> pdfDataList = new ArrayList<>();
 
@@ -77,19 +104,25 @@ public class EmailSendService {
         }
 
         if (attachmentFilenames.isEmpty()) {
-            logToActivity(request, userId, "FAILED", attachmentFilenames);
+            if (shouldLog) {
+                logToActivity(request, userId, "FAILED", attachmentFilenames);
+            }
             return new EmailSendResponse("FAILED", "No documents could be generated", attachmentFilenames);
         }
 
         try {
             sendMimeMessage(request, attachmentFilenames, pdfDataList);
-            logToActivity(request, userId, "SENT", attachmentFilenames);
+            if (shouldLog) {
+                logToActivity(request, userId, "SENT", attachmentFilenames);
+            }
             return new EmailSendResponse("SENT",
                     "Email sent successfully with " + attachmentFilenames.size() + " attachment(s)",
                     attachmentFilenames);
         } catch (Exception e) {
             log.error("Failed to send email to {}", request.emailRecipientEmail(), e);
-            logToActivity(request, userId, "FAILED", attachmentFilenames);
+            if (shouldLog) {
+                logToActivity(request, userId, "FAILED", attachmentFilenames);
+            }
             return new EmailSendResponse("FAILED", "Failed to send email: " + e.getMessage(), attachmentFilenames);
         }
     }
@@ -144,9 +177,10 @@ public class EmailSendService {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        if (mailUsername != null && !mailUsername.isBlank()) {
-            helper.setFrom(mailUsername);
+        if (mailUsername == null || mailUsername.isBlank()) {
+            throw new IllegalStateException("spring.mail.username 미설정 — 메일 발송 불가.");
         }
+        helper.setFrom(mailUsername);
         helper.setTo(request.emailRecipientEmail());
         helper.setSubject(request.emailTitle());
 

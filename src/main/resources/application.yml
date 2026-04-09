@@ -13,7 +13,8 @@ spring:
     compatibility-verifier:
       enabled: false
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    # 기본값 'dev' 제거 — docker 배포 시 보안 개방 방지. dev 는 로컬 IDE 에서만 명시 활성.
+    active: ${SPRING_PROFILES_ACTIVE:}
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -38,6 +39,13 @@ spring:
           auth: ${MAIL_SMTP_AUTH:true}
           starttls:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+
+jwt:
+  fallback-public-key-path: ${JWT_FALLBACK_PUBLIC_KEY_PATH:}
+
+master:
+  service:
+    url: ${MASTER_SERVICE_URL:http://localhost:8012}
 
 auth:
   service:

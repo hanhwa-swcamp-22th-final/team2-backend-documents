@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,6 +28,12 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins:http://localhost:8001}")
     private String allowedOrigins;
 
+    private final InternalApiTokenFilter internalApiTokenFilter;
+
+    public SecurityConfig(InternalApiTokenFilter internalApiTokenFilter) {
+        this.internalApiTokenFilter = internalApiTokenFilter;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -34,9 +41,13 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // InternalApiTokenFilter 는 JWT 필터 앞에서 /internal 경로의 X-Internal-Token 을 검증한다.
+            .addFilterBefore(internalApiTokenFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                // /api/**\/internal/** 는 InternalApiTokenFilter 가 이미 검증했고 Gateway denyAll 로 외부 차단됨.
+                .requestMatchers("/api/emails/internal/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth -> oauth

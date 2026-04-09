@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -401,7 +402,7 @@ public class DocumentCommandController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")
-    @Operation(summary = "문서 첨부 이메일 발송", description = "선택한 문서 유형의 PDF를 생성하여 이메일로 발송합니다")
+    @Operation(summary = "문서 첨부 이메일 발송", description = "선택한 문서 유형의 PDF를 생성하여 이메일로 발송합니다. Activity 서비스에 발송 이력을 기록합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "이메일 발송 결과"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터")
@@ -411,7 +412,40 @@ public class DocumentCommandController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody EmailSendRequest request) {
         Long userId = Long.parseLong(jwt.getSubject());
+        // 기본 경로 — Activity 에 이력 자동 기록
         EmailSendResponse response = emailSendService.sendEmail(userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Activity 재전송 흐름 전용 내부 엔드포인트.
+     *
+     * <p>Activity 가 자기 EmailLog 의 상태를 직접 update 하므로,
+     * Documents 는 실제 발송만 수행하고 로그 기록은 생략한다.
+     * 이로써 resend 1회가 email_logs 테이블에 2개 row 를 만드는 중복 문제를 해결한다.
+     *
+     * <p>경로에 {@code /internal} 이 포함되어 있어:
+     * <ul>
+     *   <li>Gateway 에서 denyAll 로 외부 완전 차단</li>
+     *   <li>Activity → Documents Feign 호출 시 X-Internal-Token 자동 주입 (InternalTokenFeignInterceptor)</li>
+     *   <li>Documents 의 InternalApiTokenFilter (향후 추가) 또는 SecurityConfig permitAll 로 JWT 없이 수신</li>
+     * </ul>
+     *
+     * <p>단, Documents 는 현재 InternalApiTokenFilter 수신 측 필터가 없으므로
+     * 이 엔드포인트는 Bearer JWT 로도 호출 가능. Activity 가 Bearer 를 전파하지 않고
+     * X-Internal-Token 만 보내기 때문에 추후 Documents 에도 InternalApiTokenFilter 추가 권장.
+     */
+    @PreAuthorize("permitAll()")
+    @Operation(summary = "내부 전용: 로그 기록 없이 메일 발송",
+               description = "Activity 재전송 흐름 전용. 이력 기록은 호출자(Activity)가 책임진다.")
+    @PostMapping("/emails/internal/send-no-log")
+    public ResponseEntity<EmailSendResponse> sendEmailWithoutLogging(
+            @RequestHeader(name = "X-User-Id", required = false) Long headerUserId,
+            @Valid @RequestBody EmailSendRequest request) {
+        // 사용자 컨텍스트가 없는 시스템 호출이므로 헤더 기반 userId 또는 기본값(0) 사용.
+        // Activity 가 원본 EmailLog 의 emailSenderId 를 X-User-Id 헤더로 전달.
+        Long userId = headerUserId != null ? headerUserId : 0L;
+        EmailSendResponse response = emailSendService.sendEmailWithoutLogging(userId, request);
         return ResponseEntity.ok(response);
     }
 
