@@ -4,7 +4,8 @@
 <mapper namespace="com.team2.documents.query.mapper.ProformaInvoiceQueryMapper">
 
     <resultMap id="proformaInvoiceResultMap" type="com.team2.documents.query.model.ProformaInvoiceView">
-        <id property="piId" column="pi_id"/>
+        <id property="proformaInvoiceId" column="pi_id"/>
+        <result property="piId" column="pi_code"/>
         <result property="status" column="pi_status"/>
         <result property="issueDate" column="pi_issue_date"/>
         <result property="clientId" column="client_id"/>
@@ -42,7 +43,7 @@
     </resultMap>
 
     <sql id="piColumns">
-        pi_id, pi_issue_date, client_id, currency_id, manager_id, pi_status,
+        pi_id, pi_code, pi_issue_date, client_id, currency_id, manager_id, pi_status,
         pi_delivery_date, pi_incoterms_code, pi_named_place, pi_total_amount,
         pi_client_name, pi_client_address, pi_country, pi_currency_code, pi_manager_name,
         pi_approval_status, pi_request_status, pi_approval_action,
@@ -53,7 +54,7 @@
     <select id="findById" resultMap="proformaInvoiceResultMap">
         SELECT <include refid="piColumns"/>
         FROM proforma_invoices
-        WHERE pi_id = #{piId}
+        WHERE pi_code = #{piId}
     </select>
 
     <select id="findAll" resultMap="proformaInvoiceResultMap">

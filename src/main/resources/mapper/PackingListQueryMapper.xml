@@ -4,38 +4,26 @@
 <mapper namespace="com.team2.documents.query.mapper.PackingListQueryMapper">
 
     <resultMap id="packingListResultMap" type="com.team2.documents.query.model.PackingListView">
-        <id property="plId" column="pl_id"/>
+        <id property="packingListId" column="pl_id"/>
+        <result property="plId" column="pl_code"/>
         <result property="poId" column="po_id"/>
         <result property="invoiceDate" column="pl_invoice_date"/>
         <result property="clientId" column="client_id"/>
         <result property="grossWeight" column="pl_gross_weight"/>
         <result property="status" column="pl_status"/>
-        <result property="clientName" column="pl_client_name"/>
-        <result property="clientAddress" column="pl_client_address"/>
-        <result property="country" column="pl_country"/>
-        <result property="paymentTerms" column="pl_payment_terms"/>
-        <result property="portOfDischarge" column="pl_port_of_discharge"/>
-        <result property="buyer" column="pl_buyer"/>
-        <result property="itemsSnapshot" column="pl_items_snapshot"/>
-        <result property="linkedDocuments" column="pl_linked_documents"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <sql id="plColumns">
-        pl_id, po_id, pl_invoice_date, client_id, pl_gross_weight, pl_status,
-        pl_client_name, pl_client_address, pl_country,
-        pl_payment_terms, pl_port_of_discharge, pl_buyer,
-        pl_items_snapshot, pl_linked_documents, created_at
-    </sql>
-
     <select id="findById" resultMap="packingListResultMap">
-        SELECT <include refid="plColumns"/>
+        SELECT pl_id, pl_code, po_id, pl_invoice_date, client_id,
+               pl_gross_weight, pl_status, created_at
         FROM packing_lists
-        WHERE pl_id = #{plId}
+        WHERE pl_code = #{plId}
     </select>
 
     <select id="findAll" resultMap="packingListResultMap">
-        SELECT <include refid="plColumns"/>
+        SELECT pl_id, pl_code, po_id, pl_invoice_date, client_id,
+               pl_gross_weight, pl_status, created_at
         FROM packing_lists
         ORDER BY pl_invoice_date DESC, pl_id DESC
     </select>

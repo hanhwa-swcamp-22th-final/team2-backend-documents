@@ -14,20 +14,11 @@ import lombok.Setter;
 public class CommercialInvoiceView {
     private Long commercialInvoiceId;
     private String ciId;
-    private String poId;
+    private Long poId;
     private LocalDate invoiceDate;
     private Integer clientId;
     private Integer currencyId;
     private BigDecimal totalAmount;
     private String status;
-    private String clientName;
-    private String clientAddress;
-    private String country;
-    private String currencyCode;
-    private String paymentTerms;
-    private String portOfDischarge;
-    private String buyer;
-    private String itemsSnapshot;
-    private String linkedDocuments;
     private LocalDateTime createdAt;
 }
