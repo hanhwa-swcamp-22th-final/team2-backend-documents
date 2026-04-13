@@ -63,7 +63,7 @@ public class ApprovalRequestCommandService {
     }
 
     public ApprovalRequest update(Long approvalRequestId, ApprovalStatus targetApprovalStatus) {
-        return update(approvalRequestId, targetApprovalStatus, null);
+        return update(approvalRequestId, targetApprovalStatus, null, null);
     }
 
     public ApprovalRequest updatePendingDocument(ApprovalDocumentType documentType,
@@ -77,10 +77,10 @@ public class ApprovalRequestCommandService {
                                                  ApprovalStatus targetApprovalStatus,
                                                  String comment) {
         ApprovalRequest approvalRequest = findPendingByDocument(documentType, documentId);
-        return update(approvalRequest.getApprovalRequestId(), targetApprovalStatus, comment);
+        return update(approvalRequest.getApprovalRequestId(), targetApprovalStatus, comment, null);
     }
 
-    public ApprovalRequest update(Long approvalRequestId, ApprovalStatus targetApprovalStatus, String comment) {
+    public ApprovalRequest update(Long approvalRequestId, ApprovalStatus targetApprovalStatus, String comment, String reason) {
         ApprovalRequest approvalRequest = approvalRequestRepository.findById(approvalRequestId)
                 .orElseThrow(() -> new IllegalArgumentException("결재 요청 정보를 찾을 수 없습니다."));
 
@@ -103,6 +103,7 @@ public class ApprovalRequestCommandService {
             approvalRequest.setStatus(ApprovalStatus.REJECTED);
             approvalRequest.setReviewedAt(java.time.LocalDateTime.now());
             approvalRequest.setReviewSnapshot(comment);
+            approvalRequest.setReason(reason);
             approvalRequestRepository.save(approvalRequest);
             approvalDocumentMetadataService.markReviewed(approvalRequest, targetApprovalStatus, comment);
             approvalRequestRevisionService.recordReviewEvent(

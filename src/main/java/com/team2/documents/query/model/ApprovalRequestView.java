@@ -17,6 +17,7 @@ public class ApprovalRequestView {
     private Long requesterId;
     private Long approverId;
     private String comment;
+    private String reason;
     private String reviewSnapshot;
     private LocalDateTime requestedAt;
     private LocalDateTime reviewedAt;

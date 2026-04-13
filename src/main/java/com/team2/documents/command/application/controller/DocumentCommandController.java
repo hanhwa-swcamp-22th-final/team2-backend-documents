@@ -285,7 +285,7 @@ public class DocumentCommandController {
             @Parameter(description = "결재 요청 ID", example = "1") @PathVariable("approvalRequestId") Long approvalRequestId,
             @RequestBody ApprovalRequestUpdateRequest request) {
         ApprovalRequestResponse response = toApprovalRequestResponse(
-                approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment()));
+                approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment(), request.reason()));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(approvalRequestId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
@@ -485,6 +485,7 @@ public class DocumentCommandController {
                 approvalRequest.getRequesterId(),
                 approvalRequest.getApproverId(),
                 approvalRequest.getComment(),
+                approvalRequest.getReason(),
                 approvalRequest.getReviewSnapshot(),
                 approvalRequest.getRequestedAt(),
                 approvalRequest.getReviewedAt(),
@@ -527,6 +528,7 @@ public class DocumentCommandController {
             @Schema(description = "요청자 ID") Long requesterId,
             @Schema(description = "결재자 ID") Long approverId,
             @Schema(description = "코멘트") String comment,
+            @Schema(description = "반려 사유") String reason,
             @Schema(description = "검토 스냅샷") String reviewSnapshot,
             @Schema(description = "요청일시") LocalDateTime requestedAt,
             @Schema(description = "검토일시") LocalDateTime reviewedAt,

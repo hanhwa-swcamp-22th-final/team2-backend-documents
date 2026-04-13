@@ -50,6 +50,9 @@ public class ApprovalRequest {
     @Column(name = "approval_comment")
     private String comment;
 
+    @Column(name = "approval_reason")
+    private String reason;
+
     @Column(name = "approval_review_snapshot", columnDefinition = "TEXT")
     private String reviewSnapshot;
 
@@ -133,6 +136,14 @@ public class ApprovalRequest {
 
     public String getComment() {
         return comment;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public String getReviewSnapshot() {

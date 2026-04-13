@@ -11,6 +11,7 @@
         <result property="requesterId" column="approval_requester_id"/>
         <result property="approverId" column="approval_approver_id"/>
         <result property="comment"       column="approval_comment"/>
+        <result property="reason"        column="approval_reason"/>
         <result property="reviewSnapshot" column="approval_review_snapshot"/>
         <result property="requestedAt"   column="approval_requested_at"/>
         <result property="reviewedAt"    column="approval_reviewed_at"/>
@@ -20,7 +21,7 @@
     <select id="findById" resultMap="approvalRequestResultMap">
         SELECT approval_request_id, approval_document_type, approval_document_id,
                approval_request_type, approval_requester_id, approval_approver_id,
-               approval_comment, approval_review_snapshot, approval_requested_at,
+               approval_comment, approval_reason, approval_review_snapshot, approval_requested_at,
                approval_reviewed_at, approval_status
         FROM approval_requests
         WHERE approval_request_id = #{approvalRequestId}
@@ -29,7 +30,7 @@
     <select id="findByDocumentTypeAndDocumentIdAndStatus" resultMap="approvalRequestResultMap">
         SELECT approval_request_id, approval_document_type, approval_document_id,
                approval_request_type, approval_requester_id, approval_approver_id,
-               approval_comment, approval_review_snapshot, approval_requested_at,
+               approval_comment, approval_reason, approval_review_snapshot, approval_requested_at,
                approval_reviewed_at, approval_status
         FROM approval_requests
         WHERE approval_document_type = #{documentType}
@@ -40,7 +41,7 @@
     <select id="findAll" resultMap="approvalRequestResultMap">
         SELECT approval_request_id, approval_document_type, approval_document_id,
                approval_request_type, approval_requester_id, approval_approver_id,
-               approval_comment, approval_review_snapshot, approval_requested_at,
+               approval_comment, approval_reason, approval_review_snapshot, approval_requested_at,
                approval_reviewed_at, approval_status
         FROM approval_requests
     </select>
