@@ -505,30 +505,45 @@ public class DocumentQueryController {
         );
     }
 
-    private CommercialInvoiceResponse toCommercialInvoiceResponse(CommercialInvoiceView commercialInvoice) {
+    private CommercialInvoiceResponse toCommercialInvoiceResponse(CommercialInvoiceView ci) {
         return new CommercialInvoiceResponse(
-                commercialInvoice.getCommercialInvoiceId(),
-                commercialInvoice.getCiId(),
-                commercialInvoice.getPoId(),
-                commercialInvoice.getInvoiceDate(),
-                commercialInvoice.getClientId(),
-                commercialInvoice.getCurrencyId(),
-                commercialInvoice.getTotalAmount(),
-                commercialInvoice.getStatus(),
-                commercialInvoice.getCreatedAt()
+                ci.getCiId(),
+                ci.getPoId(),
+                ci.getInvoiceDate(),
+                ci.getClientId(),
+                ci.getCurrencyId(),
+                ci.getTotalAmount(),
+                ci.getStatus(),
+                ci.getClientName(),
+                ci.getClientAddress(),
+                ci.getCountry(),
+                ci.getCurrencyCode(),
+                ci.getPaymentTerms(),
+                ci.getPortOfDischarge(),
+                ci.getBuyer(),
+                ci.getItemsSnapshot(),
+                ci.getLinkedDocuments(),
+                ci.getCreatedAt()
         );
     }
 
-    private PackingListResponse toPackingListResponse(PackingListView packingList) {
+    private PackingListResponse toPackingListResponse(PackingListView pl) {
         return new PackingListResponse(
-                packingList.getPackingListId(),
-                packingList.getPlId(),
-                packingList.getPoId(),
-                packingList.getInvoiceDate(),
-                packingList.getClientId(),
-                packingList.getGrossWeight(),
-                packingList.getStatus(),
-                packingList.getCreatedAt()
+                pl.getPlId(),
+                pl.getPoId(),
+                pl.getInvoiceDate(),
+                pl.getClientId(),
+                pl.getGrossWeight(),
+                pl.getStatus(),
+                pl.getClientName(),
+                pl.getClientAddress(),
+                pl.getCountry(),
+                pl.getPaymentTerms(),
+                pl.getPortOfDischarge(),
+                pl.getBuyer(),
+                pl.getItemsSnapshot(),
+                pl.getLinkedDocuments(),
+                pl.getCreatedAt()
         );
     }
 
@@ -709,27 +724,42 @@ public class DocumentQueryController {
 
     @Schema(description = "Commercial Invoice 응답")
     public record CommercialInvoiceResponse(
-            @Schema(description = "CI 내부 ID") Long commercialInvoiceId,
             @Schema(description = "CI 문서 ID") String ciId,
-            @Schema(description = "PO 내부 ID") Long poId,
+            @Schema(description = "PO 문서 ID") String poId,
             @Schema(description = "송장 발행일") LocalDate invoiceDate,
             @Schema(description = "거래처 ID") Integer clientId,
             @Schema(description = "통화 ID") Integer currencyId,
             @Schema(description = "총 금액") BigDecimal totalAmount,
             @Schema(description = "CI 상태") String status,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "거래처 주소") String clientAddress,
+            @Schema(description = "국가") String country,
+            @Schema(description = "통화 코드") String currencyCode,
+            @Schema(description = "결제조건") String paymentTerms,
+            @Schema(description = "도착항") String portOfDischarge,
+            @Schema(description = "바이어") String buyer,
+            @Schema(description = "품목 스냅샷 JSON") String itemsSnapshot,
+            @Schema(description = "연결 문서 JSON") String linkedDocuments,
             @Schema(description = "생성일시") LocalDateTime createdAt
     ) {
     }
 
     @Schema(description = "Packing List 응답")
     public record PackingListResponse(
-            @Schema(description = "PL 내부 ID") Long packingListId,
             @Schema(description = "PL 문서 ID") String plId,
-            @Schema(description = "PO 내부 ID") Long poId,
+            @Schema(description = "PO 문서 ID") String poId,
             @Schema(description = "송장 발행일") LocalDate invoiceDate,
             @Schema(description = "거래처 ID") Integer clientId,
             @Schema(description = "총 중량") BigDecimal grossWeight,
             @Schema(description = "PL 상태") String status,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "거래처 주소") String clientAddress,
+            @Schema(description = "국가") String country,
+            @Schema(description = "결제조건") String paymentTerms,
+            @Schema(description = "도착항") String portOfDischarge,
+            @Schema(description = "바이어") String buyer,
+            @Schema(description = "품목 스냅샷 JSON") String itemsSnapshot,
+            @Schema(description = "연결 문서 JSON") String linkedDocuments,
             @Schema(description = "생성일시") LocalDateTime createdAt
     ) {
     }

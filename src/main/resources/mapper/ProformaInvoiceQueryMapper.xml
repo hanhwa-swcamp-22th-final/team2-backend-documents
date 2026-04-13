@@ -4,21 +4,70 @@
 <mapper namespace="com.team2.documents.query.mapper.ProformaInvoiceQueryMapper">
 
     <resultMap id="proformaInvoiceResultMap" type="com.team2.documents.query.model.ProformaInvoiceView">
-        <id property="proformaInvoiceId" column="pi_id"/>
-        <result property="piId" column="pi_code"/>
+        <id property="piId" column="pi_id"/>
         <result property="status" column="pi_status"/>
+        <result property="issueDate" column="pi_issue_date"/>
+        <result property="clientId" column="client_id"/>
+        <result property="currencyId" column="currency_id"/>
+        <result property="managerId" column="manager_id"/>
+        <result property="deliveryDate" column="pi_delivery_date"/>
+        <result property="incotermsCode" column="pi_incoterms_code"/>
+        <result property="namedPlace" column="pi_named_place"/>
+        <result property="totalAmount" column="pi_total_amount"/>
+        <result property="clientName" column="pi_client_name"/>
+        <result property="clientAddress" column="pi_client_address"/>
+        <result property="country" column="pi_country"/>
+        <result property="currencyCode" column="pi_currency_code"/>
+        <result property="managerName" column="pi_manager_name"/>
+        <result property="approvalStatus" column="pi_approval_status"/>
+        <result property="requestStatus" column="pi_request_status"/>
+        <result property="approvalAction" column="pi_approval_action"/>
+        <result property="approvalRequestedBy" column="pi_approval_requested_by"/>
+        <result property="approvalRequestedAt" column="pi_approval_requested_at"/>
+        <result property="approvalReview" column="pi_approval_review"/>
+        <result property="itemsSnapshot" column="pi_items_snapshot"/>
+        <result property="linkedDocuments" column="pi_linked_documents"/>
+        <collection property="items" ofType="com.team2.documents.query.model.ProformaInvoiceItemView"
+                    column="pi_id" select="findItemsByPiId"/>
     </resultMap>
 
+    <resultMap id="proformaInvoiceItemResultMap" type="com.team2.documents.query.model.ProformaInvoiceItemView">
+        <result property="itemId" column="item_id"/>
+        <result property="itemName" column="pi_item_name"/>
+        <result property="quantity" column="pi_item_qty"/>
+        <result property="unit" column="pi_item_unit"/>
+        <result property="unitPrice" column="pi_item_unit_price"/>
+        <result property="amount" column="pi_item_amount"/>
+        <result property="remark" column="pi_item_remark"/>
+    </resultMap>
+
+    <sql id="piColumns">
+        pi_id, pi_issue_date, client_id, currency_id, manager_id, pi_status,
+        pi_delivery_date, pi_incoterms_code, pi_named_place, pi_total_amount,
+        pi_client_name, pi_client_address, pi_country, pi_currency_code, pi_manager_name,
+        pi_approval_status, pi_request_status, pi_approval_action,
+        pi_approval_requested_by, pi_approval_requested_at, pi_approval_review,
+        pi_items_snapshot, pi_linked_documents, created_at, updated_at
+    </sql>
+
     <select id="findById" resultMap="proformaInvoiceResultMap">
-        SELECT pi_id, pi_code, pi_status
+        SELECT <include refid="piColumns"/>
         FROM proforma_invoices
-        WHERE pi_code = #{piId}
+        WHERE pi_id = #{piId}
     </select>
 
     <select id="findAll" resultMap="proformaInvoiceResultMap">
-        SELECT pi_id, pi_code, pi_status
+        SELECT <include refid="piColumns"/>
         FROM proforma_invoices
-        ORDER BY pi_id
+        ORDER BY pi_issue_date DESC, pi_id DESC
+    </select>
+
+    <select id="findItemsByPiId" resultMap="proformaInvoiceItemResultMap">
+        SELECT pi_item_id, pi_id, item_id, pi_item_name, pi_item_qty, pi_item_unit,
+               pi_item_unit_price, pi_item_amount, pi_item_remark
+        FROM pi_items
+        WHERE pi_id = #{piId}
+        ORDER BY pi_item_id
     </select>
 
 </mapper>
