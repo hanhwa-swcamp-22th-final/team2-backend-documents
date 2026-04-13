@@ -20,5 +20,14 @@ public class CommercialInvoiceView {
     private Integer currencyId;
     private BigDecimal totalAmount;
     private String status;
+    private String clientName;
+    private String clientAddress;
+    private String country;
+    private String currencyCode;
+    private String paymentTerms;
+    private String portOfDischarge;
+    private String buyer;
+    private String itemsSnapshot;
+    private String linkedDocuments;
     private LocalDateTime createdAt;
 }

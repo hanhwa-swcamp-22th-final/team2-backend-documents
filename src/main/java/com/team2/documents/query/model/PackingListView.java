@@ -19,5 +19,13 @@ public class PackingListView {
     private Integer clientId;
     private BigDecimal grossWeight;
     private String status;
+    private String clientName;
+    private String clientAddress;
+    private String country;
+    private String paymentTerms;
+    private String portOfDischarge;
+    private String buyer;
+    private String itemsSnapshot;
+    private String linkedDocuments;
     private LocalDateTime createdAt;
 }

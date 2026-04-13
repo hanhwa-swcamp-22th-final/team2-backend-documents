@@ -515,6 +515,15 @@ public class DocumentQueryController {
                 ci.getCurrencyId(),
                 ci.getTotalAmount(),
                 ci.getStatus(),
+                ci.getClientName(),
+                ci.getClientAddress(),
+                ci.getCountry(),
+                ci.getCurrencyCode(),
+                ci.getPaymentTerms(),
+                ci.getPortOfDischarge(),
+                ci.getBuyer(),
+                ci.getItemsSnapshot(),
+                ci.getLinkedDocuments(),
                 ci.getCreatedAt()
         );
     }
@@ -528,6 +537,14 @@ public class DocumentQueryController {
                 pl.getClientId(),
                 pl.getGrossWeight(),
                 pl.getStatus(),
+                pl.getClientName(),
+                pl.getClientAddress(),
+                pl.getCountry(),
+                pl.getPaymentTerms(),
+                pl.getPortOfDischarge(),
+                pl.getBuyer(),
+                pl.getItemsSnapshot(),
+                pl.getLinkedDocuments(),
                 pl.getCreatedAt()
         );
     }
@@ -717,6 +734,15 @@ public class DocumentQueryController {
             @Schema(description = "통화 ID") Integer currencyId,
             @Schema(description = "총 금액") BigDecimal totalAmount,
             @Schema(description = "CI 상태") String status,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "거래처 주소") String clientAddress,
+            @Schema(description = "국가") String country,
+            @Schema(description = "통화 코드") String currencyCode,
+            @Schema(description = "결제조건") String paymentTerms,
+            @Schema(description = "도착항") String portOfDischarge,
+            @Schema(description = "바이어") String buyer,
+            @Schema(description = "품목 스냅샷 JSON") String itemsSnapshot,
+            @Schema(description = "연결 문서 JSON") String linkedDocuments,
             @Schema(description = "생성일시") LocalDateTime createdAt
     ) {
     }
@@ -730,6 +756,14 @@ public class DocumentQueryController {
             @Schema(description = "거래처 ID") Integer clientId,
             @Schema(description = "총 중량") BigDecimal grossWeight,
             @Schema(description = "PL 상태") String status,
+            @Schema(description = "거래처명") String clientName,
+            @Schema(description = "거래처 주소") String clientAddress,
+            @Schema(description = "국가") String country,
+            @Schema(description = "결제조건") String paymentTerms,
+            @Schema(description = "도착항") String portOfDischarge,
+            @Schema(description = "바이어") String buyer,
+            @Schema(description = "품목 스냅샷 JSON") String itemsSnapshot,
+            @Schema(description = "연결 문서 JSON") String linkedDocuments,
             @Schema(description = "생성일시") LocalDateTime createdAt
     ) {
     }
