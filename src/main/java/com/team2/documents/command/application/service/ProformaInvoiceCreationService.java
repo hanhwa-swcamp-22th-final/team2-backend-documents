@@ -132,23 +132,19 @@ public class ProformaInvoiceCreationService {
         );
     }
 
+    /** 총액은 서버에서 항상 재계산 — 클라이언트 요청값은 무시 (통화 환산 불일치/100배 오류 방지). */
     private BigDecimal calculateTotalAmount(BigDecimal requestedTotal,
                                             List<ProformaInvoiceItem> items,
                                             String currencyCode,
                                             BigDecimal exchangeRate) {
-        if (requestedTotal != null) {
-            return convertAmount(currencyCode, exchangeRate, requestedTotal);
-        }
         return items.stream().map(ProformaInvoiceItem::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /** 라인 금액도 서버에서 항상 convertedUnitPrice × quantity 로 재계산. */
     private BigDecimal calculateItemAmount(ProformaInvoiceItemCreateRequest item,
                                            String currencyCode,
                                            BigDecimal exchangeRate,
                                            BigDecimal convertedUnitPrice) {
-        if (item.amount() != null) {
-            return convertAmount(currencyCode, exchangeRate, item.amount());
-        }
         BigDecimal unitPrice = convertedUnitPrice == null ? BigDecimal.ZERO : convertedUnitPrice;
         BigDecimal quantity = BigDecimal.valueOf(item.quantity() == null ? 0 : item.quantity());
         return unitPrice.multiply(quantity);

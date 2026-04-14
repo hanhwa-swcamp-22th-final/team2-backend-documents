@@ -170,19 +170,15 @@ public class PurchaseOrderCreationService {
                 .toList();
     }
 
+    /** 총액은 서버에서 항상 재계산 — 클라이언트 파라미터 신뢰하지 않음 (100배 차이 같은 케이스 방지). */
     private BigDecimal calculateTotalAmount(BigDecimal requestedTotal, List<PurchaseOrderItem> items) {
-        if (requestedTotal != null) {
-            return requestedTotal;
-        }
         return items.stream()
                 .map(PurchaseOrderItem::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /** 라인 금액도 서버에서 항상 unitPrice × quantity 로 재계산. */
     private BigDecimal calculateItemAmount(PurchaseOrderItemCreateRequest item) {
-        if (item.amount() != null) {
-            return item.amount();
-        }
         BigDecimal unitPrice = item.unitPrice() == null ? BigDecimal.ZERO : item.unitPrice();
         BigDecimal quantity = BigDecimal.valueOf(item.quantity() == null ? 0 : item.quantity());
         return unitPrice.multiply(quantity);

@@ -3,6 +3,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.team2.documents.command.domain.repository.ShipmentOrderRepository">
 
+    <!--
+      PO 의 items snapshot(JSON) 에서 대표 품목명을 추출해 shipment_item_name 에 세팅.
+      "{첫품목명} 외 N건" 포맷 (품목 1개면 이름만, 0개/NULL 이면 빈 문자열).
+    -->
     <insert id="createFromPurchaseOrder">
         INSERT INTO shipment_orders (
             shipment_order_code, po_id, shipment_issue_date, client_id, manager_id, shipment_status,
@@ -20,7 +24,21 @@
             po_client_name,
             po_country,
             po_manager_name,
-            '',
+            COALESCE(
+                CASE
+                    WHEN JSON_LENGTH(po_items_snapshot) > 1 THEN
+                        CONCAT(
+                            JSON_UNQUOTE(JSON_EXTRACT(po_items_snapshot, '$[0].itemName')),
+                            ' 외 ',
+                            JSON_LENGTH(po_items_snapshot) - 1,
+                            '건'
+                        )
+                    WHEN JSON_LENGTH(po_items_snapshot) = 1 THEN
+                        JSON_UNQUOTE(JSON_EXTRACT(po_items_snapshot, '$[0].itemName'))
+                    ELSE ''
+                END,
+                ''
+            ),
             CONCAT('[{"id":"', po_code, '","type":"PO","status":"', po_status, '"}]')
         FROM purchase_orders
         WHERE po_code = #{poId}
