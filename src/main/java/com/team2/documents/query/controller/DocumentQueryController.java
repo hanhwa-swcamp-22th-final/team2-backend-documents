@@ -31,6 +31,7 @@ import com.team2.documents.command.domain.repository.ProductionOrderRepository;
 import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
 import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderJpaRepository;
+import com.team2.documents.command.application.service.UserSnapshotService;
 import com.team2.documents.infrastructure.pdf.PdfGenerationService;
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.ApprovalRequestView;
@@ -85,6 +86,7 @@ public class DocumentQueryController {
     private final PackingListJpaRepository packingListJpaRepository;
     private final ShipmentOrderJpaRepository shipmentOrderJpaRepository;
     private final ProductionOrderRepository productionOrderRepository;
+    private final UserSnapshotService userSnapshotService;
 
     public DocumentQueryController(PurchaseOrderQueryService purchaseOrderQueryService,
                                    ProformaInvoiceQueryService proformaInvoiceQueryService,
@@ -102,7 +104,8 @@ public class DocumentQueryController {
                                    CommercialInvoiceJpaRepository commercialInvoiceJpaRepository,
                                    PackingListJpaRepository packingListJpaRepository,
                                    ShipmentOrderJpaRepository shipmentOrderJpaRepository,
-                                   ProductionOrderRepository productionOrderRepository) {
+                                   ProductionOrderRepository productionOrderRepository,
+                                   UserSnapshotService userSnapshotService) {
         this.purchaseOrderQueryService = purchaseOrderQueryService;
         this.proformaInvoiceQueryService = proformaInvoiceQueryService;
         this.commercialInvoiceQueryService = commercialInvoiceQueryService;
@@ -120,6 +123,7 @@ public class DocumentQueryController {
         this.packingListJpaRepository = packingListJpaRepository;
         this.shipmentOrderJpaRepository = shipmentOrderJpaRepository;
         this.productionOrderRepository = productionOrderRepository;
+        this.userSnapshotService = userSnapshotService;
     }
 
     @Operation(summary = "Proforma Invoice 전체 조회", description = "모든 견적송장(PI) 목록을 조회합니다.")
@@ -575,7 +579,9 @@ public class DocumentQueryController {
                 approvalRequest.getDocumentId(),
                 approvalRequest.getRequestType(),
                 approvalRequest.getRequesterId(),
+                resolveUserName(approvalRequest.getRequesterId()),
                 approvalRequest.getApproverId(),
+                resolveUserName(approvalRequest.getApproverId()),
                 approvalRequest.getComment(),
                 approvalRequest.getReason(),
                 approvalRequest.getReviewSnapshot(),
@@ -583,6 +589,15 @@ public class DocumentQueryController {
                 approvalRequest.getReviewedAt(),
                 approvalRequest.getStatus()
         );
+    }
+
+    /** Auth 서비스에서 사용자명 best-effort 조회. id null → null, Feign 실패 → null. */
+    private String resolveUserName(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        String name = userSnapshotService.resolveRequesterDisplayName(userId);
+        return (name == null || name.isBlank() || name.equals(String.valueOf(userId))) ? null : name;
     }
 
     private ProductionOrderResponse toProductionOrderResponse(ProductionOrderView productionOrder) {
@@ -794,7 +809,9 @@ public class DocumentQueryController {
             @Schema(description = "문서 ID") String documentId,
             @Schema(description = "요청 유형") String requestType,
             @Schema(description = "요청자 ID") Long requesterId,
+            @Schema(description = "요청자명") String requesterName,
             @Schema(description = "결재자 ID") Long approverId,
+            @Schema(description = "결재자명") String approverName,
             @Schema(description = "코멘트") String comment,
             @Schema(description = "반려 사유") String reason,
             @Schema(description = "검토 스냅샷") String reviewSnapshot,
