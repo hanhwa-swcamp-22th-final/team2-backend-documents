@@ -10,6 +10,7 @@ import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
+import com.team2.documents.command.infrastructure.client.ApproverResolver;
 
 @Service
 @Transactional
@@ -19,15 +20,18 @@ public class PurchaseOrderDeletionRequestService {
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
+    private final ApproverResolver approverResolver;
 
     public PurchaseOrderDeletionRequestService(PurchaseOrderCommandService purchaseOrderCommandService,
                                                UserPositionRepository userPositionRepository,
                                                ApprovalRequestCommandService approvalRequestCommandService,
-                                               DocumentRevisionHistoryService documentRevisionHistoryService) {
+                                               DocumentRevisionHistoryService documentRevisionHistoryService,
+                                               ApproverResolver approverResolver) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
+        this.approverResolver = approverResolver;
     }
 
     public void requestDeletion(String poId, Long userId) {
@@ -45,12 +49,13 @@ public class PurchaseOrderDeletionRequestService {
         purchaseOrderCommandService.save(purchaseOrder);
 
         if (PositionLevel.STAFF.equals(positionLevel)) {
+            Long approverId = approverResolver.resolveApproverId(userId);
             approvalRequestCommandService.save(new ApprovalRequest(
                     ApprovalDocumentType.PO,
                     poId,
                     ApprovalRequestType.DELETION,
                     userId,
-                    1L
+                    approverId
             ));
             return;
         }

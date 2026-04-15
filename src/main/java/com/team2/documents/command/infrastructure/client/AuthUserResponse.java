@@ -14,6 +14,7 @@ public class AuthUserResponse {
 
     @JsonAlias({"name", "userName", "username", "memberName", "employeeName"})
     private String name;
+    private Integer teamId;
     private AuthPositionResponse position;
 
     @Getter

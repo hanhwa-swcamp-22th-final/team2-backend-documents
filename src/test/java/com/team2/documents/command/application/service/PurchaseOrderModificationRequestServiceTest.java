@@ -20,6 +20,7 @@ import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
 import com.team2.documents.command.application.service.ApprovalRequestCommandService;
 import com.team2.documents.command.application.service.PurchaseOrderCommandService;
+import com.team2.documents.command.infrastructure.client.ApproverResolver;
 
 @ExtendWith(MockitoExtension.class)
 class PurchaseOrderModificationRequestServiceTest {
@@ -36,6 +37,9 @@ class PurchaseOrderModificationRequestServiceTest {
     @Mock
     private DocumentRevisionHistoryService documentRevisionHistoryService;
 
+    @Mock
+    private ApproverResolver approverResolver;
+
     @InjectMocks
     private PurchaseOrderModificationRequestService purchaseOrderModificationRequestService;
 
@@ -50,13 +54,18 @@ class PurchaseOrderModificationRequestServiceTest {
         when(purchaseOrderCommandService.findById(poId)).thenReturn(purchaseOrder);
         when(userPositionRepository.findPositionLevelByUserId(userId))
                 .thenReturn(Optional.of(PositionLevel.STAFF));
+        when(approverResolver.resolveApproverId(userId)).thenReturn(7L);
 
         // when
         purchaseOrderModificationRequestService.requestModification(poId, userId);
 
         // then
         assertEquals(PurchaseOrderStatus.APPROVAL_PENDING, purchaseOrder.getStatus());
-        verify(approvalRequestCommandService).save(any(com.team2.documents.command.domain.entity.ApprovalRequest.class));
+        verify(approverResolver).resolveApproverId(userId);
+        org.mockito.ArgumentCaptor<com.team2.documents.command.domain.entity.ApprovalRequest> captor =
+                org.mockito.ArgumentCaptor.forClass(com.team2.documents.command.domain.entity.ApprovalRequest.class);
+        verify(approvalRequestCommandService).save(captor.capture());
+        assertEquals(7L, captor.getValue().getApproverId());
     }
 
     @Test
