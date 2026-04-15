@@ -31,6 +31,7 @@
         <result property="approvalReview" column="po_approval_review"/>
         <result property="itemsSnapshot" column="po_items_snapshot"/>
         <result property="linkedDocuments" column="po_linked_documents"/>
+        <result property="shipmentStatus" column="po_shipment_status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
         <collection property="items" ofType="com.team2.documents.query.model.PurchaseOrderItemView"
@@ -49,25 +50,51 @@
         <result property="remark" column="po_item_remark"/>
     </resultMap>
 
+    <!--
+      shipments 테이블을 LEFT JOIN 으로 aggregate 해 PO 별 출하 상태 enrich.
+      - 출하 row 가 0개      → po_shipment_status NULL (출하 전)
+      - 모두 'completed'     → 'completed'
+      - 일부라도 'preparing' → 'preparing'
+      영업담당자가 출하 모듈 데이터 직접 조회 권한 없이도 본인 PO 진행을 PO 화면에서 확인.
+    -->
+    <sql id="poShipmentJoin">
+        LEFT JOIN (
+            SELECT po_id,
+                   CASE
+                       WHEN COUNT(*) = SUM(CASE WHEN shipment_status = 'completed' THEN 1 ELSE 0 END)
+                            THEN 'completed'
+                       ELSE 'preparing'
+                       END AS po_shipment_status
+            FROM shipments
+            GROUP BY po_id
+        ) sh ON sh.po_id = po.po_id
+    </sql>
+
     <select id="findById" resultMap="purchaseOrderResultMap">
-        SELECT po_id, po_code, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
-               po_delivery_date, po_incoterms_code, po_named_place, po_source_delivery_date,
-               po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
-               po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,
-               po_approval_action, po_approval_requested_by, po_approval_requested_at, po_approval_review,
-               po_items_snapshot, po_linked_documents, created_at, updated_at
-        FROM purchase_orders
-        WHERE po_code = #{poId}
+        SELECT po.po_id, po.po_code, po.pi_id, po.po_issue_date, po.client_id, po.currency_id, po.manager_id,
+               po.po_status, po.po_delivery_date, po.po_incoterms_code, po.po_named_place,
+               po.po_source_delivery_date, po.po_delivery_date_override, po.po_total_amount,
+               po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
+               po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
+               po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
+               po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
+               po.created_at, po.updated_at
+        FROM purchase_orders po
+        <include refid="poShipmentJoin"/>
+        WHERE po.po_code = #{poId}
     </select>
 
     <select id="findAll" resultMap="purchaseOrderResultMap">
-        SELECT po_id, po_code, pi_id, po_issue_date, client_id, currency_id, manager_id, po_status,
-               po_delivery_date, po_incoterms_code, po_named_place, po_source_delivery_date,
-               po_delivery_date_override, po_total_amount, po_client_name, po_client_address,
-               po_country, po_currency_code, po_manager_name, po_approval_status, po_request_status,
-               po_approval_action, po_approval_requested_by, po_approval_requested_at, po_approval_review,
-               po_items_snapshot, po_linked_documents, created_at, updated_at
-        FROM purchase_orders
+        SELECT po.po_id, po.po_code, po.pi_id, po.po_issue_date, po.client_id, po.currency_id, po.manager_id,
+               po.po_status, po.po_delivery_date, po.po_incoterms_code, po.po_named_place,
+               po.po_source_delivery_date, po.po_delivery_date_override, po.po_total_amount,
+               po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
+               po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
+               po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
+               po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
+               po.created_at, po.updated_at
+        FROM purchase_orders po
+        <include refid="poShipmentJoin"/>
     </select>
 
     <select id="findItemsByPoId" resultMap="purchaseOrderItemResultMap">

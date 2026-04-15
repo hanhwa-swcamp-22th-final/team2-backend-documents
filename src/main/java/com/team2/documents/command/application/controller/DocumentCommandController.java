@@ -41,6 +41,7 @@ import com.team2.documents.command.application.dto.EmailSendRequest;
 import com.team2.documents.command.application.dto.EmailSendResponse;
 import com.team2.documents.command.application.service.ApprovalRequestCommandService;
 import com.team2.documents.command.application.service.CollectionCommandService;
+import com.team2.documents.command.application.service.ProductionOrderCommandService;
 import com.team2.documents.command.application.service.ShipmentCommandService;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
@@ -87,6 +88,7 @@ public class DocumentCommandController {
     private final CollectionCommandService collectionCommandService;
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final EmailSendService emailSendService;
+    private final ProductionOrderCommandService productionOrderCommandService;
 
     public DocumentCommandController(PurchaseOrderModificationService purchaseOrderModificationService,
                               ProformaInvoiceApprovalWorkflowService proformaInvoiceApprovalWorkflowService,
@@ -104,7 +106,8 @@ public class DocumentCommandController {
                               ShipmentCommandService shipmentCommandService,
                               CollectionCommandService collectionCommandService,
                               ApprovalRequestCommandService approvalRequestCommandService,
-                              EmailSendService emailSendService) {
+                              EmailSendService emailSendService,
+                              ProductionOrderCommandService productionOrderCommandService) {
         this.purchaseOrderModificationService = purchaseOrderModificationService;
         this.proformaInvoiceApprovalWorkflowService = proformaInvoiceApprovalWorkflowService;
         this.proformaInvoiceRejectionWorkflowService = proformaInvoiceRejectionWorkflowService;
@@ -122,6 +125,7 @@ public class DocumentCommandController {
         this.collectionCommandService = collectionCommandService;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.emailSendService = emailSendService;
+        this.productionOrderCommandService = productionOrderCommandService;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")
@@ -344,6 +348,26 @@ public class DocumentCommandController {
         purchaseOrderProductionOrderGenerationService.generate(poId);
         return ResponseEntity.ok().build();
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN','PRODUCTION')")
+    @Operation(summary = "생산완료 처리", description = "생산지시서 상태를 '생산완료'로 변경합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "생산완료 처리 성공"),
+            @ApiResponse(responseCode = "404", description = "생산지시서를 찾을 수 없음")
+    })
+    @PutMapping("/production-orders/{productionOrderId}/complete")
+    public ResponseEntity<ProductionOrderCompleteResponse> completeProductionOrder(
+            @Parameter(description = "생산지시서 ID", example = "PR-2026-0001")
+            @PathVariable("productionOrderId") String productionOrderId) {
+        var po = productionOrderCommandService.complete(productionOrderId);
+        return ResponseEntity.ok(new ProductionOrderCompleteResponse(po.getProductionOrderId(), po.getStatus()));
+    }
+
+    @Schema(description = "생산완료 처리 응답")
+    public record ProductionOrderCompleteResponse(
+            @Schema(description = "생산지시서 ID") String productionOrderId,
+            @Schema(description = "변경된 상태") String status
+    ) {}
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")
     @Operation(summary = "Purchase Order 승인", description = "PO를 승인 처리합니다. 승인 시 관련 문서가 자동 생성될 수 있습니다.")

@@ -30,4 +30,12 @@ public class ProductionOrderCommandService {
     public ProductionOrder save(ProductionOrder productionOrder) {
         return productionOrderRepository.save(productionOrder);
     }
+
+    /** 생산완료 처리. DB enum 값 'completed' 로 상태 변경. */
+    public ProductionOrder complete(String productionOrderCode) {
+        ProductionOrder po = productionOrderRepository.findByProductionOrderCode(productionOrderCode)
+                .orElseThrow(() -> new IllegalArgumentException("생산지시서 정보를 찾을 수 없습니다."));
+        po.setStatus("completed");
+        return productionOrderRepository.save(po);
+    }
 }

@@ -447,6 +447,7 @@ public class DocumentQueryController {
                 purchaseOrder.getItemsSnapshot(),
                 purchaseOrder.getLinkedDocuments(),
                 docsRevisionQueryService.getRevisionHistory("PO", purchaseOrder.getPurchaseOrderId()),
+                purchaseOrder.getShipmentStatus(),
                 purchaseOrder.getCreatedAt(),
                 purchaseOrder.getUpdatedAt(),
                 purchaseOrder.getItems().stream().map(this::toPurchaseOrderItemResponse).toList()
@@ -691,6 +692,7 @@ public class DocumentQueryController {
             @Schema(description = "품목 스냅샷 (JSON)") String itemsSnapshot,
             @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
             @Schema(description = "수정 이력") String revisionHistory,
+            @Schema(description = "출하 진행 상태 (null=출하전 / preparing / completed)") String shipmentStatus,
             @Schema(description = "생성일시") LocalDateTime createdAt,
             @Schema(description = "수정일시") LocalDateTime updatedAt,
             @Schema(description = "PO 품목 목록") List<PurchaseOrderItemResponse> items
