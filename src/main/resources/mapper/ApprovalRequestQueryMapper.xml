@@ -46,4 +46,18 @@
         FROM approval_requests
     </select>
 
+    <select id="findPage" resultMap="approvalRequestResultMap">
+        SELECT approval_request_id, approval_document_type, approval_document_id,
+               approval_request_type, approval_requester_id, approval_approver_id,
+               approval_comment, approval_reason, approval_review_snapshot, approval_requested_at,
+               approval_reviewed_at, approval_status
+        FROM approval_requests
+        ORDER BY approval_request_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM approval_requests
+    </select>
+
 </mapper>

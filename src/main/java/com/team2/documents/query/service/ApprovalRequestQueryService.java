@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.ApprovalRequestQueryMapper;
 import com.team2.documents.query.model.ApprovalRequestView;
 
@@ -35,5 +36,12 @@ public class ApprovalRequestQueryService {
 
     public List<ApprovalRequestView> findAll() {
         return approvalRequestQueryMapper.findAll();
+    }
+
+    public PagedResult<ApprovalRequestView> findAll(int page, int size) {
+        int offset = page * size;
+        List<ApprovalRequestView> content = approvalRequestQueryMapper.findPage(offset, size);
+        long total = approvalRequestQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

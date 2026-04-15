@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.PurchaseOrderQueryMapper;
 import com.team2.documents.query.model.PurchaseOrderView;
 
@@ -32,5 +33,12 @@ public class PurchaseOrderQueryService {
 
     public List<PurchaseOrderView> findAll() {
         return purchaseOrderQueryMapper.findAll();
+    }
+
+    public PagedResult<PurchaseOrderView> findAll(int page, int size) {
+        int offset = page * size;
+        List<PurchaseOrderView> content = purchaseOrderQueryMapper.findPage(offset, size);
+        long total = purchaseOrderQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

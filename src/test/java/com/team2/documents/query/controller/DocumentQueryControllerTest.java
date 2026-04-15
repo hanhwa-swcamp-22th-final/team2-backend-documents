@@ -1,5 +1,6 @@
 package com.team2.documents.query.controller;
 
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -19,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.team2.documents.command.application.service.UserSnapshotService;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.CommercialInvoiceJpaRepository;
@@ -27,7 +29,9 @@ import com.team2.documents.command.domain.repository.ProductionOrderRepository;
 import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
 import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderJpaRepository;
+import com.team2.documents.command.infrastructure.client.AuthFeignClient;
 import com.team2.documents.infrastructure.pdf.PdfGenerationService;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.CollectionView;
 import com.team2.documents.query.model.CommercialInvoiceView;
@@ -105,6 +109,12 @@ class DocumentQueryControllerTest {
     @MockitoBean
     private ProductionOrderRepository productionOrderRepository;
 
+    @MockitoBean
+    private UserSnapshotService userSnapshotService;
+
+    @MockitoBean
+    private AuthFeignClient authFeignClient;
+
     @Test
     @DisplayName("PDF 다운로드 API 호출 시 문서 PDF를 즉시 생성해 반환한다")
     void downloadPdf_whenS3KeyExists_thenReturnsPdfBytes() throws Exception {
@@ -148,14 +158,15 @@ class DocumentQueryControllerTest {
         CommercialInvoiceView commercialInvoice = new CommercialInvoiceView();
         commercialInvoice.setCiId("CI260001");
         commercialInvoice.setStatus("CONFIRMED");
-        when(commercialInvoiceQueryService.findAll()).thenReturn(List.of(commercialInvoice));
+        when(commercialInvoiceQueryService.findAll(anyInt(), anyInt()))
+                .thenReturn(new PagedResult<>(List.of(commercialInvoice), 1L));
 
         mockMvc.perform(get("/api/commercial-invoices"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.*[0].ciId").value("CI260001"))
                 .andExpect(jsonPath("$._embedded.*[0].status").value("CONFIRMED"));
 
-        verify(commercialInvoiceQueryService).findAll();
+        verify(commercialInvoiceQueryService).findAll(anyInt(), anyInt());
     }
 
     @Test
@@ -180,14 +191,15 @@ class DocumentQueryControllerTest {
         PackingListView packingList = new PackingListView();
         packingList.setPlId("PL260001");
         packingList.setStatus("CREATED");
-        when(packingListQueryService.findAll()).thenReturn(List.of(packingList));
+        when(packingListQueryService.findAll(anyInt(), anyInt()))
+                .thenReturn(new PagedResult<>(List.of(packingList), 1L));
 
         mockMvc.perform(get("/api/packing-lists"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded.*[0].plId").value("PL260001"))
                 .andExpect(jsonPath("$._embedded.*[0].status").value("CREATED"));
 
-        verify(packingListQueryService).findAll();
+        verify(packingListQueryService).findAll(anyInt(), anyInt());
     }
 
     @Test
@@ -213,7 +225,8 @@ class DocumentQueryControllerTest {
         shipmentOrder.setShipmentOrderId("SO260001");
         shipmentOrder.setPoId("PO260001");
         shipmentOrder.setStatus("READY");
-        when(shipmentOrderQueryService.findAll()).thenReturn(List.of(shipmentOrder));
+        when(shipmentOrderQueryService.findAll(anyInt(), anyInt()))
+                .thenReturn(new PagedResult<>(List.of(shipmentOrder), 1L));
 
         mockMvc.perform(get("/api/shipment-orders"))
                 .andExpect(status().isOk())
@@ -221,7 +234,7 @@ class DocumentQueryControllerTest {
                 .andExpect(jsonPath("$._embedded.*[0].poId").value("PO260001"))
                 .andExpect(jsonPath("$._embedded.*[0].status").value("READY"));
 
-        verify(shipmentOrderQueryService).findAll();
+        verify(shipmentOrderQueryService).findAll(anyInt(), anyInt());
     }
 
     @Test
@@ -262,7 +275,8 @@ class DocumentQueryControllerTest {
         productionOrder.setPoId("PO260001");
         productionOrder.setPoNo("PO260001");
         productionOrder.setStatus("진행중");
-        when(productionOrderQueryService.findAll()).thenReturn(java.util.List.of(productionOrder));
+        when(productionOrderQueryService.findAll(anyInt(), anyInt()))
+                .thenReturn(new PagedResult<>(java.util.List.of(productionOrder), 1L));
 
         mockMvc.perform(get("/api/production-orders"))
                 .andExpect(status().isOk())
@@ -270,7 +284,7 @@ class DocumentQueryControllerTest {
                 .andExpect(jsonPath("$._embedded.*[0].poId").value("PO260001"))
                 .andExpect(jsonPath("$._embedded.*[0].status").value("진행중"));
 
-        verify(productionOrderQueryService).findAll();
+        verify(productionOrderQueryService).findAll(anyInt(), anyInt());
     }
 
     @Test
@@ -299,7 +313,8 @@ class DocumentQueryControllerTest {
         shipment.setShipmentId(1L);
         shipment.setPoId("PO2025-0001");
         shipment.setShipmentStatus("READY");
-        when(shipmentQueryService.findAll()).thenReturn(java.util.List.of(shipment));
+        when(shipmentQueryService.findAll(anyInt(), anyInt()))
+                .thenReturn(new PagedResult<>(java.util.List.of(shipment), 1L));
 
         mockMvc.perform(get("/api/shipments"))
                 .andExpect(status().isOk())
@@ -307,7 +322,7 @@ class DocumentQueryControllerTest {
                 .andExpect(jsonPath("$._embedded.*[0].poId").value("PO2025-0001"))
                 .andExpect(jsonPath("$._embedded.*[0].shipmentStatus").value("READY"));
 
-        verify(shipmentQueryService).findAll();
+        verify(shipmentQueryService).findAll(anyInt(), anyInt());
     }
 
     @Test
@@ -342,7 +357,8 @@ class DocumentQueryControllerTest {
         collection.setRemainingAmount(new BigDecimal("5000.00"));
         collection.setCurrencyCode("USD");
         collection.setStatus("미수금");
-        when(collectionQueryService.findAll()).thenReturn(java.util.List.of(collection));
+        when(collectionQueryService.findAll(anyInt(), anyInt()))
+                .thenReturn(new PagedResult<>(java.util.List.of(collection), 1L));
 
         mockMvc.perform(get("/api/collections"))
                 .andExpect(status().isOk())
@@ -350,7 +366,7 @@ class DocumentQueryControllerTest {
                 .andExpect(jsonPath("$._embedded.*[0].clientName").value("ABC Trading"))
                 .andExpect(jsonPath("$._embedded.*[0].status").value("미수금"));
 
-        verify(collectionQueryService).findAll();
+        verify(collectionQueryService).findAll(anyInt(), anyInt());
     }
 
     @Test

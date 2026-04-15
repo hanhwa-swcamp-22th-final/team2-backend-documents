@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.CollectionQueryMapper;
 import com.team2.documents.query.model.CollectionView;
 
@@ -27,5 +28,12 @@ public class CollectionQueryService {
 
     public List<CollectionView> findAll() {
         return collectionQueryMapper.findAll();
+    }
+
+    public PagedResult<CollectionView> findAll(int page, int size) {
+        int offset = page * size;
+        List<CollectionView> content = collectionQueryMapper.findPage(offset, size);
+        long total = collectionQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

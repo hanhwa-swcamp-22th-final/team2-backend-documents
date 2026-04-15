@@ -24,6 +24,22 @@
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
     </select>
 
+    <select id="findPage" resultMap="shipmentResultMap">
+        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        FROM shipments s
+        JOIN purchase_orders po ON s.po_id = po.po_id
+        LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
+        ORDER BY s.shipment_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM shipments s
+        JOIN purchase_orders po ON s.po_id = po.po_id
+        LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
+    </select>
+
     <select id="findByPoId" resultMap="shipmentResultMap">
         SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
         FROM shipments s

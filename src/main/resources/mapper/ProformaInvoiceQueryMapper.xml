@@ -63,6 +63,17 @@
         ORDER BY pi_issue_date DESC, pi_id DESC
     </select>
 
+    <select id="findPage" resultMap="proformaInvoiceResultMap">
+        SELECT <include refid="piColumns"/>
+        FROM proforma_invoices
+        ORDER BY pi_issue_date DESC, pi_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM proforma_invoices
+    </select>
+
     <select id="findItemsByPiId" resultMap="proformaInvoiceItemResultMap">
         SELECT pi_item_id, pi_id, item_id, pi_item_name, pi_item_qty, pi_item_unit,
                pi_item_unit_price, pi_item_amount, pi_item_remark

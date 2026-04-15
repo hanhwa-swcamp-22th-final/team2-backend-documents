@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.ProformaInvoiceQueryMapper;
 import com.team2.documents.query.model.ProformaInvoiceView;
 
@@ -27,5 +28,12 @@ public class ProformaInvoiceQueryService {
 
     public List<ProformaInvoiceView> findAll() {
         return proformaInvoiceQueryMapper.findAll();
+    }
+
+    public PagedResult<ProformaInvoiceView> findAll(int page, int size) {
+        int offset = page * size;
+        List<ProformaInvoiceView> content = proformaInvoiceQueryMapper.findPage(offset, size);
+        long total = proformaInvoiceQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

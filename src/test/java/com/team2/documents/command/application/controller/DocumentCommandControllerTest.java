@@ -344,18 +344,18 @@ class DocumentCommandControllerTest {
                 null
         );
         approvalRequest.setStatus(ApprovalStatus.APPROVED);
-        when(approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED, "확인 완료")).thenReturn(approvalRequest);
+        when(approvalRequestCommandService.update(1L, ApprovalStatus.APPROVED, "확인 완료", null)).thenReturn(approvalRequest);
 
         // when & then
         mockMvc.perform(put("/api/approval-requests/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new ApprovalRequestUpdateRequest(ApprovalStatus.APPROVED, "확인 완료"))))
+                                new ApprovalRequestUpdateRequest(ApprovalStatus.APPROVED, "확인 완료", null))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.approvalRequestId").value(1))
                 .andExpect(jsonPath("$.status").value("APPROVED"));
 
-        verify(approvalRequestCommandService).update(1L, ApprovalStatus.APPROVED, "확인 완료");
+        verify(approvalRequestCommandService).update(1L, ApprovalStatus.APPROVED, "확인 완료", null);
     }
 
     @Test

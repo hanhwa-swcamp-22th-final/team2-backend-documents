@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.CommercialInvoiceQueryMapper;
 import com.team2.documents.query.model.CommercialInvoiceView;
 
@@ -27,5 +28,12 @@ public class CommercialInvoiceQueryService {
 
     public List<CommercialInvoiceView> findAll() {
         return commercialInvoiceQueryMapper.findAll();
+    }
+
+    public PagedResult<CommercialInvoiceView> findAll(int page, int size) {
+        int offset = page * size;
+        List<CommercialInvoiceView> content = commercialInvoiceQueryMapper.findPage(offset, size);
+        long total = commercialInvoiceQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

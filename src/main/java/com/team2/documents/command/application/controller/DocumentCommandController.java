@@ -140,7 +140,7 @@ public class DocumentCommandController {
         PurchaseOrderCreateResponse response = new PurchaseOrderCreateResponse("PO 생성 요청이 처리되었습니다.", purchaseOrder.getPoId());
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(purchaseOrder.getPoId())).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders(0, 1000)).withRel("purchase-orders")));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")
@@ -155,7 +155,7 @@ public class DocumentCommandController {
         ProformaInvoiceCreateResponse response = new ProformaInvoiceCreateResponse("PI 생성 요청이 처리되었습니다.", proformaInvoice.getPiId());
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(proformaInvoice.getPiId())).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withRel("proforma-invoices")));
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(0, 1000)).withRel("proforma-invoices")));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")
@@ -221,7 +221,7 @@ public class DocumentCommandController {
         purchaseOrderDeletionRequestService.requestDeletion(request.poId(), request.userId());
         PurchaseOrderDeletionResponse response = new PurchaseOrderDeletionResponse("PO 삭제 요청이 처리되었습니다.");
         return ResponseEntity.ok(EntityModel.of(response,
-                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders(0, 1000)).withRel("purchase-orders")));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SHIPPING')")
@@ -238,7 +238,7 @@ public class DocumentCommandController {
         ShipmentResponse response = toShipmentResponse(shipmentCommandService.updateStatus(shipmentId, request.status()));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getShipment(shipmentId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getShipments()).withRel("shipments")));
+                linkTo(methodOn(DocumentQueryController.class).getShipments(0, 1000)).withRel("shipments")));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")
@@ -259,7 +259,7 @@ public class DocumentCommandController {
         ));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getCollection(collectionId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getCollections()).withRel("collections")));
+                linkTo(methodOn(DocumentQueryController.class).getCollections(0, 1000)).withRel("collections")));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -274,7 +274,7 @@ public class DocumentCommandController {
         ApprovalRequestResponse response = toApprovalRequestResponse(approvalRequestCommandService.create(request));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(response.approvalRequestId())).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests(0, 1000)).withRel("approval-requests")));
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -292,7 +292,7 @@ public class DocumentCommandController {
                 approvalRequestCommandService.update(approvalRequestId, request.status(), request.comment(), request.reason()));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(approvalRequestId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests(0, 1000)).withRel("approval-requests")));
     }
 
     @PreAuthorize("isAuthenticated()")

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.ProductionOrderQueryMapper;
 import com.team2.documents.query.model.ProductionOrderView;
 
@@ -27,5 +28,12 @@ public class ProductionOrderQueryService {
 
     public List<ProductionOrderView> findAll() {
         return productionOrderQueryMapper.findAll();
+    }
+
+    public PagedResult<ProductionOrderView> findAll(int page, int size) {
+        int offset = page * size;
+        List<ProductionOrderView> content = productionOrderQueryMapper.findPage(offset, size);
+        long total = productionOrderQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

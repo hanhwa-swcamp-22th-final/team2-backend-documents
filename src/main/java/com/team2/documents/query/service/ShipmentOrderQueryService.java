@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.ShipmentOrderQueryMapper;
 import com.team2.documents.query.model.ShipmentOrderView;
 
@@ -27,5 +28,12 @@ public class ShipmentOrderQueryService {
 
     public List<ShipmentOrderView> findAll() {
         return shipmentOrderQueryMapper.findAll();
+    }
+
+    public PagedResult<ShipmentOrderView> findAll(int page, int size) {
+        int offset = page * size;
+        List<ShipmentOrderView> content = shipmentOrderQueryMapper.findPage(offset, size);
+        long total = shipmentOrderQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

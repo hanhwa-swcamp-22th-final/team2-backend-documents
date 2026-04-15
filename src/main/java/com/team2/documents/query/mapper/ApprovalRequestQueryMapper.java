@@ -18,4 +18,8 @@ public interface ApprovalRequestQueryMapper {
             @Param("status") String status);
 
     List<ApprovalRequestView> findAll();
+
+    List<ApprovalRequestView> findPage(@Param("offset") int offset, @Param("limit") int limit);
+
+    long countAll();
 }

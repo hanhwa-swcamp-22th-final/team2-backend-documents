@@ -97,6 +97,25 @@
         <include refid="poShipmentJoin"/>
     </select>
 
+    <select id="findPage" resultMap="purchaseOrderResultMap">
+        SELECT po.po_id, po.po_code, po.pi_id, po.po_issue_date, po.client_id, po.currency_id, po.manager_id,
+               po.po_status, po.po_delivery_date, po.po_incoterms_code, po.po_named_place,
+               po.po_source_delivery_date, po.po_delivery_date_override, po.po_total_amount,
+               po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
+               po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
+               po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
+               po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
+               po.created_at, po.updated_at
+        FROM purchase_orders po
+        <include refid="poShipmentJoin"/>
+        ORDER BY po.po_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM purchase_orders
+    </select>
+
     <select id="findItemsByPoId" resultMap="purchaseOrderItemResultMap">
         SELECT po_item_id, po_id, item_id, po_item_name, po_item_qty, po_item_unit,
                po_item_unit_price, po_item_amount, po_item_remark

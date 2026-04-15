@@ -30,4 +30,19 @@
         JOIN purchase_orders po ON c.po_id = po.po_id
     </select>
 
+    <select id="findPage" resultMap="collectionResultMap">
+        SELECT c.collection_id, c.po_id, po.po_code, c.client_id, c.collection_sales_amount,
+               c.collection_status, c.collection_completed_date, c.created_at, c.updated_at
+        FROM collections c
+        JOIN purchase_orders po ON c.po_id = po.po_id
+        ORDER BY c.collection_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM collections c
+        JOIN purchase_orders po ON c.po_id = po.po_id
+    </select>
+
 </mapper>

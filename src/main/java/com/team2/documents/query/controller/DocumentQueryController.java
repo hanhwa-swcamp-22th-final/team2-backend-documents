@@ -5,8 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import org.springframework.http.HttpHeaders;
@@ -33,6 +33,7 @@ import com.team2.documents.command.domain.repository.PurchaseOrderRepository;
 import com.team2.documents.command.domain.repository.ShipmentOrderJpaRepository;
 import com.team2.documents.command.application.service.UserSnapshotService;
 import com.team2.documents.infrastructure.pdf.PdfGenerationService;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.dto.PurchaseOrderInitialStatusResponse;
 import com.team2.documents.query.model.ApprovalRequestView;
 import com.team2.documents.query.model.CollectionView;
@@ -144,14 +145,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/proforma-invoices")
-    public ResponseEntity<CollectionModel<EntityModel<ProformaInvoiceResponse>>> getProformaInvoices() {
-        List<EntityModel<ProformaInvoiceResponse>> models = proformaInvoiceQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<ProformaInvoiceResponse>>> getProformaInvoices(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<ProformaInvoiceView> result = proformaInvoiceQueryService.findAll(page, size);
+        List<EntityModel<ProformaInvoiceResponse>> models = result.content().stream()
                 .map(this::toProformaInvoiceResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(r.piId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "Proforma Invoice 단건 조회", description = "PI ID로 견적송장을 조회합니다.")
@@ -165,7 +170,7 @@ public class DocumentQueryController {
         ProformaInvoiceResponse response = toProformaInvoiceResponse(proformaInvoiceQueryService.findById(piId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(piId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices()).withRel("proforma-invoices")));
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(0, 1000)).withRel("proforma-invoices")));
     }
 
     @Operation(summary = "Commercial Invoice 전체 조회", description = "모든 상업송장(CI) 목록을 조회합니다.")
@@ -173,14 +178,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/commercial-invoices")
-    public ResponseEntity<CollectionModel<EntityModel<CommercialInvoiceResponse>>> getCommercialInvoices() {
-        List<EntityModel<CommercialInvoiceResponse>> models = commercialInvoiceQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<CommercialInvoiceResponse>>> getCommercialInvoices(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<CommercialInvoiceView> result = commercialInvoiceQueryService.findAll(page, size);
+        List<EntityModel<CommercialInvoiceResponse>> models = result.content().stream()
                 .map(this::toCommercialInvoiceResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getCommercialInvoice(r.ciId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "Commercial Invoice 단건 조회", description = "CI ID로 상업송장을 조회합니다.")
@@ -194,7 +203,7 @@ public class DocumentQueryController {
         CommercialInvoiceResponse response = toCommercialInvoiceResponse(commercialInvoiceQueryService.findById(ciId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getCommercialInvoice(ciId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices()).withRel("commercial-invoices")));
+                linkTo(methodOn(DocumentQueryController.class).getCommercialInvoices(0, 1000)).withRel("commercial-invoices")));
     }
 
     @Operation(summary = "Packing List 전체 조회", description = "모든 패킹리스트(PL) 목록을 조회합니다.")
@@ -202,14 +211,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/packing-lists")
-    public ResponseEntity<CollectionModel<EntityModel<PackingListResponse>>> getPackingLists() {
-        List<EntityModel<PackingListResponse>> models = packingListQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<PackingListResponse>>> getPackingLists(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<PackingListView> result = packingListQueryService.findAll(page, size);
+        List<EntityModel<PackingListResponse>> models = result.content().stream()
                 .map(this::toPackingListResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getPackingList(r.plId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getPackingLists()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getPackingLists(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "Packing List 단건 조회", description = "PL ID로 패킹리스트를 조회합니다.")
@@ -223,7 +236,7 @@ public class DocumentQueryController {
         PackingListResponse response = toPackingListResponse(packingListQueryService.findById(plId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPackingList(plId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getPackingLists()).withRel("packing-lists")));
+                linkTo(methodOn(DocumentQueryController.class).getPackingLists(0, 1000)).withRel("packing-lists")));
     }
 
     @Operation(summary = "선적지시서 전체 조회", description = "모든 선적지시서(Shipment Order) 목록을 조회합니다.")
@@ -231,14 +244,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/shipment-orders")
-    public ResponseEntity<CollectionModel<EntityModel<ShipmentOrderResponse>>> getShipmentOrders() {
-        List<EntityModel<ShipmentOrderResponse>> models = shipmentOrderQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<ShipmentOrderResponse>>> getShipmentOrders(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<ShipmentOrderView> result = shipmentOrderQueryService.findAll(page, size);
+        List<EntityModel<ShipmentOrderResponse>> models = result.content().stream()
                 .map(this::toShipmentOrderResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getShipmentOrder(r.shipmentOrderId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getShipmentOrders()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getShipmentOrders(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "선적지시서 단건 조회", description = "선적지시서 ID로 선적지시서를 조회합니다.")
@@ -252,7 +269,7 @@ public class DocumentQueryController {
         ShipmentOrderResponse response = toShipmentOrderResponse(shipmentOrderQueryService.findById(shipmentOrderId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getShipmentOrder(shipmentOrderId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getShipmentOrders()).withRel("shipment-orders")));
+                linkTo(methodOn(DocumentQueryController.class).getShipmentOrders(0, 1000)).withRel("shipment-orders")));
     }
 
     @Operation(summary = "Purchase Order 전체 조회", description = "모든 발주서(PO) 목록을 조회합니다.")
@@ -260,14 +277,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/purchase-orders")
-    public ResponseEntity<CollectionModel<EntityModel<PurchaseOrderResponse>>> getPurchaseOrders() {
-        List<EntityModel<PurchaseOrderResponse>> models = purchaseOrderQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<PurchaseOrderResponse>>> getPurchaseOrders(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<PurchaseOrderView> result = purchaseOrderQueryService.findAll(page, size);
+        List<EntityModel<PurchaseOrderResponse>> models = result.content().stream()
                 .map(this::toPurchaseOrderResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(r.poId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "Purchase Order 단건 조회", description = "PO ID로 발주서를 조회합니다.")
@@ -281,7 +302,7 @@ public class DocumentQueryController {
         PurchaseOrderResponse response = toPurchaseOrderResponse(purchaseOrderQueryService.findById(poId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(poId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders()).withRel("purchase-orders")));
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders(0, 1000)).withRel("purchase-orders")));
     }
 
     @Operation(summary = "PO 초기 상태 조회", description = "사용자 직급에 따라 PO 생성 시 초기 상태를 결정합니다.")
@@ -303,14 +324,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/approval-requests")
-    public ResponseEntity<CollectionModel<EntityModel<ApprovalRequestResponse>>> getApprovalRequests() {
-        List<EntityModel<ApprovalRequestResponse>> models = approvalRequestQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<ApprovalRequestResponse>>> getApprovalRequests(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<ApprovalRequestView> result = approvalRequestQueryService.findAll(page, size);
+        List<EntityModel<ApprovalRequestResponse>> models = result.content().stream()
                 .map(this::toApprovalRequestResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(r.approvalRequestId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "결재 요청 단건 조회", description = "결재 요청 ID로 결재 요청을 조회합니다.")
@@ -324,7 +349,7 @@ public class DocumentQueryController {
         ApprovalRequestResponse response = toApprovalRequestResponse(approvalRequestQueryService.findById(approvalRequestId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getApprovalRequest(approvalRequestId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests()).withRel("approval-requests")));
+                linkTo(methodOn(DocumentQueryController.class).getApprovalRequests(0, 1000)).withRel("approval-requests")));
     }
 
     @Operation(summary = "문서 유형/ID/상태별 결재 요청 조회", description = "문서 유형, 문서 ID, 결재 상태로 결재 요청을 조회합니다.")
@@ -348,14 +373,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/production-orders")
-    public ResponseEntity<CollectionModel<EntityModel<ProductionOrderResponse>>> getProductionOrders() {
-        List<EntityModel<ProductionOrderResponse>> models = productionOrderQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<ProductionOrderResponse>>> getProductionOrders(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<ProductionOrderView> result = productionOrderQueryService.findAll(page, size);
+        List<EntityModel<ProductionOrderResponse>> models = result.content().stream()
                 .map(this::toProductionOrderResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getProductionOrder(r.productionOrderId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getProductionOrders()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getProductionOrders(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "생산지시서 단건 조회", description = "생산지시서 ID로 생산지시서를 조회합니다.")
@@ -369,7 +398,7 @@ public class DocumentQueryController {
         ProductionOrderResponse response = toProductionOrderResponse(productionOrderQueryService.findById(productionOrderId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProductionOrder(productionOrderId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getProductionOrders()).withRel("production-orders")));
+                linkTo(methodOn(DocumentQueryController.class).getProductionOrders(0, 1000)).withRel("production-orders")));
     }
 
     @Operation(summary = "출하 전체 조회", description = "모든 출하(Shipment) 목록을 조회합니다.")
@@ -377,14 +406,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/shipments")
-    public ResponseEntity<CollectionModel<EntityModel<ShipmentResponse>>> getShipments() {
-        List<EntityModel<ShipmentResponse>> models = shipmentQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<ShipmentResponse>>> getShipments(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<ShipmentView> result = shipmentQueryService.findAll(page, size);
+        List<EntityModel<ShipmentResponse>> models = result.content().stream()
                 .map(this::toShipmentResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getShipment(r.shipmentId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getShipments()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getShipments(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "출하 단건 조회", description = "출하 ID로 출하를 조회합니다.")
@@ -398,7 +431,7 @@ public class DocumentQueryController {
         ShipmentResponse response = toShipmentResponse(shipmentQueryService.findById(shipmentId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getShipment(shipmentId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getShipments()).withRel("shipments")));
+                linkTo(methodOn(DocumentQueryController.class).getShipments(0, 1000)).withRel("shipments")));
     }
 
     @Operation(summary = "수금 전체 조회", description = "모든 수금(Collection) 목록을 조회합니다.")
@@ -406,14 +439,18 @@ public class DocumentQueryController {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/collections")
-    public ResponseEntity<CollectionModel<EntityModel<CollectionResponse>>> getCollections() {
-        List<EntityModel<CollectionResponse>> models = collectionQueryService.findAll().stream()
+    public ResponseEntity<PagedModel<EntityModel<CollectionResponse>>> getCollections(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "1000") int size) {
+        PagedResult<CollectionView> result = collectionQueryService.findAll(page, size);
+        List<EntityModel<CollectionResponse>> models = result.content().stream()
                 .map(this::toCollectionResponse)
                 .map(r -> EntityModel.of(r,
                         linkTo(methodOn(DocumentQueryController.class).getCollection(r.collectionId())).withSelfRel()))
                 .toList();
-        return ResponseEntity.ok(CollectionModel.of(models,
-                linkTo(methodOn(DocumentQueryController.class).getCollections()).withSelfRel()));
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(size, page, result.totalElements());
+        return ResponseEntity.ok(PagedModel.of(models, metadata,
+                linkTo(methodOn(DocumentQueryController.class).getCollections(page, size)).withSelfRel()));
     }
 
     @Operation(summary = "수금 단건 조회", description = "수금 ID로 수금을 조회합니다.")
@@ -427,7 +464,7 @@ public class DocumentQueryController {
         CollectionResponse response = toCollectionResponse(collectionQueryService.findById(collectionId));
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getCollection(collectionId)).withSelfRel(),
-                linkTo(methodOn(DocumentQueryController.class).getCollections()).withRel("collections")));
+                linkTo(methodOn(DocumentQueryController.class).getCollections(0, 1000)).withRel("collections")));
     }
 
     private PurchaseOrderResponse toPurchaseOrderResponse(PurchaseOrderView purchaseOrder) {

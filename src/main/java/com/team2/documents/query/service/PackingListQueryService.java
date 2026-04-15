@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.team2.documents.common.error.ResourceNotFoundException;
+import com.team2.documents.query.dto.PagedResult;
 import com.team2.documents.query.mapper.PackingListQueryMapper;
 import com.team2.documents.query.model.PackingListView;
 
@@ -27,5 +28,12 @@ public class PackingListQueryService {
 
     public List<PackingListView> findAll() {
         return packingListQueryMapper.findAll();
+    }
+
+    public PagedResult<PackingListView> findAll(int page, int size) {
+        int offset = page * size;
+        List<PackingListView> content = packingListQueryMapper.findPage(offset, size);
+        long total = packingListQueryMapper.countAll();
+        return new PagedResult<>(content, total);
     }
 }

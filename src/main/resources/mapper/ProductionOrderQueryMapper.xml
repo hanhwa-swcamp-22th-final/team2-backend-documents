@@ -42,4 +42,20 @@
         ORDER BY pr.production_order_id
     </select>
 
+    <select id="findPage" resultMap="productionOrderResultMap">
+        SELECT pr.production_order_id, pr.production_order_code, pr.po_id, po.po_code, pr.production_issue_date, pr.client_id, pr.manager_id,
+               pr.production_due_date, pr.production_status, pr.production_client_name, pr.production_country,
+               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents, pr.created_at, pr.updated_at
+        FROM production_orders pr
+        JOIN purchase_orders po ON pr.po_id = po.po_id
+        ORDER BY pr.production_order_id
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM production_orders pr
+        JOIN purchase_orders po ON pr.po_id = po.po_id
+    </select>
+
 </mapper>
