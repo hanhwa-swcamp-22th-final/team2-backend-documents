@@ -32,6 +32,13 @@ public class AuthFeignFallbackFactory implements FallbackFactory<AuthFeignClient
                         role, userStatus, cause != null ? cause.getMessage() : "unknown");
                 return Collections.emptyList();
             }
+
+            @Override
+            public List<AuthInternalUserResponse> getApprovers(Integer teamId) {
+                log.warn("[fallback] auth-service getApprovers(teamId={}) unavailable: {}",
+                        teamId, cause != null ? cause.getMessage() : "unknown");
+                return Collections.emptyList();
+            }
         };
     }
 }

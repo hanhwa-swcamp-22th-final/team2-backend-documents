@@ -87,6 +87,7 @@ public class DocumentQueryController {
     private final ShipmentOrderJpaRepository shipmentOrderJpaRepository;
     private final ProductionOrderRepository productionOrderRepository;
     private final UserSnapshotService userSnapshotService;
+    private final com.team2.documents.command.infrastructure.client.AuthFeignClient authFeignClient;
 
     public DocumentQueryController(PurchaseOrderQueryService purchaseOrderQueryService,
                                    ProformaInvoiceQueryService proformaInvoiceQueryService,
@@ -105,7 +106,8 @@ public class DocumentQueryController {
                                    PackingListJpaRepository packingListJpaRepository,
                                    ShipmentOrderJpaRepository shipmentOrderJpaRepository,
                                    ProductionOrderRepository productionOrderRepository,
-                                   UserSnapshotService userSnapshotService) {
+                                   UserSnapshotService userSnapshotService,
+                                   com.team2.documents.command.infrastructure.client.AuthFeignClient authFeignClient) {
         this.purchaseOrderQueryService = purchaseOrderQueryService;
         this.proformaInvoiceQueryService = proformaInvoiceQueryService;
         this.commercialInvoiceQueryService = commercialInvoiceQueryService;
@@ -124,6 +126,17 @@ public class DocumentQueryController {
         this.shipmentOrderJpaRepository = shipmentOrderJpaRepository;
         this.productionOrderRepository = productionOrderRepository;
         this.userSnapshotService = userSnapshotService;
+        this.authFeignClient = authFeignClient;
+    }
+
+    @Operation(summary = "결재자 후보 조회",
+            description = "요청자 팀의 팀장(position_level=1) + ADMIN 사용자 목록. teamId 미지정 시 전 팀의 팀장을 반환.")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
+    @GetMapping("/approval-requests/approvers")
+    public ResponseEntity<List<com.team2.documents.command.infrastructure.client.AuthInternalUserResponse>> getApprovers(
+            @Parameter(description = "요청자 팀 ID (미지정 시 전체 팀장)")
+            @RequestParam(name = "teamId", required = false) Integer teamId) {
+        return ResponseEntity.ok(authFeignClient.getApprovers(teamId));
     }
 
     @Operation(summary = "Proforma Invoice 전체 조회", description = "모든 견적송장(PI) 목록을 조회합니다.")

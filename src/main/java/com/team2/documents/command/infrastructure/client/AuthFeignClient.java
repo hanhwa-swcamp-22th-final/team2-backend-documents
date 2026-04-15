@@ -26,4 +26,11 @@ public interface AuthFeignClient {
     List<AuthInternalUserResponse> getUsersByRole(
             @RequestParam("role") String role,
             @RequestParam(name = "userStatus", required = false) String userStatus);
+
+    /**
+     * 결재자 후보 조회 — 해당 팀의 팀장(position_level=1) + 전체 ADMIN.
+     * teamId null 이면 전 팀의 팀장.
+     */
+    @GetMapping("/api/users/internal/approvers")
+    List<AuthInternalUserResponse> getApprovers(@RequestParam(name = "teamId", required = false) Integer teamId);
 }
