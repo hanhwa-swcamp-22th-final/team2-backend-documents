@@ -35,19 +35,17 @@
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
         <collection property="items" ofType="com.team2.documents.query.model.PurchaseOrderItemView"
-                    column="po_id" select="findItemsByPoId"/>
-    </resultMap>
-
-    <resultMap id="purchaseOrderItemResultMap" type="com.team2.documents.query.model.PurchaseOrderItemView">
-        <id property="poItemId" column="po_item_id"/>
-        <result property="poId" column="po_id"/>
-        <result property="itemId" column="item_id"/>
-        <result property="itemName" column="po_item_name"/>
-        <result property="quantity" column="po_item_qty"/>
-        <result property="unit" column="po_item_unit"/>
-        <result property="unitPrice" column="po_item_unit_price"/>
-        <result property="amount" column="po_item_amount"/>
-        <result property="remark" column="po_item_remark"/>
+                    columnPrefix="pot_">
+            <id property="poItemId" column="po_item_id"/>
+            <result property="poId" column="po_id"/>
+            <result property="itemId" column="item_id"/>
+            <result property="itemName" column="po_item_name"/>
+            <result property="quantity" column="po_item_qty"/>
+            <result property="unit" column="po_item_unit"/>
+            <result property="unitPrice" column="po_item_unit_price"/>
+            <result property="amount" column="po_item_amount"/>
+            <result property="remark" column="po_item_remark"/>
+        </collection>
     </resultMap>
 
     <!--
@@ -57,6 +55,18 @@
       - 일부라도 'preparing' → 'preparing'
       영업담당자가 출하 모듈 데이터 직접 조회 권한 없이도 본인 PO 진행을 PO 화면에서 확인.
     -->
+    <sql id="poItemColumns">
+        pot.po_item_id     AS pot_po_item_id,
+        pot.po_id          AS pot_po_id,
+        pot.item_id        AS pot_item_id,
+        pot.po_item_name   AS pot_po_item_name,
+        pot.po_item_qty    AS pot_po_item_qty,
+        pot.po_item_unit   AS pot_po_item_unit,
+        pot.po_item_unit_price AS pot_po_item_unit_price,
+        pot.po_item_amount AS pot_po_item_amount,
+        pot.po_item_remark AS pot_po_item_remark
+    </sql>
+
     <sql id="poShipmentJoin">
         LEFT JOIN (
             SELECT po_id,
@@ -70,61 +80,64 @@
         ) sh ON sh.po_id = po.po_id
     </sql>
 
+    <sql id="poColumns">
+        po.po_id, po.po_code, po.pi_id, po.po_issue_date, po.client_id, po.currency_id, po.manager_id,
+        po.po_status, po.po_delivery_date, po.po_incoterms_code, po.po_named_place,
+        po.po_source_delivery_date, po.po_delivery_date_override, po.po_total_amount,
+        po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
+        po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
+        po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
+        po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
+        po.created_at, po.updated_at
+    </sql>
+
     <select id="findById" resultMap="purchaseOrderResultMap">
-        SELECT po.po_id, po.po_code, po.pi_id, po.po_issue_date, po.client_id, po.currency_id, po.manager_id,
-               po.po_status, po.po_delivery_date, po.po_incoterms_code, po.po_named_place,
-               po.po_source_delivery_date, po.po_delivery_date_override, po.po_total_amount,
-               po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
-               po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
-               po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
-               po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
-               po.created_at, po.updated_at
+        SELECT <include refid="poColumns"/>,
+               <include refid="poItemColumns"/>
         FROM purchase_orders po
         <include refid="poShipmentJoin"/>
+        LEFT JOIN po_items pot ON pot.po_id = po.po_id
         WHERE po.po_code = #{poId}
           AND po.po_status != 'deleted'
+        ORDER BY pot.po_item_id
     </select>
 
     <select id="findAll" resultMap="purchaseOrderResultMap">
-        SELECT po.po_id, po.po_code, po.pi_id, po.po_issue_date, po.client_id, po.currency_id, po.manager_id,
-               po.po_status, po.po_delivery_date, po.po_incoterms_code, po.po_named_place,
-               po.po_source_delivery_date, po.po_delivery_date_override, po.po_total_amount,
-               po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
-               po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
-               po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
-               po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
-               po.created_at, po.updated_at
+        SELECT <include refid="poColumns"/>,
+               <include refid="poItemColumns"/>
         FROM purchase_orders po
         <include refid="poShipmentJoin"/>
+        LEFT JOIN po_items pot ON pot.po_id = po.po_id
         WHERE po.po_status != 'deleted'
+        ORDER BY po.po_id DESC, pot.po_item_id
     </select>
 
     <select id="findPage" resultMap="purchaseOrderResultMap">
-        SELECT po.po_id, po.po_code, po.pi_id, po.po_issue_date, po.client_id, po.currency_id, po.manager_id,
-               po.po_status, po.po_delivery_date, po.po_incoterms_code, po.po_named_place,
-               po.po_source_delivery_date, po.po_delivery_date_override, po.po_total_amount,
-               po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
-               po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
-               po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
-               po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
-               po.created_at, po.updated_at
-        FROM purchase_orders po
-        <include refid="poShipmentJoin"/>
-        WHERE po.po_status != 'deleted'
-        ORDER BY po.po_id DESC
-        LIMIT #{limit} OFFSET #{offset}
+        SELECT <include refid="poColumns"/>,
+               <include refid="poItemColumns"/>
+        FROM (
+            SELECT po_inner.*
+            FROM purchase_orders po_inner
+            WHERE po_inner.po_status != 'deleted'
+            ORDER BY po_inner.po_id DESC
+            LIMIT #{limit} OFFSET #{offset}
+        ) po
+        LEFT JOIN (
+            SELECT po_id,
+                   CASE
+                       WHEN COUNT(*) = SUM(CASE WHEN shipment_status = 'completed' THEN 1 ELSE 0 END)
+                            THEN 'completed'
+                       ELSE 'preparing'
+                       END AS po_shipment_status
+            FROM shipments
+            GROUP BY po_id
+        ) sh ON sh.po_id = po.po_id
+        LEFT JOIN po_items pot ON pot.po_id = po.po_id
+        ORDER BY po.po_id DESC, pot.po_item_id
     </select>
 
     <select id="countAll" resultType="long">
         SELECT COUNT(*) FROM purchase_orders WHERE po_status != 'deleted'
-    </select>
-
-    <select id="findItemsByPoId" resultMap="purchaseOrderItemResultMap">
-        SELECT po_item_id, po_id, item_id, po_item_name, po_item_qty, po_item_unit,
-               po_item_unit_price, po_item_amount, po_item_remark
-        FROM po_items
-        WHERE po_id = #{poId}
-        ORDER BY po_item_id
     </select>
 
 </mapper>

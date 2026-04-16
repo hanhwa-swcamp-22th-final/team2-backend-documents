@@ -29,60 +29,70 @@
         <result property="itemsSnapshot" column="pi_items_snapshot"/>
         <result property="linkedDocuments" column="pi_linked_documents"/>
         <collection property="items" ofType="com.team2.documents.query.model.ProformaInvoiceItemView"
-                    column="pi_id" select="findItemsByPiId"/>
-    </resultMap>
-
-    <resultMap id="proformaInvoiceItemResultMap" type="com.team2.documents.query.model.ProformaInvoiceItemView">
-        <result property="itemId" column="item_id"/>
-        <result property="itemName" column="pi_item_name"/>
-        <result property="quantity" column="pi_item_qty"/>
-        <result property="unit" column="pi_item_unit"/>
-        <result property="unitPrice" column="pi_item_unit_price"/>
-        <result property="amount" column="pi_item_amount"/>
-        <result property="remark" column="pi_item_remark"/>
+                    columnPrefix="pit_">
+            <id property="itemId" column="item_id"/>
+            <result property="itemName" column="pi_item_name"/>
+            <result property="quantity" column="pi_item_qty"/>
+            <result property="unit" column="pi_item_unit"/>
+            <result property="unitPrice" column="pi_item_unit_price"/>
+            <result property="amount" column="pi_item_amount"/>
+            <result property="remark" column="pi_item_remark"/>
+        </collection>
     </resultMap>
 
     <sql id="piColumns">
-        pi_id, pi_code, pi_issue_date, client_id, currency_id, manager_id, pi_status,
-        pi_delivery_date, pi_incoterms_code, pi_named_place, pi_total_amount,
-        pi_client_name, pi_client_address, pi_country, pi_currency_code, pi_manager_name,
-        pi_approval_status, pi_request_status, pi_approval_action,
-        pi_approval_requested_by, pi_approval_requested_at, pi_approval_review,
-        pi_items_snapshot, pi_linked_documents, created_at, updated_at
+        pi.pi_id, pi.pi_code, pi.pi_issue_date, pi.client_id, pi.currency_id, pi.manager_id, pi.pi_status,
+        pi.pi_delivery_date, pi.pi_incoterms_code, pi.pi_named_place, pi.pi_total_amount,
+        pi.pi_client_name, pi.pi_client_address, pi.pi_country, pi.pi_currency_code, pi.pi_manager_name,
+        pi.pi_approval_status, pi.pi_request_status, pi.pi_approval_action,
+        pi.pi_approval_requested_by, pi.pi_approval_requested_at, pi.pi_approval_review,
+        pi.pi_items_snapshot, pi.pi_linked_documents, pi.created_at, pi.updated_at
+    </sql>
+
+    <sql id="piItemColumns">
+        pit.item_id        AS pit_item_id,
+        pit.pi_item_name   AS pit_pi_item_name,
+        pit.pi_item_qty    AS pit_pi_item_qty,
+        pit.pi_item_unit   AS pit_pi_item_unit,
+        pit.pi_item_unit_price AS pit_pi_item_unit_price,
+        pit.pi_item_amount AS pit_pi_item_amount,
+        pit.pi_item_remark AS pit_pi_item_remark
     </sql>
 
     <select id="findById" resultMap="proformaInvoiceResultMap">
-        SELECT <include refid="piColumns"/>
-        FROM proforma_invoices
-        WHERE pi_code = #{piId}
-          AND pi_status != 'deleted'
+        SELECT <include refid="piColumns"/>,
+               <include refid="piItemColumns"/>
+        FROM proforma_invoices pi
+        LEFT JOIN pi_items pit ON pit.pi_id = pi.pi_id
+        WHERE pi.pi_code = #{piId}
+          AND pi.pi_status != 'deleted'
+        ORDER BY pit.pi_item_id
     </select>
 
     <select id="findAll" resultMap="proformaInvoiceResultMap">
-        SELECT <include refid="piColumns"/>
-        FROM proforma_invoices
-        WHERE pi_status != 'deleted'
-        ORDER BY pi_issue_date DESC, pi_id DESC
+        SELECT <include refid="piColumns"/>,
+               <include refid="piItemColumns"/>
+        FROM proforma_invoices pi
+        LEFT JOIN pi_items pit ON pit.pi_id = pi.pi_id
+        WHERE pi.pi_status != 'deleted'
+        ORDER BY pi.pi_issue_date DESC, pi.pi_id DESC, pit.pi_item_id
     </select>
 
     <select id="findPage" resultMap="proformaInvoiceResultMap">
-        SELECT <include refid="piColumns"/>
-        FROM proforma_invoices
-        WHERE pi_status != 'deleted'
-        ORDER BY pi_issue_date DESC, pi_id DESC
-        LIMIT #{limit} OFFSET #{offset}
+        SELECT <include refid="piColumns"/>,
+               <include refid="piItemColumns"/>
+        FROM (
+            SELECT * FROM proforma_invoices
+            WHERE pi_status != 'deleted'
+            ORDER BY pi_issue_date DESC, pi_id DESC
+            LIMIT #{limit} OFFSET #{offset}
+        ) pi
+        LEFT JOIN pi_items pit ON pit.pi_id = pi.pi_id
+        ORDER BY pi.pi_issue_date DESC, pi.pi_id DESC, pit.pi_item_id
     </select>
 
     <select id="countAll" resultType="long">
         SELECT COUNT(*) FROM proforma_invoices WHERE pi_status != 'deleted'
-    </select>
-
-    <select id="findItemsByPiId" resultMap="proformaInvoiceItemResultMap">
-        SELECT pi_item_id, pi_id, item_id, pi_item_name, pi_item_qty, pi_item_unit,
-               pi_item_unit_price, pi_item_amount, pi_item_remark
-        FROM pi_items
-        WHERE pi_id = #{piId}
-        ORDER BY pi_item_id
     </select>
 
 </mapper>

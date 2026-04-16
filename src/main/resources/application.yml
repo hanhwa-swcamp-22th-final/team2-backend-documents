@@ -87,7 +87,7 @@ resilience4j:
         waitDurationInOpenState: 10s
         failureRateThreshold: 50
         slowCallRateThreshold: 50
-        slowCallDurationThreshold: 8s
+        slowCallDurationThreshold: 20s
         minimumNumberOfCalls: 5
 
 mybatis:
