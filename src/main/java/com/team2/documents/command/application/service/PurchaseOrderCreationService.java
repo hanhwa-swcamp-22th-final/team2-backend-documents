@@ -13,12 +13,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
 import com.team2.documents.command.application.dto.PurchaseOrderItemCreateRequest;
 import com.team2.documents.command.domain.entity.Collection;
+import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.PurchaseOrderItem;
 import com.team2.documents.command.domain.entity.Shipment;
+import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.domain.repository.CollectionRepository;
+import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
 import com.team2.documents.command.domain.repository.ShipmentRepository;
 
 @Service
@@ -32,6 +35,7 @@ public class PurchaseOrderCreationService {
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ShipmentRepository shipmentRepository;
     private final CollectionRepository collectionRepository;
+    private final ProformaInvoiceRepository proformaInvoiceRepository;
     private final ObjectMapper objectMapper;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
@@ -41,6 +45,7 @@ public class PurchaseOrderCreationService {
                                         DocumentRevisionHistoryService documentRevisionHistoryService,
                                         ShipmentRepository shipmentRepository,
                                         CollectionRepository collectionRepository,
+                                        ProformaInvoiceRepository proformaInvoiceRepository,
                                         ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
@@ -49,6 +54,7 @@ public class PurchaseOrderCreationService {
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.shipmentRepository = shipmentRepository;
         this.collectionRepository = collectionRepository;
+        this.proformaInvoiceRepository = proformaInvoiceRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -57,6 +63,7 @@ public class PurchaseOrderCreationService {
     }
 
     public PurchaseOrder create(PurchaseOrderCreateRequest request) {
+        validateLinkedProformaInvoice(request.piId());
         PurchaseOrderStatus initialStatus = PurchaseOrderStatus.DRAFT;
         String poId = request.poId() == null || request.poId().isBlank()
                 ? documentNumberGeneratorService.nextPurchaseOrderId()
@@ -141,6 +148,21 @@ public class PurchaseOrderCreationService {
 
     public void create(Long userId) {
         create(new PurchaseOrderCreateRequest(userId));
+    }
+
+    /**
+     * PO 생성 시 연결된 PI 는 반드시 결재 확정(CONFIRMED) 상태여야 한다.
+     * draft / pending_approval / modification_requested 등의 PI 로는 PO 를 만들 수 없다.
+     */
+    private void validateLinkedProformaInvoice(String piCode) {
+        if (piCode == null || piCode.isBlank()) {
+            throw new IllegalArgumentException("PO 는 연결할 PI 를 지정해야 합니다.");
+        }
+        ProformaInvoice linkedPi = proformaInvoiceRepository.findByPiCode(piCode)
+                .orElseThrow(() -> new IllegalArgumentException("연결할 PI 를 찾을 수 없습니다: " + piCode));
+        if (!ProformaInvoiceStatus.CONFIRMED.equals(linkedPi.getStatus())) {
+            throw new IllegalStateException("결재 확정된 PI 만 PO 에 연결할 수 있습니다. (PI: " + piCode + ")");
+        }
     }
 
     private Long resolveManagerId(PurchaseOrderCreateRequest request) {
