@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.team2.documents.command.domain.entity.PurchaseOrder;
-import com.team2.documents.command.domain.entity.Shipment;
-import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.domain.repository.CollectionRepository;
 import com.team2.documents.command.domain.repository.CommercialInvoiceJpaRepository;
 import com.team2.documents.command.domain.repository.PackingListJpaRepository;
@@ -19,7 +17,8 @@ import com.team2.documents.command.domain.repository.ShipmentRepository;
 @Transactional
 public class PurchaseOrderModificationService {
 
-    private final ShipmentCommandService shipmentCommandService;
+    private static final String COLLECTION_COMPLETED = "수금완료";
+
     private final PurchaseOrderCommandService purchaseOrderCommandService;
     private final CommercialInvoiceJpaRepository commercialInvoiceJpaRepository;
     private final PackingListJpaRepository packingListJpaRepository;
@@ -27,14 +26,12 @@ public class PurchaseOrderModificationService {
     private final ShipmentRepository shipmentRepository;
     private final CollectionRepository collectionRepository;
 
-    public PurchaseOrderModificationService(ShipmentCommandService shipmentCommandService,
-                                            PurchaseOrderCommandService purchaseOrderCommandService,
+    public PurchaseOrderModificationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                             CommercialInvoiceJpaRepository commercialInvoiceJpaRepository,
                                             PackingListJpaRepository packingListJpaRepository,
                                             ProductionOrderRepository productionOrderRepository,
                                             ShipmentRepository shipmentRepository,
                                             CollectionRepository collectionRepository) {
-        this.shipmentCommandService = shipmentCommandService;
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.commercialInvoiceJpaRepository = commercialInvoiceJpaRepository;
         this.packingListJpaRepository = packingListJpaRepository;
@@ -43,12 +40,41 @@ public class PurchaseOrderModificationService {
         this.collectionRepository = collectionRepository;
     }
 
+    /**
+     * 출하완료된 출하 또는 수금완료된 수금이 있는 PO 는 수정 불가.
+     * 진행중(preparing/미수금) 후속문서는 PO 수정 반영을 허용.
+     */
     public void validateModifiable(String poId) {
-        Shipment shipment = shipmentCommandService.findByPoId(poId);
-
-        if (ShipmentStatus.COMPLETED.equals(shipment.getShipmentStatus())) {
-            throw new IllegalStateException("출하완료 상태의 PO는 수정할 수 없습니다.");
+        String reason = checkModifiable(poId);
+        if (reason != null) {
+            throw new IllegalStateException(reason);
         }
+    }
+
+    /**
+     * @return null if modifiable, or a descriptive reason string if not
+     */
+    public String checkModifiable(String poId) {
+        PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
+        Long poLongId = purchaseOrder.getPurchaseOrderId();
+
+        List<String> blockers = new ArrayList<>();
+
+        long completedShipmentCount = shipmentRepository.countCompletedByPoCode(poId);
+        if (completedShipmentCount > 0) {
+            blockers.add("출하완료 " + completedShipmentCount + "건");
+        }
+
+        long completedCollectionCount =
+                collectionRepository.countByPoIdAndStatus(poLongId, COLLECTION_COMPLETED);
+        if (completedCollectionCount > 0) {
+            blockers.add("수금완료 " + completedCollectionCount + "건");
+        }
+
+        if (!blockers.isEmpty()) {
+            return String.join(", ", blockers) + "이(가) 존재하여 수정할 수 없습니다.";
+        }
+        return null;
     }
 
     public void validateDeletable(String poId) {

@@ -17,17 +17,20 @@ import com.team2.documents.command.infrastructure.client.ApproverResolver;
 public class PurchaseOrderModificationRequestService {
 
     private final PurchaseOrderCommandService purchaseOrderCommandService;
+    private final PurchaseOrderModificationService purchaseOrderModificationService;
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ApproverResolver approverResolver;
 
     public PurchaseOrderModificationRequestService(PurchaseOrderCommandService purchaseOrderCommandService,
+                                                   PurchaseOrderModificationService purchaseOrderModificationService,
                                                    UserPositionRepository userPositionRepository,
                                                    ApprovalRequestCommandService approvalRequestCommandService,
                                                    DocumentRevisionHistoryService documentRevisionHistoryService,
                                                    ApproverResolver approverResolver) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
+        this.purchaseOrderModificationService = purchaseOrderModificationService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
@@ -43,6 +46,7 @@ public class PurchaseOrderModificationRequestService {
         if (!PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())) {
             throw new IllegalStateException("확정 상태의 PO만 수정 요청할 수 있습니다.");
         }
+        purchaseOrderModificationService.validateModifiable(poId);
         java.util.Map<String, Object> beforeSnapshot =
                 documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);

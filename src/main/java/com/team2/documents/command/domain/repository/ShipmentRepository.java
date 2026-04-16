@@ -31,4 +31,13 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
             WHERE p.po_code = :poCode
             """, nativeQuery = true)
     long countByPoCode(@Param("poCode") String poCode);
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM shipments s
+            JOIN purchase_orders p ON s.po_id = p.po_id
+            WHERE p.po_code = :poCode
+              AND s.shipment_status = 'completed'
+            """, nativeQuery = true)
+    long countCompletedByPoCode(@Param("poCode") String poCode);
 }
