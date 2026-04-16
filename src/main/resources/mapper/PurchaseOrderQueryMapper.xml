@@ -82,6 +82,7 @@
         FROM purchase_orders po
         <include refid="poShipmentJoin"/>
         WHERE po.po_code = #{poId}
+          AND po.po_status != 'deleted'
     </select>
 
     <select id="findAll" resultMap="purchaseOrderResultMap">
@@ -95,6 +96,7 @@
                po.created_at, po.updated_at
         FROM purchase_orders po
         <include refid="poShipmentJoin"/>
+        WHERE po.po_status != 'deleted'
     </select>
 
     <select id="findPage" resultMap="purchaseOrderResultMap">
@@ -108,12 +110,13 @@
                po.created_at, po.updated_at
         FROM purchase_orders po
         <include refid="poShipmentJoin"/>
+        WHERE po.po_status != 'deleted'
         ORDER BY po.po_id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM purchase_orders
+        SELECT COUNT(*) FROM purchase_orders WHERE po_status != 'deleted'
     </select>
 
     <select id="findItemsByPoId" resultMap="purchaseOrderItemResultMap">

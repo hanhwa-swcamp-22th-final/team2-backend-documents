@@ -47,6 +47,10 @@ import com.team2.documents.command.application.service.ProformaInvoiceApprovalWo
 import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
 import com.team2.documents.command.application.service.ProformaInvoiceRejectionWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceService;
+import com.team2.documents.command.application.service.ProformaInvoiceModificationService;
+import com.team2.documents.command.application.service.ProformaInvoiceDeletionRequestService;
+import com.team2.documents.command.application.dto.ProformaInvoiceDeletionRequest;
+import com.team2.documents.command.application.dto.ProformaInvoiceDeletionResponse;
 import com.team2.documents.command.application.service.PurchaseOrderModificationService;
 import com.team2.documents.command.application.service.PurchaseOrderModificationRequestService;
 import com.team2.documents.command.application.service.PurchaseOrderDeletionRequestService;
@@ -72,6 +76,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class DocumentCommandController {
 
     private final PurchaseOrderModificationService purchaseOrderModificationService;
+    private final ProformaInvoiceModificationService proformaInvoiceModificationService;
+    private final ProformaInvoiceDeletionRequestService proformaInvoiceDeletionRequestService;
     private final ProformaInvoiceApprovalWorkflowService proformaInvoiceApprovalWorkflowService;
     private final ProformaInvoiceRejectionWorkflowService proformaInvoiceRejectionWorkflowService;
     private final PurchaseOrderApprovalWorkflowService purchaseOrderApprovalWorkflowService;
@@ -91,6 +97,8 @@ public class DocumentCommandController {
     private final ProductionOrderCommandService productionOrderCommandService;
 
     public DocumentCommandController(PurchaseOrderModificationService purchaseOrderModificationService,
+                              ProformaInvoiceModificationService proformaInvoiceModificationService,
+                              ProformaInvoiceDeletionRequestService proformaInvoiceDeletionRequestService,
                               ProformaInvoiceApprovalWorkflowService proformaInvoiceApprovalWorkflowService,
                               ProformaInvoiceRejectionWorkflowService proformaInvoiceRejectionWorkflowService,
                               PurchaseOrderApprovalWorkflowService purchaseOrderApprovalWorkflowService,
@@ -109,6 +117,8 @@ public class DocumentCommandController {
                               EmailSendService emailSendService,
                               ProductionOrderCommandService productionOrderCommandService) {
         this.purchaseOrderModificationService = purchaseOrderModificationService;
+        this.proformaInvoiceModificationService = proformaInvoiceModificationService;
+        this.proformaInvoiceDeletionRequestService = proformaInvoiceDeletionRequestService;
         this.proformaInvoiceApprovalWorkflowService = proformaInvoiceApprovalWorkflowService;
         this.proformaInvoiceRejectionWorkflowService = proformaInvoiceRejectionWorkflowService;
         this.purchaseOrderApprovalWorkflowService = purchaseOrderApprovalWorkflowService;
@@ -321,6 +331,37 @@ public class DocumentCommandController {
             @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
         purchaseOrderModificationService.validateDeletable(poId);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "PI 삭제 가능 여부 검증", description = "해당 PI가 삭제 가능한 상태인지 검증합니다. 참조 PO가 있으면 삭제 불가.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "삭제 가능"),
+            @ApiResponse(responseCode = "404", description = "PI를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "삭제 불가능한 상태")
+    })
+    @PostMapping("/proforma-invoices/{piId}/validate-deletable")
+    public ResponseEntity<Void> validatePiDeletable(
+            @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable("piId") String piId) {
+        proformaInvoiceModificationService.validateDeletable(piId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "Proforma Invoice 삭제 요청", description = "PI의 삭제를 요청합니다. 결재 프로세스가 시작됩니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "PI 삭제 요청 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+            @ApiResponse(responseCode = "404", description = "PI를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "삭제 불가능한 상태")
+    })
+    @PostMapping("/proforma-invoices/request-deletion")
+    public ResponseEntity<EntityModel<ProformaInvoiceDeletionResponse>> requestProformaInvoiceDeletion(
+            @RequestBody ProformaInvoiceDeletionRequest request) {
+        proformaInvoiceDeletionRequestService.requestDeletion(request.piId(), request.userId());
+        ProformaInvoiceDeletionResponse response = new ProformaInvoiceDeletionResponse("PI 삭제 요청이 처리되었습니다.");
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(0, 1000)).withRel("proforma-invoices")));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")

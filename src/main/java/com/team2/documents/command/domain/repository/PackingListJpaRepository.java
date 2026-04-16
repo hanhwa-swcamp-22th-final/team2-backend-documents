@@ -11,4 +11,6 @@ public interface PackingListJpaRepository extends JpaRepository<PackingList, Lon
     Optional<PackingList> findByPlCode(String plCode);
 
     Optional<PackingList> findByPoId(Long poId);
+
+    long countByPoId(Long poId);
 }

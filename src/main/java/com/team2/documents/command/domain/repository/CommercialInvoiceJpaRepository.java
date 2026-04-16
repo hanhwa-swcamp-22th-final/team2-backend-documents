@@ -11,4 +11,6 @@ public interface CommercialInvoiceJpaRepository extends JpaRepository<Commercial
     Optional<CommercialInvoice> findByCiCode(String ciCode);
 
     Optional<CommercialInvoice> findByPoId(Long poId);
+
+    long countByPoId(Long poId);
 }

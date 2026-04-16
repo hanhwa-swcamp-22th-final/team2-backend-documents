@@ -55,23 +55,26 @@
         SELECT <include refid="piColumns"/>
         FROM proforma_invoices
         WHERE pi_code = #{piId}
+          AND pi_status != 'deleted'
     </select>
 
     <select id="findAll" resultMap="proformaInvoiceResultMap">
         SELECT <include refid="piColumns"/>
         FROM proforma_invoices
+        WHERE pi_status != 'deleted'
         ORDER BY pi_issue_date DESC, pi_id DESC
     </select>
 
     <select id="findPage" resultMap="proformaInvoiceResultMap">
         SELECT <include refid="piColumns"/>
         FROM proforma_invoices
+        WHERE pi_status != 'deleted'
         ORDER BY pi_issue_date DESC, pi_id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM proforma_invoices
+        SELECT COUNT(*) FROM proforma_invoices WHERE pi_status != 'deleted'
     </select>
 
     <select id="findItemsByPiId" resultMap="proformaInvoiceItemResultMap">

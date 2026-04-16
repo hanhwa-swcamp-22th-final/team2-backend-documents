@@ -23,4 +23,12 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     default Optional<Shipment> findByPoId(String poCode) {
         return findByPoCode(poCode);
     }
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM shipments s
+            JOIN purchase_orders p ON s.po_id = p.po_id
+            WHERE p.po_code = :poCode
+            """, nativeQuery = true)
+    long countByPoCode(@Param("poCode") String poCode);
 }

@@ -38,7 +38,7 @@ CREATE TABLE proforma_invoices (
     client_id               INT             NOT NULL,                   -- REFERENCES master.clients(id)
     currency_id             INT             NOT NULL,                   -- REFERENCES master.currencies(id)
     manager_id              INT             NOT NULL,                   -- REFERENCES auth.users(id)
-    pi_status               ENUM('초안','확정','결재대기','반려','삭제요청','등록요청','수정요청','취소')
+    pi_status               ENUM('초안','확정','결재대기','반려','삭제요청','등록요청','수정요청','취소','deleted')
                                             NOT NULL DEFAULT '초안',
     pi_delivery_date        DATE            NULL,
     pi_incoterms_code       VARCHAR(10)     NULL,
@@ -105,7 +105,7 @@ CREATE TABLE purchase_orders (
     client_id                   INT             NOT NULL,            -- REFERENCES master.clients(id)
     currency_id                 INT             NOT NULL,            -- REFERENCES master.currencies(id)
     manager_id                  INT             NOT NULL,            -- REFERENCES auth.users(id)
-    po_status                   ENUM('초안','확정','결재대기','반려','삭제요청','등록요청','수정요청','취소')
+    po_status                   ENUM('초안','확정','결재대기','반려','삭제요청','등록요청','수정요청','취소','deleted')
                                                 NOT NULL DEFAULT '초안',
     po_delivery_date            DATE            NULL,
     po_incoterms_code           VARCHAR(10)     NULL,

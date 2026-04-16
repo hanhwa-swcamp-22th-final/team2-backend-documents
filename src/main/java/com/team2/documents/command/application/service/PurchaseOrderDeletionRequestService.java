@@ -60,12 +60,16 @@ public class PurchaseOrderDeletionRequestService {
             return;
         }
 
+        // MANAGER: immediate soft delete
+        purchaseOrder.setStatus(PurchaseOrderStatus.DELETED);
+        purchaseOrderCommandService.save(purchaseOrder);
+
         documentRevisionHistoryService.recordPurchaseOrderEvent(
                 poId,
-                "REQUEST_DELETION",
+                "DELETION_COMPLETED",
                 userId,
-                PurchaseOrderStatus.APPROVAL_PENDING.name(),
-                "관리자가 PO 삭제를 요청했습니다.",
+                PurchaseOrderStatus.DELETED.name(),
+                "관리자가 PO를 즉시 삭제 처리했습니다.",
                 beforeSnapshot
         );
     }

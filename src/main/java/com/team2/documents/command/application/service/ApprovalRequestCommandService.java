@@ -86,6 +86,34 @@ public class ApprovalRequestCommandService {
 
         if (ApprovalStatus.APPROVED.equals(targetApprovalStatus)) {
             java.util.Map<String, Object> beforeSnapshot = approvalRequestRevisionService.captureBeforeSnapshot(approvalRequest);
+
+            // DELETION approval: defensive re-validation + soft delete
+            if (com.team2.documents.command.domain.entity.enums.ApprovalRequestType.DELETION
+                    .equals(approvalRequest.getRequestType())) {
+                ApprovalRequest autoRejected = approvalRequestDocumentWorkflowService.approveDeletion(
+                        approvalRequest.getDocumentType(),
+                        approvalRequest.getDocumentId(),
+                        approvalRequest);
+                if (autoRejected != null) {
+                    // Downstream docs found at approval time — auto-reject
+                    approvalRequestRepository.save(autoRejected);
+                    approvalDocumentMetadataService.markReviewed(autoRejected, ApprovalStatus.REJECTED, autoRejected.getReason());
+                    approvalRequestRevisionService.recordReviewEvent(
+                            autoRejected, "REVIEW_AUTO_REJECTED", ApprovalStatus.REJECTED, autoRejected.getReason(), beforeSnapshot);
+                    return autoRejected;
+                }
+                // Deletion succeeded
+                approvalRequest.setStatus(ApprovalStatus.APPROVED);
+                approvalRequest.setReviewedAt(java.time.LocalDateTime.now());
+                approvalRequest.setReviewSnapshot(comment);
+                approvalRequestRepository.save(approvalRequest);
+                approvalDocumentMetadataService.markReviewed(approvalRequest, targetApprovalStatus, comment);
+                approvalRequestRevisionService.recordReviewEvent(
+                        approvalRequest, "REVIEW_APPROVED", targetApprovalStatus, comment, beforeSnapshot);
+                return approvalRequest;
+            }
+
+            // REGISTRATION / MODIFICATION approval (existing flow)
             approvalRequestDocumentWorkflowService.approveDocument(approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             approvalRequest.setStatus(ApprovalStatus.APPROVED);
             approvalRequest.setReviewedAt(java.time.LocalDateTime.now());
@@ -99,7 +127,17 @@ public class ApprovalRequestCommandService {
 
         if (ApprovalStatus.REJECTED.equals(targetApprovalStatus)) {
             java.util.Map<String, Object> beforeSnapshot = approvalRequestRevisionService.captureBeforeSnapshot(approvalRequest);
-            approvalRequestDocumentWorkflowService.rejectDocument(approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
+
+            // DELETION rejection: restore document to CONFIRMED
+            if (com.team2.documents.command.domain.entity.enums.ApprovalRequestType.DELETION
+                    .equals(approvalRequest.getRequestType())) {
+                approvalRequestDocumentWorkflowService.rejectDeletion(
+                        approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
+            } else {
+                approvalRequestDocumentWorkflowService.rejectDocument(
+                        approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
+            }
+
             approvalRequest.setStatus(ApprovalStatus.REJECTED);
             approvalRequest.setReviewedAt(java.time.LocalDateTime.now());
             approvalRequest.setReviewSnapshot(comment);

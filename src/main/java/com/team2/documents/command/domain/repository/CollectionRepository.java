@@ -4,4 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.team2.documents.command.domain.entity.Collection;
 
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
+
+    long countByPoId(Long poId);
 }

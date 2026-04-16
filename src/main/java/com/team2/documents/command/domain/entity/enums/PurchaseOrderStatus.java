@@ -10,7 +10,8 @@ public enum PurchaseOrderStatus {
     CANCELLED("cancelled"),
     DELETION_REQUESTED("deletion_requested"),
     REGISTRATION_REQUESTED("registration_requested"),
-    MODIFICATION_REQUESTED("modification_requested");
+    MODIFICATION_REQUESTED("modification_requested"),
+    DELETED("deleted");
 
     private final String dbValue;
 

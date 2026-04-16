@@ -15,4 +15,6 @@ public interface ProductionOrderRepository extends JpaRepository<ProductionOrder
     }
 
     Optional<ProductionOrder> findByPoId(Long poId);
+
+    long countByPoId(Long poId);
 }
