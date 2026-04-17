@@ -135,8 +135,7 @@ public class ApprovalRequestCommandService {
                         approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             } else {
                 approvalRequestDocumentWorkflowService.rejectDocument(
-                        approvalRequest.getDocumentType(), approvalRequest.getDocumentId(),
-                        approvalRequest.getRequestType());
+                        approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             }
 
             approvalRequest.setStatus(ApprovalStatus.REJECTED);
