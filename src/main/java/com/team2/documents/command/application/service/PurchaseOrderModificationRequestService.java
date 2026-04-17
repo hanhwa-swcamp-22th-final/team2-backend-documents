@@ -40,37 +40,20 @@ public class PurchaseOrderModificationRequestService {
     public void requestModification(String poId, Long userId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
 
-        PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));
-
         if (!PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())) {
             throw new IllegalStateException("확정 상태의 PO만 수정 요청할 수 있습니다.");
         }
         purchaseOrderModificationService.validateModifiable(poId);
-        java.util.Map<String, Object> beforeSnapshot =
-                documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
+
+        Long approverId = approverResolver.resolveApproverId(userId);
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
         purchaseOrderCommandService.save(purchaseOrder);
-
-        if (PositionLevel.STAFF.equals(positionLevel)) {
-            Long approverId = approverResolver.resolveApproverId(userId);
-            approvalRequestCommandService.save(new ApprovalRequest(
-                    ApprovalDocumentType.PO,
-                    poId,
-                    ApprovalRequestType.MODIFICATION,
-                    userId,
-                    approverId
-            ));
-            return;
-        }
-
-        documentRevisionHistoryService.recordPurchaseOrderEvent(
+        approvalRequestCommandService.save(new ApprovalRequest(
+                ApprovalDocumentType.PO,
                 poId,
-                "REQUEST_MODIFICATION",
+                ApprovalRequestType.MODIFICATION,
                 userId,
-                PurchaseOrderStatus.APPROVAL_PENDING.name(),
-                "관리자가 PO 수정을 요청했습니다.",
-                beforeSnapshot
-        );
+                approverId
+        ));
     }
 }

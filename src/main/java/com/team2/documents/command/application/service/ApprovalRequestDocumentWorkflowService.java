@@ -115,13 +115,18 @@ public class ApprovalRequestDocumentWorkflowService {
         return null;
     }
 
-    public void rejectDocument(ApprovalDocumentType documentType, String documentId) {
+    public void rejectDocument(ApprovalDocumentType documentType, String documentId,
+                               ApprovalRequestType requestType) {
+        // 등록 반려 → 초안(DRAFT), 수정/삭제 반려 → 확정(CONFIRMED)
         if (ApprovalDocumentType.PO.equals(documentType)) {
             PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(documentId);
             if (!PurchaseOrderStatus.APPROVAL_PENDING.equals(purchaseOrder.getStatus())) {
                 throw new IllegalStateException("결재대기 상태의 PO만 반려할 수 있습니다.");
             }
-            purchaseOrder.setStatus(PurchaseOrderStatus.REJECTED);
+            PurchaseOrderStatus rollbackStatus = ApprovalRequestType.REGISTRATION.equals(requestType)
+                    ? PurchaseOrderStatus.DRAFT
+                    : PurchaseOrderStatus.CONFIRMED;
+            purchaseOrder.setStatus(rollbackStatus);
             purchaseOrderCommandService.save(purchaseOrder);
             return;
         }
@@ -130,7 +135,10 @@ public class ApprovalRequestDocumentWorkflowService {
         if (!ProformaInvoiceStatus.APPROVAL_PENDING.equals(proformaInvoice.getStatus())) {
             throw new IllegalStateException("결재대기 상태의 PI만 반려할 수 있습니다.");
         }
-        proformaInvoice.setStatus(ProformaInvoiceStatus.REJECTED);
+        ProformaInvoiceStatus rollbackStatus = ApprovalRequestType.REGISTRATION.equals(requestType)
+                ? ProformaInvoiceStatus.DRAFT
+                : ProformaInvoiceStatus.CONFIRMED;
+        proformaInvoice.setStatus(rollbackStatus);
         proformaInvoiceCommandService.save(proformaInvoice);
     }
 

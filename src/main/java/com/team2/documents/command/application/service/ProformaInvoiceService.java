@@ -33,24 +33,8 @@ public class ProformaInvoiceService {
     public void requestRegistration(String piId, Long userId) {
         ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
 
-        PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));
-
         if (!ProformaInvoiceStatus.DRAFT.equals(proformaInvoice.getStatus())) {
             throw new IllegalStateException("초안 상태의 PI만 등록 요청할 수 있습니다.");
-        }
-
-        if (PositionLevel.MANAGER.equals(positionLevel)) {
-            proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
-            proformaInvoiceCommandService.save(proformaInvoice);
-            documentRevisionHistoryService.recordProformaInvoiceEvent(
-                    piId,
-                    "REQUEST_REGISTRATION",
-                    userId,
-                    ProformaInvoiceStatus.CONFIRMED.name(),
-                    "관리자가 PI를 즉시 확정했습니다."
-            );
-            return;
         }
 
         proformaInvoice.setStatus(ProformaInvoiceStatus.APPROVAL_PENDING);

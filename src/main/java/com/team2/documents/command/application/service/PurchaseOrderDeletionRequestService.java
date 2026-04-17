@@ -37,40 +37,19 @@ public class PurchaseOrderDeletionRequestService {
     public void requestDeletion(String poId, Long userId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
 
-        PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));
-
         if (!PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())) {
             throw new IllegalStateException("확정 상태의 PO만 삭제 요청할 수 있습니다.");
         }
-        java.util.Map<String, Object> beforeSnapshot =
-                documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
+
+        Long approverId = approverResolver.resolveApproverId(userId);
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
         purchaseOrderCommandService.save(purchaseOrder);
-
-        if (PositionLevel.STAFF.equals(positionLevel)) {
-            Long approverId = approverResolver.resolveApproverId(userId);
-            approvalRequestCommandService.save(new ApprovalRequest(
-                    ApprovalDocumentType.PO,
-                    poId,
-                    ApprovalRequestType.DELETION,
-                    userId,
-                    approverId
-            ));
-            return;
-        }
-
-        // MANAGER: immediate soft delete
-        purchaseOrder.setStatus(PurchaseOrderStatus.DELETED);
-        purchaseOrderCommandService.save(purchaseOrder);
-
-        documentRevisionHistoryService.recordPurchaseOrderEvent(
+        approvalRequestCommandService.save(new ApprovalRequest(
+                ApprovalDocumentType.PO,
                 poId,
-                "DELETION_COMPLETED",
+                ApprovalRequestType.DELETION,
                 userId,
-                PurchaseOrderStatus.DELETED.name(),
-                "관리자가 PO를 즉시 삭제 처리했습니다.",
-                beforeSnapshot
-        );
+                approverId
+        ));
     }
 }

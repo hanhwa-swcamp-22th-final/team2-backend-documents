@@ -38,27 +38,8 @@ public class PurchaseOrderRegistrationService {
     public void requestRegistration(String poId, Long userId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
 
-        PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("사용자 직급 정보를 찾을 수 없습니다."));
-
         if (!PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())) {
             throw new BusinessConflictException("초안 상태의 PO만 등록 요청할 수 있습니다.");
-        }
-
-        java.util.Map<String, Object> beforeSnapshot = documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
-        if (PositionLevel.MANAGER.equals(positionLevel)) {
-            purchaseOrder.setStatus(PurchaseOrderStatus.CONFIRMED);
-            purchaseOrderCommandService.save(purchaseOrder);
-            purchaseOrderDocumentGenerationService.generateOnConfirmation(poId);
-            documentRevisionHistoryService.recordPurchaseOrderEvent(
-                    poId,
-                    "REQUEST_REGISTRATION",
-                    userId,
-                    PurchaseOrderStatus.CONFIRMED.name(),
-                    "관리자가 PO를 즉시 확정했습니다.",
-                    beforeSnapshot
-            );
-            return;
         }
 
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
