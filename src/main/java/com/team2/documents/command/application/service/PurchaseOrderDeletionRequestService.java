@@ -34,6 +34,28 @@ public class PurchaseOrderDeletionRequestService {
         this.approverResolver = approverResolver;
     }
 
+    /**
+     * 초안 PO 를 결재 없이 바로 soft-delete 한다. DRAFT 상태만 허용.
+     */
+    public void deleteDraft(String poId, Long userId) {
+        PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
+        if (!PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())) {
+            throw new IllegalStateException("초안 상태의 PO만 직접 삭제할 수 있습니다.");
+        }
+        java.util.Map<String, Object> beforeSnapshot =
+                documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
+        purchaseOrder.setStatus(PurchaseOrderStatus.DELETED);
+        purchaseOrderCommandService.save(purchaseOrder);
+        documentRevisionHistoryService.recordPurchaseOrderEvent(
+                poId,
+                "DRAFT_DELETE",
+                userId,
+                PurchaseOrderStatus.DELETED.name(),
+                "초안 PO를 삭제했습니다.",
+                beforeSnapshot
+        );
+    }
+
     public void requestDeletion(String poId, Long userId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
 

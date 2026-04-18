@@ -42,6 +42,54 @@ public class ProformaInvoiceCreationService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 초안 PI 를 직접 수정한다. 결재 없이 본인이 바로 편집 가능한 플로우.
+     * DRAFT 상태가 아니면 거부한다.
+     */
+    public ProformaInvoice updateDraft(String piId, ProformaInvoiceCreateRequest request) {
+        ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
+        if (!ProformaInvoiceStatus.DRAFT.equals(proformaInvoice.getStatus())) {
+            throw new IllegalStateException("초안 상태의 PI만 직접 수정할 수 있습니다.");
+        }
+
+        LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();
+        String currencyCode = request.currencyCode();
+        BigDecimal exchangeRate = request.exchangeRate();
+        validateExchangeRate(currencyCode, exchangeRate);
+        List<ProformaInvoiceItem> newItems = toEntities(request.items(), currencyCode, exchangeRate);
+        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), newItems, currencyCode, exchangeRate);
+
+        proformaInvoice.setIssueDate(issueDate);
+        if (request.clientId() != null) proformaInvoice.setClientId(request.clientId());
+        if (request.currencyId() != null) proformaInvoice.setCurrencyId(request.currencyId());
+        if (request.managerId() != null) proformaInvoice.setManagerId(request.managerId());
+        proformaInvoice.setDeliveryDate(request.deliveryDate());
+        proformaInvoice.setIncotermsCode(request.incotermsCode());
+        proformaInvoice.setNamedPlace(request.namedPlace());
+        proformaInvoice.setTotalAmount(totalAmount);
+        proformaInvoice.setClientName(request.clientName());
+        proformaInvoice.setClientAddress(request.clientAddress());
+        proformaInvoice.setCountry(request.country());
+        proformaInvoice.setCurrencyCode(currencyCode);
+        proformaInvoice.setManagerName(request.managerName());
+        proformaInvoice.setItemsSnapshot(serializeItemsSnapshot(newItems));
+
+        // orphanRemoval 이 동작하려면 리스트 참조를 바꾸지 말고 내부를 갈아끼워야 한다.
+        proformaInvoice.getItems().clear();
+        proformaInvoice.getItems().addAll(newItems);
+
+        ProformaInvoice saved = proformaInvoiceCommandService.save(proformaInvoice);
+        docsSnapshotService.saveProformaInvoiceSnapshot(saved);
+        documentRevisionHistoryService.recordProformaInvoiceEvent(
+                saved.getPiId(),
+                "DRAFT_UPDATE",
+                request.userId(),
+                saved.getStatus().name(),
+                "초안 PI를 수정했습니다."
+        );
+        return saved;
+    }
+
     public ProformaInvoice create(ProformaInvoiceCreateRequest request) {
         LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();
         String currencyCode = request.currencyCode();

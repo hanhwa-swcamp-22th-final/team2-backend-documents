@@ -66,6 +66,16 @@ public class ApprovalRequestCommandService {
         return update(approvalRequestId, targetApprovalStatus, null, null);
     }
 
+    /**
+     * 요청자 본인이 자신의 PENDING 결재 요청을 취소한다. 엔티티를 완전 삭제해
+     * 향후 findPendingByDocument 조회에서 제외되도록 한다. 취소 후 문서 상태
+     * 복구는 호출하는 쪽에서 담당한다.
+     */
+    public void cancelPendingByDocument(ApprovalDocumentType documentType, String documentId) {
+        ApprovalRequest request = findPendingByDocument(documentType, documentId);
+        approvalRequestRepository.delete(request);
+    }
+
     public ApprovalRequest updatePendingDocument(ApprovalDocumentType documentType,
                                                  String documentId,
                                                  ApprovalStatus targetApprovalStatus) {

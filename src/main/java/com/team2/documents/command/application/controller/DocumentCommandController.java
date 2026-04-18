@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +44,7 @@ import com.team2.documents.command.application.service.ApprovalRequestCommandSer
 import com.team2.documents.command.application.service.CollectionCommandService;
 import com.team2.documents.command.application.service.ProductionOrderCommandService;
 import com.team2.documents.command.application.service.ShipmentCommandService;
+import com.team2.documents.command.application.service.ProformaInvoiceApprovalCancellationService;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
 import com.team2.documents.command.application.service.ProformaInvoiceRejectionWorkflowService;
@@ -51,6 +53,7 @@ import com.team2.documents.command.application.service.ProformaInvoiceModificati
 import com.team2.documents.command.application.service.ProformaInvoiceDeletionRequestService;
 import com.team2.documents.command.application.dto.ProformaInvoiceDeletionRequest;
 import com.team2.documents.command.application.dto.ProformaInvoiceDeletionResponse;
+import com.team2.documents.command.application.service.PurchaseOrderApprovalCancellationService;
 import com.team2.documents.command.application.service.PurchaseOrderModificationService;
 import com.team2.documents.command.application.service.PurchaseOrderModificationRequestService;
 import com.team2.documents.command.application.service.PurchaseOrderDeletionRequestService;
@@ -89,6 +92,8 @@ public class DocumentCommandController {
     private final PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService;
     private final PurchaseOrderRegistrationService purchaseOrderRegistrationService;
     private final ProformaInvoiceCreationService proformaInvoiceCreationService;
+    private final ProformaInvoiceApprovalCancellationService proformaInvoiceApprovalCancellationService;
+    private final PurchaseOrderApprovalCancellationService purchaseOrderApprovalCancellationService;
     private final ProformaInvoiceService proformaInvoiceService;
     private final ShipmentCommandService shipmentCommandService;
     private final CollectionCommandService collectionCommandService;
@@ -110,6 +115,8 @@ public class DocumentCommandController {
                               PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService,
                               PurchaseOrderRegistrationService purchaseOrderRegistrationService,
                               ProformaInvoiceCreationService proformaInvoiceCreationService,
+                              ProformaInvoiceApprovalCancellationService proformaInvoiceApprovalCancellationService,
+                              PurchaseOrderApprovalCancellationService purchaseOrderApprovalCancellationService,
                               ProformaInvoiceService proformaInvoiceService,
                               ShipmentCommandService shipmentCommandService,
                               CollectionCommandService collectionCommandService,
@@ -130,6 +137,8 @@ public class DocumentCommandController {
         this.purchaseOrderProductionOrderGenerationService = purchaseOrderProductionOrderGenerationService;
         this.purchaseOrderRegistrationService = purchaseOrderRegistrationService;
         this.proformaInvoiceCreationService = proformaInvoiceCreationService;
+        this.proformaInvoiceApprovalCancellationService = proformaInvoiceApprovalCancellationService;
+        this.purchaseOrderApprovalCancellationService = purchaseOrderApprovalCancellationService;
         this.proformaInvoiceService = proformaInvoiceService;
         this.shipmentCommandService = shipmentCommandService;
         this.collectionCommandService = collectionCommandService;
@@ -166,6 +175,108 @@ public class DocumentCommandController {
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(proformaInvoice.getPiId())).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(0, 1000)).withRel("proforma-invoices")));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "초안 PI 직접 수정", description = "DRAFT 상태의 PI 를 결재 없이 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "409", description = "초안이 아닌 상태")
+    })
+    @PutMapping("/proforma-invoices/{piId}")
+    public ResponseEntity<EntityModel<ProformaInvoiceCreateResponse>> updateProformaInvoiceDraft(
+            @Parameter(description = "PI 문서 ID", example = "PI260011") @PathVariable("piId") String piId,
+            @RequestBody ProformaInvoiceCreateRequest request) {
+        com.team2.documents.command.domain.entity.ProformaInvoice pi =
+                proformaInvoiceCreationService.updateDraft(piId, request);
+        ProformaInvoiceCreateResponse response = new ProformaInvoiceCreateResponse("초안 PI가 수정되었습니다.", pi.getPiId());
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(pi.getPiId())).withSelfRel()));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "초안 PI 직접 삭제", description = "DRAFT 상태의 PI 를 결재 없이 soft-delete 합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "409", description = "초안이 아닌 상태")
+    })
+    @DeleteMapping("/proforma-invoices/{piId}")
+    public ResponseEntity<EntityModel<ProformaInvoiceDeletionResponse>> deleteProformaInvoiceDraft(
+            @Parameter(description = "PI 문서 ID", example = "PI260011") @PathVariable("piId") String piId,
+            @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt == null ? 0L : Long.parseLong(jwt.getSubject());
+        proformaInvoiceDeletionRequestService.deleteDraft(piId, userId);
+        return ResponseEntity.ok(EntityModel.of(
+                new ProformaInvoiceDeletionResponse("초안 PI가 삭제되었습니다."),
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(0, 1000)).withRel("proforma-invoices")));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "초안 PO 직접 수정", description = "DRAFT 상태의 PO 를 결재 없이 수정합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "409", description = "초안이 아닌 상태")
+    })
+    @PutMapping("/purchase-orders/{poId}")
+    public ResponseEntity<EntityModel<PurchaseOrderCreateResponse>> updatePurchaseOrderDraft(
+            @Parameter(description = "PO 문서 ID", example = "PO260001") @PathVariable("poId") String poId,
+            @RequestBody PurchaseOrderCreateRequest request) {
+        com.team2.documents.command.domain.entity.PurchaseOrder po =
+                purchaseOrderCreationService.updateDraft(poId, request);
+        PurchaseOrderCreateResponse response = new PurchaseOrderCreateResponse("초안 PO가 수정되었습니다.", po.getPoId());
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(po.getPoId())).withSelfRel()));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "초안 PO 직접 삭제", description = "DRAFT 상태의 PO 를 결재 없이 soft-delete 합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "409", description = "초안이 아닌 상태")
+    })
+    @DeleteMapping("/purchase-orders/{poId}")
+    public ResponseEntity<EntityModel<PurchaseOrderDeletionResponse>> deletePurchaseOrderDraft(
+            @Parameter(description = "PO 문서 ID", example = "PO260001") @PathVariable("poId") String poId,
+            @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt == null ? 0L : Long.parseLong(jwt.getSubject());
+        purchaseOrderDeletionRequestService.deleteDraft(poId, userId);
+        return ResponseEntity.ok(EntityModel.of(
+                new PurchaseOrderDeletionResponse("초안 PO가 삭제되었습니다."),
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders(0, 1000)).withRel("purchase-orders")));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "PI 결재 요청 취소", description = "APPROVAL_PENDING 상태의 PI 결재 요청을 요청자 본인이 취소. REGISTRATION 취소 시 DRAFT, MODIFICATION/DELETION 취소 시 CONFIRMED 복구.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "취소 성공"),
+            @ApiResponse(responseCode = "409", description = "결재대기 아님 또는 본인 요청 아님")
+    })
+    @PostMapping("/proforma-invoices/{piId}/cancel-approval")
+    public ResponseEntity<EntityModel<ProformaInvoiceRegistrationResponse>> cancelProformaInvoiceApproval(
+            @Parameter(description = "PI 문서 ID", example = "PI260011") @PathVariable("piId") String piId,
+            @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt == null ? 0L : Long.parseLong(jwt.getSubject());
+        proformaInvoiceApprovalCancellationService.cancelApprovalRequest(piId, userId);
+        return ResponseEntity.ok(EntityModel.of(
+                new ProformaInvoiceRegistrationResponse("결재 요청이 취소되었습니다."),
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(piId)).withRel("proforma-invoice")));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "PO 결재 요청 취소", description = "APPROVAL_PENDING 상태의 PO 결재 요청을 요청자 본인이 취소. PI 와 대칭.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "취소 성공"),
+            @ApiResponse(responseCode = "409", description = "결재대기 아님 또는 본인 요청 아님")
+    })
+    @PostMapping("/purchase-orders/{poId}/cancel-approval")
+    public ResponseEntity<EntityModel<PurchaseOrderRegistrationResponse>> cancelPurchaseOrderApproval(
+            @Parameter(description = "PO 문서 ID", example = "PO260001") @PathVariable("poId") String poId,
+            @AuthenticationPrincipal Jwt jwt) {
+        Long userId = jwt == null ? 0L : Long.parseLong(jwt.getSubject());
+        purchaseOrderApprovalCancellationService.cancelApprovalRequest(poId, userId);
+        return ResponseEntity.ok(EntityModel.of(
+                new PurchaseOrderRegistrationResponse("결재 요청이 취소되었습니다."),
+                linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(poId)).withRel("purchase-order")));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")

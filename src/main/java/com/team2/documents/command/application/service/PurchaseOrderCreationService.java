@@ -62,6 +62,53 @@ public class PurchaseOrderCreationService {
         return PurchaseOrderStatus.DRAFT;
     }
 
+    /**
+     * 초안 PO 를 결재 없이 직접 수정. DRAFT 상태만 허용.
+     * PI 재연결도 허용하되 새 PI 가 CONFIRMED 인지 확인.
+     */
+    public PurchaseOrder updateDraft(String poId, PurchaseOrderCreateRequest request) {
+        PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
+        if (!PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())) {
+            throw new IllegalStateException("초안 상태의 PO만 직접 수정할 수 있습니다.");
+        }
+        validateLinkedProformaInvoice(request.piId());
+
+        List<PurchaseOrderItem> newItems = toEntities(request.items());
+        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), newItems);
+
+        purchaseOrder.setPiId(request.piId());
+        purchaseOrder.setIssueDate(request.issueDate() == null ? LocalDate.now() : request.issueDate());
+        if (request.clientId() != null) purchaseOrder.setClientId(request.clientId());
+        if (request.currencyId() != null) purchaseOrder.setCurrencyId(request.currencyId());
+        purchaseOrder.setManagerId(resolveManagerId(request));
+        purchaseOrder.setDeliveryDate(request.deliveryDate());
+        purchaseOrder.setIncotermsCode(request.incotermsCode());
+        purchaseOrder.setNamedPlace(request.namedPlace());
+        purchaseOrder.setSourceDeliveryDate(request.sourceDeliveryDate());
+        purchaseOrder.setDeliveryDateOverride(Boolean.TRUE.equals(request.deliveryDateOverride()));
+        purchaseOrder.setTotalAmount(totalAmount);
+        purchaseOrder.setClientName(request.clientName());
+        purchaseOrder.setClientAddress(request.clientAddress());
+        purchaseOrder.setCountry(request.country());
+        purchaseOrder.setCurrencyCode(request.currencyCode());
+        purchaseOrder.setManagerName(request.managerName());
+        purchaseOrder.setItemsSnapshot(serializeItemsSnapshot(newItems));
+
+        purchaseOrder.getItems().clear();
+        purchaseOrder.getItems().addAll(newItems);
+
+        PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
+        docsSnapshotService.savePurchaseOrderSnapshot(saved);
+        documentRevisionHistoryService.recordPurchaseOrderEvent(
+                saved.getPoId(),
+                "DRAFT_UPDATE",
+                request.userId(),
+                saved.getStatus().name(),
+                "초안 PO를 수정했습니다."
+        );
+        return saved;
+    }
+
     public PurchaseOrder create(PurchaseOrderCreateRequest request) {
         validateLinkedProformaInvoice(request.piId());
         PurchaseOrderStatus initialStatus = PurchaseOrderStatus.DRAFT;

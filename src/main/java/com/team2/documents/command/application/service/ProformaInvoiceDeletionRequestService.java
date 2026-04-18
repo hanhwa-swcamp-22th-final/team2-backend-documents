@@ -34,6 +34,29 @@ public class ProformaInvoiceDeletionRequestService {
         this.approverResolver = approverResolver;
     }
 
+    /**
+     * 초안 PI 를 결재 없이 바로 soft-delete 한다.
+     * DRAFT 상태만 허용. 결재대기/확정 상태는 requestDeletion 경로를 써야 한다.
+     */
+    public void deleteDraft(String piId, Long userId) {
+        ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
+        if (!ProformaInvoiceStatus.DRAFT.equals(proformaInvoice.getStatus())) {
+            throw new IllegalStateException("초안 상태의 PI만 직접 삭제할 수 있습니다.");
+        }
+        java.util.Map<String, Object> beforeSnapshot =
+                documentRevisionHistoryService.captureProformaInvoiceSnapshot(proformaInvoice);
+        proformaInvoice.setStatus(ProformaInvoiceStatus.DELETED);
+        proformaInvoiceCommandService.save(proformaInvoice);
+        documentRevisionHistoryService.recordProformaInvoiceEvent(
+                piId,
+                "DRAFT_DELETE",
+                userId,
+                ProformaInvoiceStatus.DELETED.name(),
+                "초안 PI를 삭제했습니다.",
+                beforeSnapshot
+        );
+    }
+
     public void requestDeletion(String piId, Long userId) {
         ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
 
