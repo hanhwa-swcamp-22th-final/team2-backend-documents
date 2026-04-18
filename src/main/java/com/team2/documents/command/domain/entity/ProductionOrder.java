@@ -65,6 +65,11 @@ public class ProductionOrder {
     @Transient
     private List<String> items;
 
+    // created_at/updated_at 는 DB 기본값(CURRENT_TIMESTAMP / ON UPDATE CURRENT_TIMESTAMP)에
+    // 의존한다. insertable=false/updatable=false 이므로 JPA 가 INSERT/UPDATE 컬럼에서 제외.
+    // 생성자에서 값을 받지만 실제 DB 값은 서버 시간으로 세팅되고, save 직후 엔티티의 필드는
+    // null 일 수 있다. 필요시 entityManager.refresh(entity) 로 동기화. 현재 코드는 해당 값
+    // 을 save 직후 읽지 않으므로 문제 없음.
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
