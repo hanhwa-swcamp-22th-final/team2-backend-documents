@@ -725,7 +725,7 @@ public class DocumentCommandController {
             @Schema(description = "수금 ID") Long collectionId,
             @Schema(description = "PO 문서 ID") String poId,
             @Schema(description = "PO 문서 번호") String poNo,
-            @Schema(description = "거래처 ID") Long clientId,
+            @Schema(description = "거래처 ID") Integer clientId,
             @Schema(description = "거래처명") String clientName,
             @Schema(description = "총 금액") BigDecimal totalAmount,
             @Schema(description = "수금 완료 금액") BigDecimal collectedAmount,

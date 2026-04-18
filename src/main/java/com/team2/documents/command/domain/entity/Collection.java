@@ -32,12 +32,8 @@ public class Collection {
     @Transient
     private String poCode;
 
-    // DDL 은 client_id INT 이고 다른 엔티티(ProformaInvoice/PurchaseOrder)는 Integer 로
-    // 선언돼 있다. 본 엔티티만 Long 으로 드리프트돼 있으나 Hibernate 가 INT ↔ Long 자동
-    // 변환하므로 런타임 문제 없음. 타입 통일은 Command/Query DTO 의 다수 호출처 연쇄
-    // 수정 필요해 별도 리팩토링으로 분리.
     @Column(name = "client_id", nullable = false)
-    private Long clientId;
+    private Integer clientId;
 
     @Column(name = "manager_id")
     private Long managerId;
@@ -81,7 +77,7 @@ public class Collection {
     public Collection(Long collectionId,
                       String poId,
                       String poNo,
-                      Long clientId,
+                      Integer clientId,
                       String clientName,
                       BigDecimal totalAmount,
                       BigDecimal collectedAmount,
@@ -98,7 +94,7 @@ public class Collection {
     public Collection(Long collectionId,
                       Long poId,
                       String poCode,
-                      Long clientId,
+                      Integer clientId,
                       String clientName,
                       BigDecimal totalAmount,
                       BigDecimal collectedAmount,
@@ -139,7 +135,7 @@ public class Collection {
         return poId;
     }
 
-    public Long getClientId() {
+    public Integer getClientId() {
         return clientId;
     }
 

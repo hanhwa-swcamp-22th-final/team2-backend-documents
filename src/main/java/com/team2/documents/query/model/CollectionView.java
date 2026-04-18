@@ -15,7 +15,7 @@ public class CollectionView {
     private Long collectionId;
     private String poId;
     private String poNo;
-    private Long clientId;
+    private Integer clientId;
     private String clientName;
     private BigDecimal totalAmount;
     private BigDecimal collectedAmount;

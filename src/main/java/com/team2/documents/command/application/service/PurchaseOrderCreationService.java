@@ -176,7 +176,7 @@ public class PurchaseOrderCreationService {
                 null,
                 purchaseOrder.getPurchaseOrderId(),
                 purchaseOrder.getPoId(),
-                purchaseOrder.getClientId() == null ? null : purchaseOrder.getClientId().longValue(),
+                purchaseOrder.getClientId(),
                 purchaseOrder.getClientName(),
                 purchaseOrder.getTotalAmount(),
                 BigDecimal.ZERO,
