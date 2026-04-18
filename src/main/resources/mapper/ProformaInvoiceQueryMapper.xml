@@ -30,7 +30,10 @@
         <result property="linkedDocuments" column="pi_linked_documents"/>
         <collection property="items" ofType="com.team2.documents.query.model.ProformaInvoiceItemView"
                     columnPrefix="pit_">
-            <id property="itemId" column="item_id"/>
+            <!-- 행 식별자는 pi_items.pi_item_id (PK). item_id (FK) 는 NULL 가능해 id 로 쓰면
+                 같은 PI 의 여러 행이 잘못 병합될 수 있다. -->
+            <id property="piItemId" column="pi_item_id"/>
+            <result property="itemId" column="item_id"/>
             <result property="itemName" column="pi_item_name"/>
             <result property="quantity" column="pi_item_qty"/>
             <result property="unit" column="pi_item_unit"/>
@@ -50,6 +53,7 @@
     </sql>
 
     <sql id="piItemColumns">
+        pit.pi_item_id     AS pit_pi_item_id,
         pit.item_id        AS pit_item_id,
         pit.pi_item_name   AS pit_pi_item_name,
         pit.pi_item_qty    AS pit_pi_item_qty,

@@ -10,6 +10,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class ProformaInvoiceItemView {
+    // pi_items 의 PK. MyBatis collection row 식별자로 사용. item_id (FK) 와 구분.
+    private Long piItemId;
     private Integer itemId;
     private String itemName;
     private Integer quantity;
