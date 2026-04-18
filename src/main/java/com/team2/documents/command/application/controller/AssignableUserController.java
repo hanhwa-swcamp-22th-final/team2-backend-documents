@@ -1,6 +1,7 @@
 package com.team2.documents.command.application.controller;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.team2.documents.command.infrastructure.client.AuthFeignClient;
 import com.team2.documents.command.infrastructure.client.AuthInternalUserResponse;
@@ -28,6 +31,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api")
 public class AssignableUserController {
 
+    // 화이트리스트: 지시서 담당자 후보는 생산/출하 role 만. admin/sales 디렉토리
+    // 조회로 오용되지 않도록 프록시에서 차단.
+    private static final Set<String> ALLOWED_ROLES = Set.of("production", "shipping");
+
     private final AuthFeignClient authFeignClient;
 
     public AssignableUserController(AuthFeignClient authFeignClient) {
@@ -35,12 +42,17 @@ public class AssignableUserController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES','PRODUCTION','SHIPPING')")
-    @Operation(summary = "담당자 후보 조회", description = "role 별 활성 사용자 목록. 예: role=production 은 생산담당자 후보.")
+    @Operation(summary = "담당자 후보 조회", description = "role 별 활성 사용자 목록. production 또는 shipping 만 허용.")
     @GetMapping("/assignable-users")
     public ResponseEntity<List<AuthInternalUserResponse>> getAssignableUsers(
             @RequestParam("role") String role) {
+        String normalized = role == null ? "" : role.trim().toLowerCase();
+        if (!ALLOWED_ROLES.contains(normalized)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "role 은 production 또는 shipping 만 허용됩니다.");
+        }
         // Feign 인터셉터가 X-Internal-Token 을 자동 주입한다 (InternalTokenFeignInterceptor).
-        List<AuthInternalUserResponse> users = authFeignClient.getUsersByRole(role, "active");
+        List<AuthInternalUserResponse> users = authFeignClient.getUsersByRole(normalized, "active");
         return ResponseEntity.ok(users == null ? List.of() : users);
     }
 }

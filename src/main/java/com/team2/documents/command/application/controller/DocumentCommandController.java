@@ -498,10 +498,16 @@ public class DocumentCommandController {
     @PostMapping("/purchase-orders/{poId}/generate-production-order")
     public ResponseEntity<Void> generateProductionOrder(
             @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId,
-            @RequestBody(required = false) ProductionOrderIssueRequest request) {
+            @RequestBody(required = false) ProductionOrderIssueRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
         Long assigneeUserId = request == null ? null : request.assigneeUserId();
         String assigneeName = request == null ? null : request.assigneeName();
-        purchaseOrderProductionOrderGenerationService.generate(poId, assigneeUserId, assigneeName);
+        // 감사 기록용 actor = 발행한 사용자 (JWT subject). null 이면 fallback 으로 PO managerId.
+        Long callerUserId = null;
+        if (jwt != null) {
+            try { callerUserId = Long.parseLong(jwt.getSubject()); } catch (NumberFormatException ignored) {}
+        }
+        purchaseOrderProductionOrderGenerationService.generate(poId, assigneeUserId, assigneeName, callerUserId);
         return ResponseEntity.ok().build();
     }
 
