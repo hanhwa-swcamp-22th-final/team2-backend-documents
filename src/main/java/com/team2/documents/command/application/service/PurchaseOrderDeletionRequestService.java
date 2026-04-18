@@ -17,21 +17,27 @@ import com.team2.documents.command.infrastructure.client.ApproverResolver;
 public class PurchaseOrderDeletionRequestService {
 
     private final PurchaseOrderCommandService purchaseOrderCommandService;
+    private final PurchaseOrderModificationService purchaseOrderModificationService;
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ApproverResolver approverResolver;
+    private final DocumentOwnershipGuard documentOwnershipGuard;
 
     public PurchaseOrderDeletionRequestService(PurchaseOrderCommandService purchaseOrderCommandService,
+                                               PurchaseOrderModificationService purchaseOrderModificationService,
                                                UserPositionRepository userPositionRepository,
                                                ApprovalRequestCommandService approvalRequestCommandService,
                                                DocumentRevisionHistoryService documentRevisionHistoryService,
-                                               ApproverResolver approverResolver) {
+                                               ApproverResolver approverResolver,
+                                               DocumentOwnershipGuard documentOwnershipGuard) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
+        this.purchaseOrderModificationService = purchaseOrderModificationService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.approverResolver = approverResolver;
+        this.documentOwnershipGuard = documentOwnershipGuard;
     }
 
     /**
@@ -39,6 +45,7 @@ public class PurchaseOrderDeletionRequestService {
      */
     public void deleteDraft(String poId, Long userId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
+        documentOwnershipGuard.assertCanMutate(userId, purchaseOrder.getManagerId());
         if (!PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())) {
             throw new IllegalStateException("초안 상태의 PO만 직접 삭제할 수 있습니다.");
         }
@@ -58,6 +65,8 @@ public class PurchaseOrderDeletionRequestService {
 
     public void requestDeletion(String poId, Long userId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
+        documentOwnershipGuard.assertCanMutate(userId, purchaseOrder.getManagerId());
+        purchaseOrderModificationService.validateDeletable(poId);
 
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));

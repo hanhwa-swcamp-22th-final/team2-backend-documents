@@ -39,6 +39,14 @@ public class AuthFeignFallbackFactory implements FallbackFactory<AuthFeignClient
                         teamId, cause != null ? cause.getMessage() : "unknown");
                 return Collections.emptyList();
             }
+
+            @Override
+            public List<Long> getTeamMemberIds(Integer teamId) {
+                log.warn("[fallback] auth-service getTeamMemberIds(teamId={}) unavailable: {}",
+                        teamId, cause != null ? cause.getMessage() : "unknown");
+                // 빈 리스트 → 팀 스코프 0 → "해당 팀원 없음" 으로 안전히 빈 페이지 반환하도록 함
+                return Collections.emptyList();
+            }
         };
     }
 }

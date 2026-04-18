@@ -29,21 +29,26 @@ public class ProformaInvoiceModificationRequestService {
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ApproverResolver approverResolver;
+    private final DocumentOwnershipGuard documentOwnershipGuard;
 
     public ProformaInvoiceModificationRequestService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                                      UserPositionRepository userPositionRepository,
                                                      ApprovalRequestCommandService approvalRequestCommandService,
                                                      DocumentRevisionHistoryService documentRevisionHistoryService,
-                                                     ApproverResolver approverResolver) {
+                                                     ApproverResolver approverResolver,
+                                                     DocumentOwnershipGuard documentOwnershipGuard) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.approverResolver = approverResolver;
+        this.documentOwnershipGuard = documentOwnershipGuard;
     }
 
     public void requestModification(String piId, Long userId) {
         ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
+
+        documentOwnershipGuard.assertCanMutate(userId, proformaInvoice.getManagerId());
 
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));

@@ -22,23 +22,27 @@ public class PurchaseOrderModificationRequestService {
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ApproverResolver approverResolver;
+    private final DocumentOwnershipGuard documentOwnershipGuard;
 
     public PurchaseOrderModificationRequestService(PurchaseOrderCommandService purchaseOrderCommandService,
                                                    PurchaseOrderModificationService purchaseOrderModificationService,
                                                    UserPositionRepository userPositionRepository,
                                                    ApprovalRequestCommandService approvalRequestCommandService,
                                                    DocumentRevisionHistoryService documentRevisionHistoryService,
-                                                   ApproverResolver approverResolver) {
+                                                   ApproverResolver approverResolver,
+                                                   DocumentOwnershipGuard documentOwnershipGuard) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.purchaseOrderModificationService = purchaseOrderModificationService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.approverResolver = approverResolver;
+        this.documentOwnershipGuard = documentOwnershipGuard;
     }
 
     public void requestModification(String poId, Long userId) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
+        documentOwnershipGuard.assertCanMutate(userId, purchaseOrder.getManagerId());
 
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 직급 정보를 찾을 수 없습니다."));

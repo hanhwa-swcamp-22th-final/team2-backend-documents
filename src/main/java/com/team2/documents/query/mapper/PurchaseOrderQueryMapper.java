@@ -16,5 +16,11 @@ public interface PurchaseOrderQueryMapper {
 
     List<PurchaseOrderView> findPage(@Param("offset") int offset, @Param("limit") int limit);
 
+    List<PurchaseOrderView> findPageScoped(@Param("offset") int offset,
+                                           @Param("limit") int limit,
+                                           @Param("managerIds") List<Long> managerIds);
+
     long countAll();
+
+    long countScoped(@Param("managerIds") List<Long> managerIds);
 }

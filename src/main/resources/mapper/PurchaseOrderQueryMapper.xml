@@ -140,4 +140,42 @@
         SELECT COUNT(*) FROM purchase_orders WHERE po_status != 'deleted'
     </select>
 
+    <!-- 팀 스코프 — 서비스가 비어있지 않은 managerIds 만 전달해야 함 (빈 리스트는 조기 반환 처리). -->
+    <select id="findPageScoped" resultMap="purchaseOrderResultMap">
+        SELECT <include refid="poColumns"/>,
+               <include refid="poItemColumns"/>
+        FROM (
+            SELECT po_inner.*
+            FROM purchase_orders po_inner
+            WHERE po_inner.po_status != 'deleted'
+              AND po_inner.manager_id IN
+              <foreach collection="managerIds" item="mid" open="(" separator="," close=")">
+                  #{mid}
+              </foreach>
+            ORDER BY po_inner.po_id DESC
+            LIMIT #{limit} OFFSET #{offset}
+        ) po
+        LEFT JOIN (
+            SELECT po_id,
+                   CASE
+                       WHEN COUNT(*) = SUM(CASE WHEN shipment_status = 'completed' THEN 1 ELSE 0 END)
+                            THEN 'completed'
+                       ELSE 'preparing'
+                       END AS po_shipment_status
+            FROM shipments
+            GROUP BY po_id
+        ) sh ON sh.po_id = po.po_id
+        LEFT JOIN po_items pot ON pot.po_id = po.po_id
+        ORDER BY po.po_id DESC, pot.po_item_id
+    </select>
+
+    <select id="countScoped" resultType="long">
+        SELECT COUNT(*) FROM purchase_orders
+         WHERE po_status != 'deleted'
+           AND manager_id IN
+           <foreach collection="managerIds" item="mid" open="(" separator="," close=")">
+               #{mid}
+           </foreach>
+    </select>
+
 </mapper>

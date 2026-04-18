@@ -36,4 +36,21 @@ public class ProformaInvoiceQueryService {
         long total = proformaInvoiceQueryMapper.countAll();
         return new PagedResult<>(content, total);
     }
+
+    /**
+     * 팀 스코프 적용 페이지 조회.
+     * @param managerIdScope null → 전체 (ADMIN), 빈 리스트 → 빈 페이지, 비어있지 않은 리스트 → manager_id IN (...)
+     */
+    public PagedResult<ProformaInvoiceView> findAll(int page, int size, List<Long> managerIdScope) {
+        if (managerIdScope == null) {
+            return findAll(page, size);
+        }
+        if (managerIdScope.isEmpty()) {
+            return new PagedResult<>(List.of(), 0L);
+        }
+        int offset = page * size;
+        List<ProformaInvoiceView> content = proformaInvoiceQueryMapper.findPageScoped(offset, size, managerIdScope);
+        long total = proformaInvoiceQueryMapper.countScoped(managerIdScope);
+        return new PagedResult<>(content, total);
+    }
 }

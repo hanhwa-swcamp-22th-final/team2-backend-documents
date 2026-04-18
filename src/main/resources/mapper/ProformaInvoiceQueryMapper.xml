@@ -99,4 +99,31 @@
         SELECT COUNT(*) FROM proforma_invoices WHERE pi_status != 'deleted'
     </select>
 
+    <!-- managerIds 목록으로 팀 스코프. 서비스 레이어가 null 또는 비어있지 않은 리스트만 전달하도록 보장. -->
+    <select id="findPageScoped" resultMap="proformaInvoiceResultMap">
+        SELECT <include refid="piColumns"/>,
+               <include refid="piItemColumns"/>
+        FROM (
+            SELECT * FROM proforma_invoices
+            WHERE pi_status != 'deleted'
+              AND manager_id IN
+              <foreach collection="managerIds" item="mid" open="(" separator="," close=")">
+                  #{mid}
+              </foreach>
+            ORDER BY pi_issue_date DESC, pi_id DESC
+            LIMIT #{limit} OFFSET #{offset}
+        ) pi
+        LEFT JOIN pi_items pit ON pit.pi_id = pi.pi_id
+        ORDER BY pi.pi_issue_date DESC, pi.pi_id DESC, pit.pi_item_id
+    </select>
+
+    <select id="countScoped" resultType="long">
+        SELECT COUNT(*) FROM proforma_invoices
+         WHERE pi_status != 'deleted'
+           AND manager_id IN
+           <foreach collection="managerIds" item="mid" open="(" separator="," close=")">
+               #{mid}
+           </foreach>
+    </select>
+
 </mapper>

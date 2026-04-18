@@ -12,7 +12,11 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -130,6 +134,39 @@ public class DocumentQueryController {
         this.authFeignClient = authFeignClient;
     }
 
+    /**
+     * 현재 요청자의 managerId 스코프를 계산.
+     * - ADMIN → null (전체 조회)
+     * - 그 외 → JWT teamId 의 팀원 user_id 리스트. 팀 미소속 / Feign 실패 시 빈 리스트 (결과 0건).
+     */
+    private List<Long> resolveManagerIdScope() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return List.of();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (isAdmin) return null;
+        Integer teamId = null;
+        if (auth.getPrincipal() instanceof Jwt jwt) {
+            Object claim = jwt.getClaim("teamId");
+            if (claim instanceof Number num) teamId = num.intValue();
+        }
+        if (teamId == null) return List.of();
+        try {
+            List<Long> ids = authFeignClient.getTeamMemberIds(teamId);
+            return ids != null ? ids : List.of();
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private void assertInScope(Long managerId) {
+        List<Long> scope = resolveManagerIdScope();
+        if (scope == null) return;
+        if (managerId == null || !scope.contains(managerId)) {
+            throw new AccessDeniedException("해당 문서에 대한 접근 권한이 없습니다.");
+        }
+    }
+
     @Operation(summary = "결재자 후보 조회",
             description = "요청자 팀의 팀장(position_level=1) + ADMIN 사용자 목록. teamId 미지정 시 전 팀의 팀장을 반환.")
     @ApiResponses({ @ApiResponse(responseCode = "200", description = "조회 성공") })
@@ -140,7 +177,7 @@ public class DocumentQueryController {
         return ResponseEntity.ok(authFeignClient.getApprovers(teamId));
     }
 
-    @Operation(summary = "Proforma Invoice 전체 조회", description = "모든 견적송장(PI) 목록을 조회합니다.")
+    @Operation(summary = "Proforma Invoice 전체 조회", description = "ADMIN 전체, 그 외 JWT teamId 기준 팀원 작성 PI 만 반환.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
@@ -148,7 +185,8 @@ public class DocumentQueryController {
     public ResponseEntity<PagedModel<EntityModel<ProformaInvoiceResponse>>> getProformaInvoices(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "1000") int size) {
-        PagedResult<ProformaInvoiceView> result = proformaInvoiceQueryService.findAll(page, size);
+        List<Long> scope = resolveManagerIdScope();
+        PagedResult<ProformaInvoiceView> result = proformaInvoiceQueryService.findAll(page, size, scope);
         List<EntityModel<ProformaInvoiceResponse>> models = result.content().stream()
                 .map(this::toProformaInvoiceResponse)
                 .map(r -> EntityModel.of(r,
@@ -159,15 +197,18 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(page, size)).withSelfRel()));
     }
 
-    @Operation(summary = "Proforma Invoice 단건 조회", description = "PI ID로 견적송장을 조회합니다.")
+    @Operation(summary = "Proforma Invoice 단건 조회", description = "PI ID로 견적송장을 조회합니다. 팀 스코프 위반 시 403.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "팀 스코프 위반"),
             @ApiResponse(responseCode = "404", description = "PI를 찾을 수 없음")
     })
     @GetMapping("/proforma-invoices/{piId}")
     public ResponseEntity<EntityModel<ProformaInvoiceResponse>> getProformaInvoice(
             @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable("piId") String piId) {
-        ProformaInvoiceResponse response = toProformaInvoiceResponse(proformaInvoiceQueryService.findById(piId));
+        ProformaInvoiceView view = proformaInvoiceQueryService.findById(piId);
+        assertInScope(view.getManagerId());
+        ProformaInvoiceResponse response = toProformaInvoiceResponse(view);
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(piId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoices(0, 1000)).withRel("proforma-invoices")));
@@ -280,7 +321,8 @@ public class DocumentQueryController {
     public ResponseEntity<PagedModel<EntityModel<PurchaseOrderResponse>>> getPurchaseOrders(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "1000") int size) {
-        PagedResult<PurchaseOrderView> result = purchaseOrderQueryService.findAll(page, size);
+        List<Long> scope = resolveManagerIdScope();
+        PagedResult<PurchaseOrderView> result = purchaseOrderQueryService.findAll(page, size, scope);
         List<EntityModel<PurchaseOrderResponse>> models = result.content().stream()
                 .map(this::toPurchaseOrderResponse)
                 .map(r -> EntityModel.of(r,
@@ -291,15 +333,18 @@ public class DocumentQueryController {
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders(page, size)).withSelfRel()));
     }
 
-    @Operation(summary = "Purchase Order 단건 조회", description = "PO ID로 발주서를 조회합니다.")
+    @Operation(summary = "Purchase Order 단건 조회", description = "PO ID로 발주서를 조회합니다. 팀 스코프 위반 시 403.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "팀 스코프 위반"),
             @ApiResponse(responseCode = "404", description = "PO를 찾을 수 없음")
     })
     @GetMapping("/purchase-orders/{poId}")
     public ResponseEntity<EntityModel<PurchaseOrderResponse>> getPurchaseOrder(
             @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
-        PurchaseOrderResponse response = toPurchaseOrderResponse(purchaseOrderQueryService.findById(poId));
+        PurchaseOrderView view = purchaseOrderQueryService.findById(poId);
+        assertInScope(view.getManagerId());
+        PurchaseOrderResponse response = toPurchaseOrderResponse(view);
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(poId)).withSelfRel(),
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrders(0, 1000)).withRel("purchase-orders")));

@@ -35,4 +35,11 @@ public interface AuthFeignClient {
      */
     @GetMapping("/api/users/internal/approvers")
     List<AuthInternalUserResponse> getApprovers(@RequestParam(name = "teamId", required = false) Integer teamId);
+
+    /**
+     * 팀 소속 active 사용자 ID 목록. PI/PO 팀 스코프 필터에 사용.
+     * 빈 팀이면 빈 리스트. Fallback 시에도 빈 리스트 반환하여 호출부에서 "스코프 0" 로 안전히 처리.
+     */
+    @GetMapping("/api/users/internal/team/{teamId}/ids")
+    List<Long> getTeamMemberIds(@PathVariable("teamId") Integer teamId);
 }
