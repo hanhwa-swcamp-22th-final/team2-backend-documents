@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 
+import com.team2.documents.command.application.dto.ProductionOrderIssueRequest;
 import com.team2.documents.command.application.dto.ProformaInvoiceCreateResponse;
 import com.team2.documents.command.application.dto.ProformaInvoiceRegistrationResponse;
 import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
@@ -488,30 +489,43 @@ public class DocumentCommandController {
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','PRODUCTION')")
-    @Operation(summary = "생산지시서 자동 생성", description = "PO 기반으로 생산지시서를 자동 생성합니다.")
+    @PreAuthorize("hasAnyRole('ADMIN','SALES','PRODUCTION')")
+    @Operation(summary = "생산지시서 발행", description = "PO 기반으로 생산지시서를 생성. body 에 assigneeUserId 가 있으면 해당 유저를 담당자로 할당.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "생산지시서 생성 성공"),
             @ApiResponse(responseCode = "404", description = "PO를 찾을 수 없음")
     })
     @PostMapping("/purchase-orders/{poId}/generate-production-order")
     public ResponseEntity<Void> generateProductionOrder(
-            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId) {
-        purchaseOrderProductionOrderGenerationService.generate(poId);
+            @Parameter(description = "PO 문서 ID", example = "PO-2026-0001") @PathVariable("poId") String poId,
+            @RequestBody(required = false) ProductionOrderIssueRequest request) {
+        Long assigneeUserId = request == null ? null : request.assigneeUserId();
+        String assigneeName = request == null ? null : request.assigneeName();
+        purchaseOrderProductionOrderGenerationService.generate(poId, assigneeUserId, assigneeName);
         return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','PRODUCTION')")
-    @Operation(summary = "생산완료 처리", description = "생산지시서 상태를 '생산완료'로 변경합니다.")
+    @Operation(summary = "생산완료 처리", description = "생산지시서 상태를 '생산완료'로 변경. 지정된 담당자 본인만 가능.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "생산완료 처리 성공"),
-            @ApiResponse(responseCode = "404", description = "생산지시서를 찾을 수 없음")
+            @ApiResponse(responseCode = "404", description = "생산지시서를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "담당자 본인이 아님")
     })
     @PutMapping("/production-orders/{productionOrderId}/complete")
     public ResponseEntity<ProductionOrderCompleteResponse> completeProductionOrder(
             @Parameter(description = "생산지시서 ID", example = "PR-2026-0001")
-            @PathVariable("productionOrderId") String productionOrderId) {
-        var po = productionOrderCommandService.complete(productionOrderId);
+            @PathVariable("productionOrderId") String productionOrderId,
+            @AuthenticationPrincipal Jwt jwt) {
+        // ADMIN 은 담당자 체크 없이 통과. 그 외(PRODUCTION)는 담당자 본인만 가능.
+        Long userId = null;
+        if (jwt != null) {
+            String role = jwt.getClaimAsString("role");
+            if (!"admin".equalsIgnoreCase(role)) {
+                try { userId = Long.parseLong(jwt.getSubject()); } catch (NumberFormatException ignored) {}
+            }
+        }
+        var po = productionOrderCommandService.complete(productionOrderId, userId);
         return ResponseEntity.ok(new ProductionOrderCompleteResponse(po.getProductionOrderId(), po.getStatus()));
     }
 

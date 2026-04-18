@@ -33,10 +33,23 @@ public class PurchaseOrderProductionOrderGenerationService {
     }
 
     public void generate(String poId) {
+        generate(poId, null, null);
+    }
+
+    /**
+     * 생산지시서 발행. assigneeUserId 가 주어지면 생산담당자로 할당(생산 role 유저 권장).
+     * null 이면 PO 의 영업담당자(managerId) 를 그대로 승계 (기존 동작).
+     */
+    public void generate(String poId, Long assigneeUserId, String assigneeName) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
         if (!PurchaseOrderStatus.CONFIRMED.equals(purchaseOrder.getStatus())) {
             throw new IllegalStateException("확정 상태의 PO만 선택 생성 문서를 가질 수 있습니다.");
         }
+
+        Long effectiveManagerId = assigneeUserId != null ? assigneeUserId : purchaseOrder.getManagerId();
+        String effectiveManagerName = (assigneeName != null && !assigneeName.isBlank())
+                ? assigneeName
+                : purchaseOrder.getManagerName();
 
         String productionOrderId = documentNumberGeneratorService.nextProductionOrderId();
         ProductionOrder productionOrder = new ProductionOrder(
@@ -45,12 +58,12 @@ public class PurchaseOrderProductionOrderGenerationService {
                 poId,
                 java.time.LocalDate.now(),
                 purchaseOrder.getClientId(),
-                purchaseOrder.getManagerId(),
+                effectiveManagerId,
                 purchaseOrder.getDeliveryDate(),
                 "진행중",
                 purchaseOrder.getClientName(),
                 purchaseOrder.getCountry(),
-                purchaseOrder.getManagerName(),
+                effectiveManagerName,
                 purchaseOrder.getItems().isEmpty() ? null : purchaseOrder.getItems().get(0).getItemName(),
                 "[{\"id\":\"" + poId + "\",\"type\":\"PO\",\"status\":\"" + purchaseOrder.getStatus().name() + "\"}]",
                 java.time.LocalDateTime.now(),
@@ -64,6 +77,7 @@ public class PurchaseOrderProductionOrderGenerationService {
                 purchaseOrder.getManagerId(),
                 purchaseOrder.getStatus().name(),
                 "생산지시서를 선택 생성했습니다."
+                        + (assigneeUserId != null ? " (담당자 userId=" + assigneeUserId + ")" : "")
         );
         documentAutoMailService.sendProductionOrderToProductionTeam(purchaseOrder, productionOrder);
     }
