@@ -14,7 +14,9 @@ import java.util.List;
 )
 public interface AuthFeignClient {
 
-    @GetMapping("/api/users/{userId}")
+    // 내부 전용 경로로 호출 — InternalTokenFeignInterceptor 가 X-Internal-Token 자동 주입.
+    // 일반 /api/users/{id} 는 hasRole("ADMIN") 이라 팀장/영업 세션에선 401 나므로 internal 경로로 고정.
+    @GetMapping("/api/users/internal/{userId}")
     AuthUserResponse getUser(@PathVariable("userId") Long userId);
 
     /**
