@@ -45,9 +45,12 @@ import com.team2.documents.command.application.service.ApprovalRequestCommandSer
 import com.team2.documents.command.application.service.CollectionCommandService;
 import com.team2.documents.command.application.service.ProductionOrderCommandService;
 import com.team2.documents.command.application.service.ShipmentCommandService;
+import com.team2.documents.command.application.dto.ProformaInvoiceModificationRequest;
+import com.team2.documents.command.application.dto.ProformaInvoiceModificationResponse;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalCancellationService;
 import com.team2.documents.command.application.service.ProformaInvoiceApprovalWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceCreationService;
+import com.team2.documents.command.application.service.ProformaInvoiceModificationRequestService;
 import com.team2.documents.command.application.service.ProformaInvoiceRejectionWorkflowService;
 import com.team2.documents.command.application.service.ProformaInvoiceService;
 import com.team2.documents.command.application.service.ProformaInvoiceModificationService;
@@ -93,6 +96,7 @@ public class DocumentCommandController {
     private final PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService;
     private final PurchaseOrderRegistrationService purchaseOrderRegistrationService;
     private final ProformaInvoiceCreationService proformaInvoiceCreationService;
+    private final ProformaInvoiceModificationRequestService proformaInvoiceModificationRequestService;
     private final ProformaInvoiceApprovalCancellationService proformaInvoiceApprovalCancellationService;
     private final PurchaseOrderApprovalCancellationService purchaseOrderApprovalCancellationService;
     private final ProformaInvoiceService proformaInvoiceService;
@@ -116,6 +120,7 @@ public class DocumentCommandController {
                               PurchaseOrderProductionOrderGenerationService purchaseOrderProductionOrderGenerationService,
                               PurchaseOrderRegistrationService purchaseOrderRegistrationService,
                               ProformaInvoiceCreationService proformaInvoiceCreationService,
+                              ProformaInvoiceModificationRequestService proformaInvoiceModificationRequestService,
                               ProformaInvoiceApprovalCancellationService proformaInvoiceApprovalCancellationService,
                               PurchaseOrderApprovalCancellationService purchaseOrderApprovalCancellationService,
                               ProformaInvoiceService proformaInvoiceService,
@@ -138,6 +143,7 @@ public class DocumentCommandController {
         this.purchaseOrderProductionOrderGenerationService = purchaseOrderProductionOrderGenerationService;
         this.purchaseOrderRegistrationService = purchaseOrderRegistrationService;
         this.proformaInvoiceCreationService = proformaInvoiceCreationService;
+        this.proformaInvoiceModificationRequestService = proformaInvoiceModificationRequestService;
         this.proformaInvoiceApprovalCancellationService = proformaInvoiceApprovalCancellationService;
         this.purchaseOrderApprovalCancellationService = purchaseOrderApprovalCancellationService;
         this.proformaInvoiceService = proformaInvoiceService;
@@ -457,6 +463,23 @@ public class DocumentCommandController {
             @Parameter(description = "PI 문서 ID", example = "PI-2026-0001") @PathVariable("piId") String piId) {
         proformaInvoiceModificationService.validateDeletable(piId);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','SALES')")
+    @Operation(summary = "Proforma Invoice 수정 요청", description = "확정 상태 PI의 수정을 요청합니다. 결재 프로세스가 시작됩니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "PI 수정 요청 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+            @ApiResponse(responseCode = "404", description = "PI를 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "확정이 아닌 상태")
+    })
+    @PostMapping("/proforma-invoices/request-modification")
+    public ResponseEntity<EntityModel<ProformaInvoiceModificationResponse>> requestProformaInvoiceModification(
+            @RequestBody ProformaInvoiceModificationRequest request) {
+        proformaInvoiceModificationRequestService.requestModification(request.piId(), request.userId());
+        ProformaInvoiceModificationResponse response = new ProformaInvoiceModificationResponse("PI 수정 요청이 처리되었습니다.");
+        return ResponseEntity.ok(EntityModel.of(response,
+                linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(request.piId())).withRel("proforma-invoice")));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','SALES')")
