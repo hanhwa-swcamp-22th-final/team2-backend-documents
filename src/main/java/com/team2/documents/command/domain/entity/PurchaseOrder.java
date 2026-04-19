@@ -115,6 +115,19 @@ public class PurchaseOrder {
     @Column(name = "po_remarks", columnDefinition = "TEXT")
     private String remarks;
 
+    // PO 등록 시점에 선택하는 후속 흐름 분기 (Step C).
+    // 'PRODUCTION'(생산 경유) | 'DIRECT'(직출하). null=기본 DIRECT 로 해석.
+    @Column(name = "po_production_route", length = 20)
+    private String productionRoute;
+
+    // PRODUCTION 경로 선택 시 MO 담당자로 지정될 사용자 (optional).
+    @Column(name = "po_production_assignee_id")
+    private Long productionAssigneeId;
+
+    // 출하 담당자 (ShipmentOrder.managerId 로 전이).
+    @Column(name = "po_shipping_assignee_id")
+    private Long shippingAssigneeId;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -345,6 +358,18 @@ public class PurchaseOrder {
 
     public String getRemarks() {
         return remarks;
+    }
+
+    public String getProductionRoute() {
+        return productionRoute;
+    }
+
+    public Long getProductionAssigneeId() {
+        return productionAssigneeId;
+    }
+
+    public Long getShippingAssigneeId() {
+        return shippingAssigneeId;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -93,6 +93,17 @@ public class PurchaseOrderCreationService {
         purchaseOrder.setCurrencyCode(request.currencyCode());
         purchaseOrder.setManagerName(request.managerName());
         purchaseOrder.setRemarks(request.remarks());
+        // Step C — 초안 수정에서도 분기/담당자 갱신 가능.
+        String draftRoute = request.productionRoute();
+        if (draftRoute != null && !draftRoute.isBlank()) {
+            purchaseOrder.setProductionRoute(draftRoute.trim().toUpperCase());
+        }
+        if (request.productionAssigneeId() != null) {
+            purchaseOrder.setProductionAssigneeId(request.productionAssigneeId());
+        }
+        if (request.shippingAssigneeId() != null) {
+            purchaseOrder.setShippingAssigneeId(request.shippingAssigneeId());
+        }
         purchaseOrder.setItemsSnapshot(serializeItemsSnapshot(newItems));
 
         purchaseOrder.getItems().clear();
@@ -151,6 +162,17 @@ public class PurchaseOrderCreationService {
 
         // 생성자 서명에 remarks 를 추가하지 않고 @Setter 로 후설정.
         purchaseOrder.setRemarks(request.remarks());
+
+        // Step C — PO 등록 시점에 선택한 후속 흐름 분기 및 담당자 저장.
+        // productionRoute: PRODUCTION(생산 경유) | DIRECT(직출하). null → DIRECT 로 해석.
+        String route = request.productionRoute();
+        if (route != null && !route.isBlank()) {
+            purchaseOrder.setProductionRoute(route.trim().toUpperCase());
+        } else {
+            purchaseOrder.setProductionRoute("DIRECT");
+        }
+        purchaseOrder.setProductionAssigneeId(request.productionAssigneeId());
+        purchaseOrder.setShippingAssigneeId(request.shippingAssigneeId());
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
         createInitialViews(saved);

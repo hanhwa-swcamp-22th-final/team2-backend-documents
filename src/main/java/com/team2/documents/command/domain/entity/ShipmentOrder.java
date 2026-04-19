@@ -160,6 +160,10 @@ public class ShipmentOrder {
         this.status = status;
     }
 
+    public void setManagerId(Long managerId) {
+        this.managerId = managerId;
+    }
+
     public String getLinkedDocuments() {
         return linkedDocuments;
     }
