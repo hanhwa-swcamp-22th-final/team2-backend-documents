@@ -21,17 +21,20 @@ public class ProformaInvoiceService {
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ApproverResolver approverResolver;
+    private final DocumentAutoMailService documentAutoMailService;
 
     public ProformaInvoiceService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                   UserPositionRepository userPositionRepository,
                                   ApprovalRequestCommandService approvalRequestCommandService,
                                   DocumentRevisionHistoryService documentRevisionHistoryService,
-                                  ApproverResolver approverResolver) {
+                                  ApproverResolver approverResolver,
+                                  DocumentAutoMailService documentAutoMailService) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.approverResolver = approverResolver;
+        this.documentAutoMailService = documentAutoMailService;
     }
 
     public void requestRegistration(String piId, Long userId) {
@@ -58,6 +61,10 @@ public class ProformaInvoiceService {
                     ProformaInvoiceStatus.CONFIRMED.name(),
                     "관리자가 PI를 즉시 확정했습니다."
             );
+            // G8: 팀장 셀프 즉시 확정 시에도 승인 경로(ApprovalRequestDocumentWorkflowService.approveDocument)
+            // 와 동일하게 바이어에게 PI 자동 메일 발송. 기존엔 STAFF→MANAGER 결재 경로에서만
+            // 발송되어 팀장 본인 등록 시 메일이 전혀 안 나갔음.
+            documentAutoMailService.sendApprovedPiToBuyer(proformaInvoice);
             return;
         }
 
