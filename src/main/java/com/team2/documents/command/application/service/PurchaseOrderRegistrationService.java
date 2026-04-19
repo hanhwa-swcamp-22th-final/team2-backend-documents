@@ -10,6 +10,7 @@ import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
+import com.team2.documents.command.infrastructure.client.ApproverResolver;
 import com.team2.documents.common.error.BusinessConflictException;
 import com.team2.documents.common.error.ResourceNotFoundException;
 
@@ -22,20 +23,27 @@ public class PurchaseOrderRegistrationService {
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService;
+    private final ApproverResolver approverResolver;
 
     public PurchaseOrderRegistrationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                             UserPositionRepository userPositionRepository,
                                             ApprovalRequestCommandService approvalRequestCommandService,
                                             DocumentRevisionHistoryService documentRevisionHistoryService,
-                                            PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService) {
+                                            PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService,
+                                            ApproverResolver approverResolver) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.purchaseOrderDocumentGenerationService = purchaseOrderDocumentGenerationService;
+        this.approverResolver = approverResolver;
     }
 
     public void requestRegistration(String poId, Long userId) {
+        requestRegistration(poId, userId, null);
+    }
+
+    public void requestRegistration(String poId, Long userId, Long approverIdOverride) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
 
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
@@ -61,6 +69,10 @@ public class PurchaseOrderRegistrationService {
             return;
         }
 
+        Long approverId = approverIdOverride != null
+                ? approverIdOverride
+                : approverResolver.resolveApproverId(userId);
+
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
         purchaseOrderCommandService.save(purchaseOrder);
         approvalRequestCommandService.save(new ApprovalRequest(
@@ -68,7 +80,7 @@ public class PurchaseOrderRegistrationService {
                 poId,
                 ApprovalRequestType.REGISTRATION,
                 userId,
-                1L
+                approverId
         ));
     }
 }

@@ -10,6 +10,7 @@ import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
 import com.team2.documents.command.domain.entity.enums.ApprovalRequestType;
 import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
+import com.team2.documents.command.infrastructure.client.ApproverResolver;
 
 @Service
 @Transactional
@@ -19,18 +20,25 @@ public class ProformaInvoiceService {
     private final UserPositionRepository userPositionRepository;
     private final ApprovalRequestCommandService approvalRequestCommandService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
+    private final ApproverResolver approverResolver;
 
     public ProformaInvoiceService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                   UserPositionRepository userPositionRepository,
                                   ApprovalRequestCommandService approvalRequestCommandService,
-                                  DocumentRevisionHistoryService documentRevisionHistoryService) {
+                                  DocumentRevisionHistoryService documentRevisionHistoryService,
+                                  ApproverResolver approverResolver) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
+        this.approverResolver = approverResolver;
     }
 
     public void requestRegistration(String piId, Long userId) {
+        requestRegistration(piId, userId, null);
+    }
+
+    public void requestRegistration(String piId, Long userId, Long approverIdOverride) {
         ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
 
         PositionLevel positionLevel = userPositionRepository.findPositionLevelByUserId(userId)
@@ -53,6 +61,10 @@ public class ProformaInvoiceService {
             return;
         }
 
+        Long approverId = approverIdOverride != null
+                ? approverIdOverride
+                : approverResolver.resolveApproverId(userId);
+
         proformaInvoice.setStatus(ProformaInvoiceStatus.APPROVAL_PENDING);
         proformaInvoiceCommandService.save(proformaInvoice);
         approvalRequestCommandService.save(new ApprovalRequest(
@@ -60,7 +72,7 @@ public class ProformaInvoiceService {
                 piId,
                 ApprovalRequestType.REGISTRATION,
                 userId,
-                1L
+                approverId
         ));
     }
 }

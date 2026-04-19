@@ -296,7 +296,7 @@ public class DocumentCommandController {
     @PostMapping("/proforma-invoices/request-registration")
     public ResponseEntity<EntityModel<ProformaInvoiceRegistrationResponse>> requestRegistration(
             @RequestBody ProformaInvoiceRegistrationRequest request) {
-        proformaInvoiceService.requestRegistration(request.piId(), request.userId());
+        proformaInvoiceService.requestRegistration(request.piId(), request.userId(), request.approverId());
         ProformaInvoiceRegistrationResponse response = new ProformaInvoiceRegistrationResponse("PI 등록 요청이 처리되었습니다.");
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(request.piId())).withRel("proforma-invoice")));
@@ -312,7 +312,7 @@ public class DocumentCommandController {
     @PostMapping("/purchase-orders/request-registration")
     public ResponseEntity<EntityModel<PurchaseOrderRegistrationResponse>> requestPurchaseOrderRegistration(
             @RequestBody PurchaseOrderRegistrationRequest request) {
-        purchaseOrderRegistrationService.requestRegistration(request.poId(), request.userId());
+        purchaseOrderRegistrationService.requestRegistration(request.poId(), request.userId(), request.approverId());
         PurchaseOrderRegistrationResponse response = new PurchaseOrderRegistrationResponse("PO 등록 요청이 처리되었습니다.");
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(request.poId())).withRel("purchase-order")));
