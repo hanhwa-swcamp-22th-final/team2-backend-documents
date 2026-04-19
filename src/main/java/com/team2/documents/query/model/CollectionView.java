@@ -17,6 +17,8 @@ public class CollectionView {
     private String poNo;
     private Integer clientId;
     private String clientName;
+    private String country;
+    private String managerName;
     private BigDecimal totalAmount;
     private BigDecimal collectedAmount;
     private BigDecimal remainingAmount;

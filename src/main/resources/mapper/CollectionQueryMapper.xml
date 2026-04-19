@@ -8,11 +8,16 @@
         <result property="poId" column="po_code"/>
         <result property="poNo" column="po_code"/>
         <result property="clientId" column="client_id"/>
+        <result property="clientName" column="po_client_name"/>
+        <result property="country" column="po_country"/>
+        <result property="managerName" column="po_manager_name"/>
         <result property="currencyId" column="currency_id"/>
         <result property="currencyCode" column="po_currency_code"/>
         <result property="totalAmount" column="collection_sales_amount"/>
         <result property="status" column="collection_status"/>
-        <result property="issueDate" column="collection_issue_date"/>
+        <!-- collection_issue_date 는 과거 레코드에서 NULL 인 경우가 있어 po 의 po_issue_date 로 fallback.
+             둘 다 없으면 비어서 프론트가 안전하게 처리. -->
+        <result property="issueDate" column="collection_issue_date_resolved"/>
         <result property="collectionDate" column="collection_completed_date"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
@@ -20,8 +25,10 @@
 
     <sql id="collectionBaseColumns">
         c.collection_id, c.po_id, po.po_code, c.client_id, c.currency_id,
-        po.po_currency_code, c.collection_sales_amount, c.collection_status,
-        c.collection_issue_date, c.collection_completed_date, c.created_at, c.updated_at
+        po.po_currency_code, po.po_client_name, po.po_country, po.po_manager_name,
+        c.collection_sales_amount, c.collection_status,
+        COALESCE(c.collection_issue_date, po.po_issue_date) AS collection_issue_date_resolved,
+        c.collection_completed_date, c.created_at, c.updated_at
     </sql>
 
     <select id="findById" resultMap="collectionResultMap">
