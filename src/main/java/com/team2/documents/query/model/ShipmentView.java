@@ -19,6 +19,9 @@ public class ShipmentView {
     private String country;
     private String managerName;
     private String itemName;
+    // Step E — PO.po_items_snapshot 을 JOIN 으로 가져와 Shipment 상세의 품목 테이블 채움.
+    // JSON 문자열. 프론트가 parse.
+    private String itemsSnapshot;
     private LocalDate requestDate;
     private LocalDate dueDate;
 }

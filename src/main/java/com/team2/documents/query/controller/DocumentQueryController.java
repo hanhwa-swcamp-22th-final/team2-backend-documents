@@ -730,6 +730,7 @@ public class DocumentQueryController {
                 shipment.getCountry(),
                 shipment.getManagerName(),
                 shipment.getItemName(),
+                shipment.getItemsSnapshot(),
                 shipment.getRequestDate(),
                 shipment.getDueDate()
         );
@@ -965,6 +966,7 @@ public class DocumentQueryController {
             @Schema(description = "국가 (지시서 snapshot)") String country,
             @Schema(description = "담당자 (지시서 snapshot)") String managerName,
             @Schema(description = "대표 품목 (지시서 snapshot)") String itemName,
+            @Schema(description = "PO 품목 스냅샷 JSON (출하 상세 품목 테이블용)") String itemsSnapshot,
             @Schema(description = "출하 요청일") LocalDate requestDate,
             @Schema(description = "출하 납기일") LocalDate dueDate
     ) {

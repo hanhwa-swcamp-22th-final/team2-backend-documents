@@ -13,6 +13,8 @@
         <result property="country" column="shipment_country"/>
         <result property="managerName" column="shipment_manager_name"/>
         <result property="itemName" column="shipment_item_name"/>
+        <!-- Step E — PO 의 po_items_snapshot JSON 을 그대로 전달해 프론트가 parse. -->
+        <result property="itemsSnapshot" column="po_items_snapshot"/>
         <result property="requestDate" column="shipment_request_date"/>
         <result property="dueDate" column="shipment_due_date"/>
     </resultMap>
@@ -22,7 +24,8 @@
         s.shipment_order_id, so.shipment_order_code, s.shipment_status,
         s.shipment_request_date, s.shipment_due_date,
         so.shipment_client_name, so.shipment_country,
-        so.shipment_manager_name, so.shipment_item_name
+        so.shipment_manager_name, so.shipment_item_name,
+        po.po_items_snapshot
     </sql>
 
     <select id="findById" resultMap="shipmentResultMap">
