@@ -20,8 +20,10 @@ public class CollectionView {
     private BigDecimal totalAmount;
     private BigDecimal collectedAmount;
     private BigDecimal remainingAmount;
+    private Integer currencyId;
     private String currencyCode;
     private String status;
+    private LocalDate issueDate;
     private LocalDate collectionDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

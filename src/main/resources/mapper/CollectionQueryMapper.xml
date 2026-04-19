@@ -8,31 +8,37 @@
         <result property="poId" column="po_code"/>
         <result property="poNo" column="po_code"/>
         <result property="clientId" column="client_id"/>
+        <result property="currencyId" column="currency_id"/>
+        <result property="currencyCode" column="po_currency_code"/>
         <result property="totalAmount" column="collection_sales_amount"/>
         <result property="status" column="collection_status"/>
+        <result property="issueDate" column="collection_issue_date"/>
         <result property="collectionDate" column="collection_completed_date"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <sql id="collectionBaseColumns">
+        c.collection_id, c.po_id, po.po_code, c.client_id, c.currency_id,
+        po.po_currency_code, c.collection_sales_amount, c.collection_status,
+        c.collection_issue_date, c.collection_completed_date, c.created_at, c.updated_at
+    </sql>
+
     <select id="findById" resultMap="collectionResultMap">
-        SELECT c.collection_id, c.po_id, po.po_code, c.client_id, c.collection_sales_amount,
-               c.collection_status, c.collection_completed_date, c.created_at, c.updated_at
+        SELECT <include refid="collectionBaseColumns"/>
         FROM collections c
         JOIN purchase_orders po ON c.po_id = po.po_id
         WHERE c.collection_id = #{id}
     </select>
 
     <select id="findAll" resultMap="collectionResultMap">
-        SELECT c.collection_id, c.po_id, po.po_code, c.client_id, c.collection_sales_amount,
-               c.collection_status, c.collection_completed_date, c.created_at, c.updated_at
+        SELECT <include refid="collectionBaseColumns"/>
         FROM collections c
         JOIN purchase_orders po ON c.po_id = po.po_id
     </select>
 
     <select id="findPage" resultMap="collectionResultMap">
-        SELECT c.collection_id, c.po_id, po.po_code, c.client_id, c.collection_sales_amount,
-               c.collection_status, c.collection_completed_date, c.created_at, c.updated_at
+        SELECT <include refid="collectionBaseColumns"/>
         FROM collections c
         JOIN purchase_orders po ON c.po_id = po.po_id
         ORDER BY c.collection_id DESC

@@ -721,7 +721,14 @@ public class DocumentQueryController {
         return new ShipmentResponse(
                 shipment.getShipmentId(),
                 shipment.getPoId(),
-                shipment.getShipmentStatus()
+                shipment.getShipmentOrderId(),
+                shipment.getShipmentStatus(),
+                shipment.getClientName(),
+                shipment.getCountry(),
+                shipment.getManagerName(),
+                shipment.getItemName(),
+                shipment.getRequestDate(),
+                shipment.getDueDate()
         );
     }
 
@@ -943,7 +950,14 @@ public class DocumentQueryController {
     public record ShipmentResponse(
             @Schema(description = "출하 ID") Long shipmentId,
             @Schema(description = "PO 문서 ID") String poId,
-            @Schema(description = "출하 상태") String shipmentStatus
+            @Schema(description = "출하지시서 ID") String shipmentOrderId,
+            @Schema(description = "출하 상태") String shipmentStatus,
+            @Schema(description = "거래처명 (지시서 snapshot)") String clientName,
+            @Schema(description = "국가 (지시서 snapshot)") String country,
+            @Schema(description = "담당자 (지시서 snapshot)") String managerName,
+            @Schema(description = "대표 품목 (지시서 snapshot)") String itemName,
+            @Schema(description = "출하 요청일") LocalDate requestDate,
+            @Schema(description = "출하 납기일") LocalDate dueDate
     ) {
     }
 

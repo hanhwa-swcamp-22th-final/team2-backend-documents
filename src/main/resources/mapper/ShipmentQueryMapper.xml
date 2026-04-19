@@ -6,11 +6,27 @@
     <resultMap id="shipmentResultMap" type="com.team2.documents.query.model.ShipmentView">
         <id property="shipmentId" column="shipment_id"/>
         <result property="poId" column="po_code"/>
+        <result property="shipmentOrderId" column="shipment_order_code"/>
         <result property="shipmentStatus" column="shipment_status"/>
+        <!-- shipment_orders snapshot 컬럼 기반 enrich -->
+        <result property="clientName" column="shipment_client_name"/>
+        <result property="country" column="shipment_country"/>
+        <result property="managerName" column="shipment_manager_name"/>
+        <result property="itemName" column="shipment_item_name"/>
+        <result property="requestDate" column="shipment_request_date"/>
+        <result property="dueDate" column="shipment_due_date"/>
     </resultMap>
 
+    <sql id="shipmentBaseColumns">
+        s.shipment_id, s.po_id, po.po_code,
+        s.shipment_order_id, so.shipment_order_code, s.shipment_status,
+        s.shipment_request_date, s.shipment_due_date,
+        so.shipment_client_name, so.shipment_country,
+        so.shipment_manager_name, so.shipment_item_name
+    </sql>
+
     <select id="findById" resultMap="shipmentResultMap">
-        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        SELECT <include refid="shipmentBaseColumns"/>
         FROM shipments s
         JOIN purchase_orders po ON s.po_id = po.po_id
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
@@ -18,14 +34,14 @@
     </select>
 
     <select id="findAll" resultMap="shipmentResultMap">
-        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        SELECT <include refid="shipmentBaseColumns"/>
         FROM shipments s
         JOIN purchase_orders po ON s.po_id = po.po_id
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
     </select>
 
     <select id="findPage" resultMap="shipmentResultMap">
-        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        SELECT <include refid="shipmentBaseColumns"/>
         FROM shipments s
         JOIN purchase_orders po ON s.po_id = po.po_id
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
@@ -41,7 +57,7 @@
     </select>
 
     <select id="findByPoId" resultMap="shipmentResultMap">
-        SELECT s.shipment_id, s.po_id, po.po_code, s.shipment_order_id, so.shipment_order_code, s.shipment_status
+        SELECT <include refid="shipmentBaseColumns"/>
         FROM shipments s
         JOIN purchase_orders po ON s.po_id = po.po_id
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
