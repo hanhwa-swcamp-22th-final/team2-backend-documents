@@ -28,6 +28,7 @@ public class ProductionOrderView {
     private String managerName;
     private String itemName;
     private String linkedDocuments;
+    private String itemsSnapshot;
     private List<String> items;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

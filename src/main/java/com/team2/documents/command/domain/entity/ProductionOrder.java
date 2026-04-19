@@ -62,6 +62,12 @@ public class ProductionOrder {
     @Column(name = "production_linked_documents", columnDefinition = "TEXT")
     private String linkedDocuments;
 
+    // PO 에서 전이된 품목 스냅샷(JSON 배열: {itemName,quantity,unit,unitPrice,amount,remark}).
+    // NEW-6: MO 에 전용 items 테이블이 없어 화면이 "총수량 0EA, 품목 빈" 으로 보였다.
+    // ddl-auto=update 로 자동 추가. 기존 레코드는 NULL.
+    @Column(name = "production_items_snapshot", columnDefinition = "TEXT")
+    private String itemsSnapshot;
+
     @Transient
     private List<String> items;
 
@@ -214,6 +220,10 @@ public class ProductionOrder {
 
     public String getLinkedDocuments() {
         return linkedDocuments;
+    }
+
+    public String getItemsSnapshot() {
+        return itemsSnapshot;
     }
 
     public void setPoCode(String poCode) {

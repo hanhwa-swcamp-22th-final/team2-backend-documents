@@ -714,6 +714,7 @@ public class DocumentQueryController {
                 productionOrder.getItemName(),
                 productionOrder.getLinkedDocuments(),
                 productionOrder.getItems(),
+                productionOrder.getItemsSnapshot(),
                 productionOrder.getCreatedAt(),
                 productionOrder.getUpdatedAt()
         );
@@ -948,6 +949,7 @@ public class DocumentQueryController {
             @Schema(description = "품목명") String itemName,
             @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
             @Schema(description = "품목 목록") List<String> items,
+            @Schema(description = "품목 스냅샷 (JSON — MO 단계 품목/수량/단가 전이본)") String itemsSnapshot,
             @Schema(description = "생성일시") LocalDateTime createdAt,
             @Schema(description = "수정일시") LocalDateTime updatedAt
     ) {

@@ -20,6 +20,7 @@
         <result property="managerName" column="production_manager_name"/>
         <result property="itemName" column="production_item_name"/>
         <result property="linkedDocuments" column="production_linked_documents"/>
+        <result property="itemsSnapshot" column="production_items_snapshot"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -27,7 +28,8 @@
     <select id="findById" resultMap="productionOrderResultMap">
         SELECT pr.production_order_id, pr.production_order_code, pr.po_id, po.po_code, pr.production_issue_date, pr.client_id, pr.manager_id,
                pr.production_due_date, pr.production_status, pr.production_client_name, pr.production_country,
-               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents, pr.created_at, pr.updated_at
+               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents,
+               pr.production_items_snapshot, pr.created_at, pr.updated_at
         FROM production_orders pr
         JOIN purchase_orders po ON pr.po_id = po.po_id
         WHERE pr.production_order_code = #{productionOrderId}
@@ -36,7 +38,8 @@
     <select id="findAll" resultMap="productionOrderResultMap">
         SELECT pr.production_order_id, pr.production_order_code, pr.po_id, po.po_code, pr.production_issue_date, pr.client_id, pr.manager_id,
                pr.production_due_date, pr.production_status, pr.production_client_name, pr.production_country,
-               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents, pr.created_at, pr.updated_at
+               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents,
+               pr.production_items_snapshot, pr.created_at, pr.updated_at
         FROM production_orders pr
         JOIN purchase_orders po ON pr.po_id = po.po_id
         ORDER BY pr.production_order_id
@@ -45,7 +48,8 @@
     <select id="findPage" resultMap="productionOrderResultMap">
         SELECT pr.production_order_id, pr.production_order_code, pr.po_id, po.po_code, pr.production_issue_date, pr.client_id, pr.manager_id,
                pr.production_due_date, pr.production_status, pr.production_client_name, pr.production_country,
-               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents, pr.created_at, pr.updated_at
+               pr.production_manager_name, pr.production_item_name, pr.production_linked_documents,
+               pr.production_items_snapshot, pr.created_at, pr.updated_at
         FROM production_orders pr
         JOIN purchase_orders po ON pr.po_id = po.po_id
         ORDER BY pr.production_order_id

@@ -1,13 +1,17 @@
 package com.team2.documents.command.application.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team2.documents.command.domain.entity.ProductionOrder;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
+import com.team2.documents.command.domain.entity.PurchaseOrderItem;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.repository.ProductionOrderRepository;
 import com.team2.documents.command.infrastructure.client.AuthFeignClient;
@@ -25,6 +29,7 @@ public class PurchaseOrderProductionOrderGenerationService {
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final DocumentAutoMailService documentAutoMailService;
     private final AuthFeignClient authFeignClient;
+    private final ObjectMapper objectMapper;
 
     public PurchaseOrderProductionOrderGenerationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                                          ProductionOrderCommandService productionOrderCommandService,
@@ -33,7 +38,8 @@ public class PurchaseOrderProductionOrderGenerationService {
                                                          DocumentLinkService documentLinkService,
                                                          DocumentRevisionHistoryService documentRevisionHistoryService,
                                                          DocumentAutoMailService documentAutoMailService,
-                                                         AuthFeignClient authFeignClient) {
+                                                         AuthFeignClient authFeignClient,
+                                                         ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.productionOrderCommandService = productionOrderCommandService;
         this.productionOrderRepository = productionOrderRepository;
@@ -42,6 +48,7 @@ public class PurchaseOrderProductionOrderGenerationService {
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.documentAutoMailService = documentAutoMailService;
         this.authFeignClient = authFeignClient;
+        this.objectMapper = objectMapper;
     }
 
     public void generate(String poId) {
@@ -101,6 +108,9 @@ public class PurchaseOrderProductionOrderGenerationService {
                 java.time.LocalDateTime.now(),
                 java.time.LocalDateTime.now()
         );
+        // PO 의 품목 리스트를 MO items_snapshot 으로 JSON 직렬화 (NEW-6).
+        // MO 엔티티에는 별도 items 테이블이 없어 화면이 수량 0EA 로 노출되던 문제 해결.
+        productionOrder.setItemsSnapshot(serializeItemsSnapshot(purchaseOrder.getItems()));
         productionOrderCommandService.save(productionOrder);
         documentLinkService.linkProductionOrder(poId, productionOrderId);
         Long actorUserId = callerUserId != null ? callerUserId : purchaseOrder.getManagerId();
@@ -113,6 +123,26 @@ public class PurchaseOrderProductionOrderGenerationService {
                         + (assigneeUserId != null ? " (담당자 userId=" + assigneeUserId + ")" : " (담당자 미지정)")
         );
         documentAutoMailService.sendProductionOrderToProductionTeam(purchaseOrder, productionOrder);
+    }
+
+    private String serializeItemsSnapshot(List<PurchaseOrderItem> items) {
+        if (items == null || items.isEmpty()) return "[]";
+        List<Map<String, Object>> snapshot = items.stream()
+                .map(item -> Map.<String, Object>of(
+                        "itemId", item.getItemId() == null ? 0 : item.getItemId(),
+                        "itemName", item.getItemName() == null ? "" : item.getItemName(),
+                        "quantity", item.getQuantity() == null ? 0 : item.getQuantity(),
+                        "unit", item.getUnit() == null ? "" : item.getUnit(),
+                        "unitPrice", item.getUnitPrice() == null ? 0 : item.getUnitPrice(),
+                        "amount", item.getAmount() == null ? 0 : item.getAmount(),
+                        "remark", item.getRemark() == null ? "" : item.getRemark()
+                ))
+                .toList();
+        try {
+            return objectMapper.writeValueAsString(snapshot);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("MO 스냅샷 JSON 생성에 실패했습니다.", exception);
+        }
     }
 
     /**
