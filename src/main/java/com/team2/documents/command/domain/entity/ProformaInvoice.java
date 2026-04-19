@@ -102,6 +102,11 @@ public class ProformaInvoice {
     @Column(name = "pi_linked_documents", columnDefinition = "TEXT")
     private String linkedDocuments;
 
+    // 사용자가 PI 작성 모달의 "특기사항(reason)" 필드에 입력한 자유 텍스트.
+    // ddl-auto=update 로 자동 추가됨. 기존 레코드는 NULL.
+    @Column(name = "pi_remarks", columnDefinition = "TEXT")
+    private String remarks;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -306,6 +311,10 @@ public class ProformaInvoice {
 
     public String getLinkedDocuments() {
         return linkedDocuments;
+    }
+
+    public String getRemarks() {
+        return remarks;
     }
 
     public List<ProformaInvoiceItem> getItems() {

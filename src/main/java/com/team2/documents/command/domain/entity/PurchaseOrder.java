@@ -111,6 +111,10 @@ public class PurchaseOrder {
     @Column(name = "po_linked_documents", columnDefinition = "TEXT")
     private String linkedDocuments;
 
+    // 사용자가 PO 작성 모달의 "특기사항(reason)" 필드에 입력한 자유 텍스트.
+    @Column(name = "po_remarks", columnDefinition = "TEXT")
+    private String remarks;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -337,6 +341,10 @@ public class PurchaseOrder {
 
     public String getLinkedDocuments() {
         return linkedDocuments;
+    }
+
+    public String getRemarks() {
+        return remarks;
     }
 
     public LocalDateTime getCreatedAt() {

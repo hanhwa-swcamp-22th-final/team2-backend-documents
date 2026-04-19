@@ -72,6 +72,7 @@ public class ProformaInvoiceCreationService {
         proformaInvoice.setCountry(request.country());
         proformaInvoice.setCurrencyCode(currencyCode);
         proformaInvoice.setManagerName(request.managerName());
+        proformaInvoice.setRemarks(request.remarks());
         proformaInvoice.setItemsSnapshot(serializeItemsSnapshot(newItems));
 
         // orphanRemoval 이 동작하려면 리스트 참조를 바꾸지 말고 내부를 갈아끼워야 한다.
@@ -127,6 +128,9 @@ public class ProformaInvoiceCreationService {
                 "[]",
                 items
         );
+
+        // 생성자 서명에 remarks 를 추가하지 않고 @Setter 로 후설정 (기존 constructor 호출부 보존).
+        proformaInvoice.setRemarks(request.remarks());
 
         ProformaInvoice saved = proformaInvoiceCommandService.save(proformaInvoice);
         docsSnapshotService.saveProformaInvoiceSnapshot(saved);

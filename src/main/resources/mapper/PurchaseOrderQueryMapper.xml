@@ -31,6 +31,7 @@
         <result property="approvalReview" column="po_approval_review"/>
         <result property="itemsSnapshot" column="po_items_snapshot"/>
         <result property="linkedDocuments" column="po_linked_documents"/>
+        <result property="remarks" column="po_remarks"/>
         <result property="shipmentStatus" column="po_shipment_status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
@@ -87,7 +88,8 @@
         po.po_client_name, po.po_client_address, po.po_country, po.po_currency_code,
         po.po_manager_name, po.po_approval_status, po.po_request_status, po.po_approval_action,
         po.po_approval_requested_by, po.po_approval_requested_at, po.po_approval_review,
-        po.po_items_snapshot, po.po_linked_documents, sh.po_shipment_status,
+        po.po_items_snapshot, po.po_linked_documents, po.po_remarks,
+        sh.po_shipment_status,
         po.created_at, po.updated_at
     </sql>
 

@@ -92,6 +92,7 @@ public class PurchaseOrderCreationService {
         purchaseOrder.setCountry(request.country());
         purchaseOrder.setCurrencyCode(request.currencyCode());
         purchaseOrder.setManagerName(request.managerName());
+        purchaseOrder.setRemarks(request.remarks());
         purchaseOrder.setItemsSnapshot(serializeItemsSnapshot(newItems));
 
         purchaseOrder.getItems().clear();
@@ -147,6 +148,9 @@ public class PurchaseOrderCreationService {
                 serializeLinkedDocuments(),
                 items
         );
+
+        // 생성자 서명에 remarks 를 추가하지 않고 @Setter 로 후설정.
+        purchaseOrder.setRemarks(request.remarks());
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
         createInitialViews(saved);

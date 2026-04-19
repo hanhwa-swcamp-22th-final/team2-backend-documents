@@ -43,11 +43,13 @@ public record PurchaseOrderCreateRequest(
         String managerName,
         @Schema(description = "요청 사용자 ID", example = "1")
         Long userId,
+        @Schema(description = "특기사항 (자유 텍스트)", example = "포장 재확인")
+        String remarks,
         @Schema(description = "PO 품목 목록")
         List<PurchaseOrderItemCreateRequest> items
 ) {
     public PurchaseOrderCreateRequest(Long userId) {
         this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                userId, List.of());
+                userId, null, List.of());
     }
 }

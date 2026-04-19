@@ -38,5 +38,6 @@ public class ProformaInvoiceView {
     private String approvalReview;
     private String itemsSnapshot;
     private String linkedDocuments;
+    private String remarks;
     private List<ProformaInvoiceItemView> items = new ArrayList<>();
 }
