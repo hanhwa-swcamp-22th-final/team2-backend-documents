@@ -47,6 +47,7 @@
             <result property="unitPrice" column="po_item_unit_price"/>
             <result property="amount" column="po_item_amount"/>
             <result property="remark" column="po_item_remark"/>
+            <result property="itemWeight" column="po_item_weight"/>
         </collection>
     </resultMap>
 
@@ -66,7 +67,8 @@
         pot.po_item_unit   AS pot_po_item_unit,
         pot.po_item_unit_price AS pot_po_item_unit_price,
         pot.po_item_amount AS pot_po_item_amount,
-        pot.po_item_remark AS pot_po_item_remark
+        pot.po_item_remark AS pot_po_item_remark,
+        pot.po_item_weight AS pot_po_item_weight
     </sql>
 
     <sql id="poShipmentJoin">

@@ -44,6 +44,12 @@ public class PurchaseOrderItem {
     @Column(name = "po_item_remark", columnDefinition = "TEXT")
     private String remark;
 
+    // Issue D — master.items.item_weight(kg) 를 PO 생성 시점에 스냅샷으로 캡처.
+    // PL 자동생성 시 SUM(qty × weight) 로 pl_gross_weight 를 계산한다. master 쪽
+    // weight 가 이후 변경돼도 문서 시점 값이 보존되도록 컬럼에 저장.
+    @Column(name = "po_item_weight", precision = 10, scale = 3)
+    private BigDecimal itemWeight;
+
     protected PurchaseOrderItem() {
     }
 
@@ -54,6 +60,17 @@ public class PurchaseOrderItem {
                              BigDecimal unitPrice,
                              BigDecimal amount,
                              String remark) {
+        this(itemId, itemName, quantity, unit, unitPrice, amount, remark, null);
+    }
+
+    public PurchaseOrderItem(Integer itemId,
+                             String itemName,
+                             Integer quantity,
+                             String unit,
+                             BigDecimal unitPrice,
+                             BigDecimal amount,
+                             String remark,
+                             BigDecimal itemWeight) {
         this.itemId = itemId;
         this.itemName = itemName;
         this.quantity = quantity == null ? 0 : quantity;
@@ -61,6 +78,7 @@ public class PurchaseOrderItem {
         this.unitPrice = unitPrice == null ? BigDecimal.ZERO : unitPrice;
         this.amount = amount == null ? BigDecimal.ZERO : amount;
         this.remark = remark;
+        this.itemWeight = itemWeight;
     }
 
     public Long getPoItemId() {
@@ -97,5 +115,9 @@ public class PurchaseOrderItem {
 
     public String getRemark() {
         return remark;
+    }
+
+    public BigDecimal getItemWeight() {
+        return itemWeight;
     }
 }

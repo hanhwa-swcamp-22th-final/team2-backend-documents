@@ -281,7 +281,10 @@ public class PurchaseOrderCreationService {
                         item.unit(),
                         item.unitPrice(),
                         calculateItemAmount(item),
-                        item.remark()
+                        item.remark(),
+                        // Issue D — master.items.item_weight(kg) 스냅샷. PL 자동생성 시
+                        // SUM(qty × weight) 로 pl_gross_weight 계산 (createFromPurchaseOrder SQL).
+                        item.itemWeight()
                 ))
                 .toList();
     }
@@ -302,15 +305,19 @@ public class PurchaseOrderCreationService {
 
     private String serializeItemsSnapshot(List<PurchaseOrderItem> items) {
         List<Map<String, Object>> snapshot = items.stream()
-                .map(item -> Map.<String, Object>of(
-                        "itemId", item.getItemId() == null ? 0 : item.getItemId(),
-                        "itemName", item.getItemName(),
-                        "quantity", item.getQuantity(),
-                        "unit", item.getUnit() == null ? "" : item.getUnit(),
-                        "unitPrice", item.getUnitPrice(),
-                        "amount", item.getAmount(),
-                        "remark", item.getRemark() == null ? "" : item.getRemark()
-                ))
+                .<Map<String, Object>>map(item -> {
+                    java.util.LinkedHashMap<String, Object> row = new java.util.LinkedHashMap<>();
+                    row.put("itemId", item.getItemId() == null ? 0 : item.getItemId());
+                    row.put("itemName", item.getItemName());
+                    row.put("quantity", item.getQuantity());
+                    row.put("unit", item.getUnit() == null ? "" : item.getUnit());
+                    row.put("unitPrice", item.getUnitPrice());
+                    row.put("amount", item.getAmount());
+                    row.put("remark", item.getRemark() == null ? "" : item.getRemark());
+                    // Issue D — PL 과 Shipment 측 스냅샷 표시에도 kg 값 노출 가능하게.
+                    row.put("itemWeight", item.getItemWeight() == null ? 0 : item.getItemWeight());
+                    return row;
+                })
                 .toList();
         return writeJson(snapshot);
     }

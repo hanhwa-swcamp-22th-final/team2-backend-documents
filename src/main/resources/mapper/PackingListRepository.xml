@@ -11,19 +11,22 @@
         )
         SELECT
             #{plId},
-            po_id,
+            po.po_id,
             CURRENT_DATE,
-            client_id,
-            NULL,
+            po.client_id,
+            -- Issue D — 총중량(kg) = SUM(수량 × 개당 중량). po_items 에 master 의
+            -- item_weight 가 PO 생성 시점에 스냅샷으로 저장됨. 중량 미입력 품목은 0 취급.
+            (SELECT ROUND(COALESCE(SUM(poi.po_item_qty * COALESCE(poi.po_item_weight, 0)), 0), 2)
+             FROM po_items poi WHERE poi.po_id = po.po_id),
             '발행대기',
-            po_client_name,
-            po_client_address,
-            po_country,
-            po_buyer_name,
-            po_items_snapshot,
-            po_linked_documents
-        FROM purchase_orders
-        WHERE po_code = #{poId}
+            po.po_client_name,
+            po.po_client_address,
+            po.po_country,
+            po.po_buyer_name,
+            po.po_items_snapshot,
+            po.po_linked_documents
+        FROM purchase_orders po
+        WHERE po.po_code = #{poId}
     </insert>
 
 </mapper>

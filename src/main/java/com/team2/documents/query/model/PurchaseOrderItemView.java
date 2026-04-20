@@ -19,4 +19,6 @@ public class PurchaseOrderItemView {
     private BigDecimal unitPrice;
     private BigDecimal amount;
     private String remark;
+    /** 개당 중량 kg 스냅샷 (Issue D — PL 자동생성 총중량 계산 소스). */
+    private BigDecimal itemWeight;
 }

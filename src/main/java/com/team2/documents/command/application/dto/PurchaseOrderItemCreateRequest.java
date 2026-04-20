@@ -18,6 +18,8 @@ public record PurchaseOrderItemCreateRequest(
         @Schema(description = "금액", example = "5000.00")
         BigDecimal amount,
         @Schema(description = "비고", example = "긴급 납품")
-        String remark
+        String remark,
+        @Schema(description = "품목 개당 중량 (kg, master.items.item_weight 스냅샷)", example = "12.500")
+        BigDecimal itemWeight
 ) {
 }

@@ -561,7 +561,8 @@ public class DocumentQueryController {
                 item.getUnit(),
                 item.getUnitPrice(),
                 item.getAmount(),
-                item.getRemark()
+                item.getRemark(),
+                item.getItemWeight()
         );
     }
 
@@ -769,7 +770,8 @@ public class DocumentQueryController {
             @Schema(description = "단위") String unit,
             @Schema(description = "단가") BigDecimal unitPrice,
             @Schema(description = "금액") BigDecimal amount,
-            @Schema(description = "비고") String remark
+            @Schema(description = "비고") String remark,
+            @Schema(description = "개당 중량 kg 스냅샷") BigDecimal itemWeight
     ) {
     }
 
