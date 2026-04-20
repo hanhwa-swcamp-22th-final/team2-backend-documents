@@ -21,14 +21,17 @@ public class ProformaInvoiceApprovalCancellationService {
 
     private final ProformaInvoiceCommandService proformaInvoiceCommandService;
     private final ApprovalRequestCommandService approvalRequestCommandService;
+    private final ApprovalDocumentMetadataService approvalDocumentMetadataService;
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
 
     public ProformaInvoiceApprovalCancellationService(
             ProformaInvoiceCommandService proformaInvoiceCommandService,
             ApprovalRequestCommandService approvalRequestCommandService,
+            ApprovalDocumentMetadataService approvalDocumentMetadataService,
             DocumentRevisionHistoryService documentRevisionHistoryService) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.approvalRequestCommandService = approvalRequestCommandService;
+        this.approvalDocumentMetadataService = approvalDocumentMetadataService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
     }
 
@@ -51,6 +54,9 @@ public class ProformaInvoiceApprovalCancellationService {
         proformaInvoiceCommandService.save(proformaInvoice);
 
         approvalRequestCommandService.cancelPendingByDocument(ApprovalDocumentType.PI, piId);
+        // 대시보드 결재함이 pi_request_status / pi_approval_status 컬럼을 필터링하므로
+        // ApprovalRequest 삭제만으로는 stale 레코드가 "미지정" 으로 남는다.
+        approvalDocumentMetadataService.markCancelled(ApprovalDocumentType.PI, piId);
 
         documentRevisionHistoryService.recordProformaInvoiceEvent(
                 piId,

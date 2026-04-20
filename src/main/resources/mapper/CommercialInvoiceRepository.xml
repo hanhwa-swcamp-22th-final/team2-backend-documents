@@ -5,7 +5,9 @@
 
     <insert id="createFromPurchaseOrder">
         INSERT INTO commercial_invoices (
-            ci_code, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status
+            ci_code, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status,
+            ci_client_name, ci_client_address, ci_country, ci_currency_code,
+            ci_items_snapshot, ci_linked_documents
         )
         SELECT
             #{ciId},
@@ -14,7 +16,13 @@
             client_id,
             currency_id,
             po_total_amount,
-            '발행대기'
+            '발행대기',
+            po_client_name,
+            po_client_address,
+            po_country,
+            po_currency_code,
+            po_items_snapshot,
+            po_linked_documents
         FROM purchase_orders
         WHERE po_code = #{poId}
     </insert>
