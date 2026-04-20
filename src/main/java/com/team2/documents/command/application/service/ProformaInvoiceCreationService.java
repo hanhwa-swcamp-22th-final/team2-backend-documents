@@ -15,7 +15,9 @@ import com.team2.documents.command.application.dto.ProformaInvoiceCreateRequest;
 import com.team2.documents.command.application.dto.ProformaInvoiceItemCreateRequest;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.ProformaInvoiceItem;
+import com.team2.documents.command.domain.entity.enums.PositionLevel;
 import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
+import com.team2.documents.command.domain.repository.UserPositionRepository;
 
 @Service
 @Transactional
@@ -27,29 +29,44 @@ public class ProformaInvoiceCreationService {
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ExchangeRateService exchangeRateService;
     private final ObjectMapper objectMapper;
+    private final UserPositionRepository userPositionRepository;
 
     public ProformaInvoiceCreationService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                           DocumentNumberGeneratorService documentNumberGeneratorService,
                                           DocsSnapshotService docsSnapshotService,
                                           DocumentRevisionHistoryService documentRevisionHistoryService,
                                           ExchangeRateService exchangeRateService,
-                                          ObjectMapper objectMapper) {
+                                          ObjectMapper objectMapper,
+                                          UserPositionRepository userPositionRepository) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.docsSnapshotService = docsSnapshotService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.exchangeRateService = exchangeRateService;
         this.objectMapper = objectMapper;
+        this.userPositionRepository = userPositionRepository;
     }
 
     /**
-     * 초안 PI 를 직접 수정한다. 결재 없이 본인이 바로 편집 가능한 플로우.
-     * DRAFT 상태가 아니면 거부한다.
+     * 초안/확정 PI 직접 수정. 결재 없이 본인이 바로 편집 가능.
+     * - STAFF: DRAFT 만 허용 (기존 계약).
+     * - MANAGER(팀장/ADMIN): DRAFT + CONFIRMED 모두 허용. 결재 요청 경로를 거치지
+     *   않고 즉시 반영. 상태는 그대로 유지 (CONFIRMED 는 CONFIRMED 로).
      */
     public ProformaInvoice updateDraft(String piId, ProformaInvoiceCreateRequest request) {
         ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
-        if (!ProformaInvoiceStatus.DRAFT.equals(proformaInvoice.getStatus())) {
-            throw new IllegalStateException("초안 상태의 PI만 직접 수정할 수 있습니다.");
+        ProformaInvoiceStatus status = proformaInvoice.getStatus();
+
+        boolean isManager = request.userId() != null
+                && userPositionRepository.findPositionLevelByUserId(request.userId())
+                        .map(PositionLevel.MANAGER::equals)
+                        .orElse(false);
+        boolean allowed = ProformaInvoiceStatus.DRAFT.equals(status)
+                || (isManager && ProformaInvoiceStatus.CONFIRMED.equals(status));
+        if (!allowed) {
+            throw new IllegalStateException(isManager
+                    ? "초안 또는 확정 상태의 PI만 직접 수정할 수 있습니다."
+                    : "초안 상태의 PI만 직접 수정할 수 있습니다.");
         }
 
         LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();

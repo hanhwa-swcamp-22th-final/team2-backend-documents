@@ -17,12 +17,14 @@ import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.PurchaseOrderItem;
 import com.team2.documents.command.domain.entity.Shipment;
+import com.team2.documents.command.domain.entity.enums.PositionLevel;
 import com.team2.documents.command.domain.entity.enums.ProformaInvoiceStatus;
 import com.team2.documents.command.domain.entity.enums.PurchaseOrderStatus;
 import com.team2.documents.command.domain.entity.enums.ShipmentStatus;
 import com.team2.documents.command.domain.repository.CollectionRepository;
 import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
 import com.team2.documents.command.domain.repository.ShipmentRepository;
+import com.team2.documents.command.domain.repository.UserPositionRepository;
 
 @Service
 @Transactional
@@ -37,6 +39,7 @@ public class PurchaseOrderCreationService {
     private final CollectionRepository collectionRepository;
     private final ProformaInvoiceRepository proformaInvoiceRepository;
     private final ObjectMapper objectMapper;
+    private final UserPositionRepository userPositionRepository;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                         DocumentNumberGeneratorService documentNumberGeneratorService,
@@ -46,7 +49,8 @@ public class PurchaseOrderCreationService {
                                         ShipmentRepository shipmentRepository,
                                         CollectionRepository collectionRepository,
                                         ProformaInvoiceRepository proformaInvoiceRepository,
-                                        ObjectMapper objectMapper) {
+                                        ObjectMapper objectMapper,
+                                        UserPositionRepository userPositionRepository) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.documentLinkService = documentLinkService;
@@ -56,6 +60,7 @@ public class PurchaseOrderCreationService {
         this.collectionRepository = collectionRepository;
         this.proformaInvoiceRepository = proformaInvoiceRepository;
         this.objectMapper = objectMapper;
+        this.userPositionRepository = userPositionRepository;
     }
 
     public PurchaseOrderStatus determineInitialStatus(Long userId) {
@@ -63,13 +68,25 @@ public class PurchaseOrderCreationService {
     }
 
     /**
-     * 초안 PO 를 결재 없이 직접 수정. DRAFT 상태만 허용.
+     * PO 직접 수정. 결재 없이 본인이 바로 편집.
+     * - STAFF: DRAFT 만 허용.
+     * - MANAGER(팀장/ADMIN): DRAFT + CONFIRMED 모두 허용. 상태 유지.
      * PI 재연결도 허용하되 새 PI 가 CONFIRMED 인지 확인.
      */
     public PurchaseOrder updateDraft(String poId, PurchaseOrderCreateRequest request) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
-        if (!PurchaseOrderStatus.DRAFT.equals(purchaseOrder.getStatus())) {
-            throw new IllegalStateException("초안 상태의 PO만 직접 수정할 수 있습니다.");
+        PurchaseOrderStatus status = purchaseOrder.getStatus();
+
+        boolean isManager = request.userId() != null
+                && userPositionRepository.findPositionLevelByUserId(request.userId())
+                        .map(PositionLevel.MANAGER::equals)
+                        .orElse(false);
+        boolean allowed = PurchaseOrderStatus.DRAFT.equals(status)
+                || (isManager && PurchaseOrderStatus.CONFIRMED.equals(status));
+        if (!allowed) {
+            throw new IllegalStateException(isManager
+                    ? "초안 또는 확정 상태의 PO만 직접 수정할 수 있습니다."
+                    : "초안 상태의 PO만 직접 수정할 수 있습니다.");
         }
         validateLinkedProformaInvoice(request.piId());
 

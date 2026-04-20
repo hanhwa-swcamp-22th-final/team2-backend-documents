@@ -17,8 +17,11 @@ import com.team2.documents.command.infrastructure.client.ApproverResolver;
  * {@link PurchaseOrderModificationRequestService} 와 대칭 구조.
  *
  * - STAFF: 상태를 APPROVAL_PENDING 으로 이동하고 ApprovalRequest(MODIFICATION) 생성.
- * - MANAGER(팀장): ApprovalRequest 없이 상태만 APPROVAL_PENDING 으로 두고
- *   revision history 에 즉시 수정 요청 이벤트 기록 (이후 플로우는 PO 와 동일).
+ * - MANAGER(팀장/ADMIN): 상태를 **변경하지 않고** (CONFIRMED 유지) revision history 만
+ *   기록. 이후 실제 필드 수정은 팀장 전용 PUT /proforma-invoices/{piId} (MANAGER
+ *   모드 updateDraft) 로 직접 반영되므로 결재 경로를 밟지 않는다. 기존엔 MANAGER 도
+ *   APPROVAL_PENDING 으로 밀어 대시보드 미노출 + "결재 요청 취소" 404 오류(G3+G4)
+ *   를 유발했음.
  */
 @Service
 @Transactional
@@ -59,10 +62,11 @@ public class ProformaInvoiceModificationRequestService {
 
         java.util.Map<String, Object> beforeSnapshot =
                 documentRevisionHistoryService.captureProformaInvoiceSnapshot(proformaInvoice);
-        proformaInvoice.setStatus(ProformaInvoiceStatus.APPROVAL_PENDING);
-        proformaInvoiceCommandService.save(proformaInvoice);
 
         if (PositionLevel.STAFF.equals(positionLevel)) {
+            // STAFF: 기존 흐름 유지 — 상태 APPROVAL_PENDING 전환 + ApprovalRequest 생성.
+            proformaInvoice.setStatus(ProformaInvoiceStatus.APPROVAL_PENDING);
+            proformaInvoiceCommandService.save(proformaInvoice);
             Long approverId = approverResolver.resolveApproverId(userId);
             approvalRequestCommandService.save(new ApprovalRequest(
                     ApprovalDocumentType.PI,
@@ -74,12 +78,15 @@ public class ProformaInvoiceModificationRequestService {
             return;
         }
 
+        // MANAGER: 상태 변경 없이 revision history 에만 기록. 실제 필드 수정은
+        // PUT /proforma-invoices/{id} (MANAGER 모드 updateDraft) 로 즉시 적용되므로
+        // 결재 대기 상태를 거치지 않는다.
         documentRevisionHistoryService.recordProformaInvoiceEvent(
                 piId,
-                "REQUEST_MODIFICATION",
+                "MANAGER_MODIFY",
                 userId,
-                ProformaInvoiceStatus.APPROVAL_PENDING.name(),
-                "관리자가 PI 수정을 요청했습니다.",
+                proformaInvoice.getStatus().name(),
+                "팀장이 PI 를 직접 수정했습니다.",
                 beforeSnapshot
         );
     }

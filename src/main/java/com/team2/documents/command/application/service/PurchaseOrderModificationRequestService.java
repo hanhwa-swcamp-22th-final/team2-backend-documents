@@ -53,10 +53,11 @@ public class PurchaseOrderModificationRequestService {
         purchaseOrderModificationService.validateModifiable(poId);
         java.util.Map<String, Object> beforeSnapshot =
                 documentRevisionHistoryService.capturePurchaseOrderSnapshot(purchaseOrder);
-        purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
-        purchaseOrderCommandService.save(purchaseOrder);
 
         if (PositionLevel.STAFF.equals(positionLevel)) {
+            // STAFF: 상태 APPROVAL_PENDING 전환 + ApprovalRequest 생성.
+            purchaseOrder.setStatus(PurchaseOrderStatus.APPROVAL_PENDING);
+            purchaseOrderCommandService.save(purchaseOrder);
             Long approverId = approverResolver.resolveApproverId(userId);
             approvalRequestCommandService.save(new ApprovalRequest(
                     ApprovalDocumentType.PO,
@@ -68,12 +69,16 @@ public class PurchaseOrderModificationRequestService {
             return;
         }
 
+        // MANAGER: 상태 변경 없이 revision history 에만 기록. 실제 필드 수정은
+        // PUT /purchase-orders/{id} (MANAGER 모드 updateDraft) 로 즉시 반영되므로
+        // 결재 대기 상태를 거치지 않는다. 이전 동작(APPROVAL_PENDING 전환) 은
+        // 팀장이 "결재 요청 취소" 를 눌렀을 때 ApprovalRequest 가 없어 404 를 유발.
         documentRevisionHistoryService.recordPurchaseOrderEvent(
                 poId,
-                "REQUEST_MODIFICATION",
+                "MANAGER_MODIFY",
                 userId,
-                PurchaseOrderStatus.APPROVAL_PENDING.name(),
-                "관리자가 PO 수정을 요청했습니다.",
+                purchaseOrder.getStatus().name(),
+                "팀장이 PO 를 직접 수정했습니다.",
                 beforeSnapshot
         );
     }
