@@ -7,10 +7,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.team2.documents.command.application.dto.EmailLogInternalRequest;
 import com.team2.documents.command.domain.entity.ProductionOrder;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
 import com.team2.documents.command.domain.entity.ShipmentOrder;
+import com.team2.documents.infrastructure.client.ActivityFeignClient;
 import com.team2.documents.infrastructure.pdf.PdfGenerationService;
 
 import jakarta.activation.DataSource;
@@ -25,16 +27,19 @@ public class DocumentAutoMailService {
     private final AutoEmailRecipientResolver autoEmailRecipientResolver;
     private final PdfGenerationService pdfGenerationService;
     private final JavaMailSender javaMailSender;
+    private final ActivityFeignClient activityFeignClient;
 
     @Value("${MAIL_USERNAME:}")
     private String mailUsername;
 
     public DocumentAutoMailService(AutoEmailRecipientResolver autoEmailRecipientResolver,
                                    PdfGenerationService pdfGenerationService,
-                                   JavaMailSender javaMailSender) {
+                                   JavaMailSender javaMailSender,
+                                   ActivityFeignClient activityFeignClient) {
         this.autoEmailRecipientResolver = autoEmailRecipientResolver;
         this.pdfGenerationService = pdfGenerationService;
         this.javaMailSender = javaMailSender;
+        this.activityFeignClient = activityFeignClient;
     }
 
     public void sendApprovedPiToBuyer(ProformaInvoice proformaInvoice) {
@@ -46,12 +51,26 @@ public class DocumentAutoMailService {
 
         byte[] pdf = pdfGenerationService.generateProformaInvoicePdf(proformaInvoice, proformaInvoice.getItems());
         String recipientName = autoEmailRecipientResolver.findPrimaryBuyerNameByClientId(proformaInvoice.getClientId());
-        sendEmail(
+        // 외국 거래처 대상이므로 제목은 영문으로 통일 (Issue F).
+        String subject = "Proforma Invoice " + proformaInvoice.getPiId() + " — Approved";
+        boolean sent = sendEmail(
                 recipients,
-                "[자동발송] PI 승인 완료 - " + proformaInvoice.getPiId(),
+                subject,
                 buildBuyerBody(recipientName, proformaInvoice.getPiId()),
                 "PI.pdf",
                 pdf
+        );
+        // 발송 후 Activity email-logs 에 기록. 실패해도 문서 흐름은 계속 (best-effort).
+        logEmailToActivity(
+                proformaInvoice.getClientId(),
+                null,
+                subject,
+                recipientName,
+                recipients,
+                proformaInvoice.getManagerId(),
+                sent ? "SENT" : "FAILED",
+                List.of("PI"),
+                List.of("PI.pdf")
         );
     }
 
@@ -89,11 +108,11 @@ public class DocumentAutoMailService {
         );
     }
 
-    private void sendEmail(List<String> recipients,
-                           String subject,
-                           String body,
-                           String attachmentFilename,
-                           byte[] attachmentData) {
+    private boolean sendEmail(List<String> recipients,
+                              String subject,
+                              String body,
+                              String attachmentFilename,
+                              byte[] attachmentData) {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -107,8 +126,45 @@ public class DocumentAutoMailService {
             helper.addAttachment(attachmentFilename, dataSource);
             javaMailSender.send(message);
             log.info("자동 메일 발송 완료. recipients={}, subject={}", recipients, subject);
+            return true;
         } catch (Exception e) {
             log.warn("자동 메일 발송에 실패했습니다. subject={}, recipients={}", subject, recipients, e);
+            return false;
+        }
+    }
+
+    /**
+     * Activity 서비스의 email_logs 테이블에 자동 메일 발송 이력을 기록.
+     * 이전엔 자동 메일이 이력 저장 경로를 거치지 않아 email 이력 페이지에서 PI 승인
+     * 자동 발송이 누락돼 있었음 (Issue B). 첫 수신자를 recipient 로 기록.
+     * Feign 실패는 warn 만 찍고 삼킴 — 문서 흐름을 끊지 않는다.
+     */
+    private void logEmailToActivity(Integer clientId,
+                                    String poId,
+                                    String subject,
+                                    String recipientName,
+                                    List<String> recipients,
+                                    Long senderUserId,
+                                    String status,
+                                    List<String> docTypes,
+                                    List<String> attachmentFilenames) {
+        try {
+            String firstRecipient = recipients == null || recipients.isEmpty() ? null : recipients.get(0);
+            EmailLogInternalRequest logRequest = new EmailLogInternalRequest(
+                    clientId == null ? null : clientId.longValue(),
+                    poId,
+                    subject,
+                    recipientName,
+                    firstRecipient,
+                    senderUserId,
+                    status,
+                    docTypes == null ? List.of() : docTypes,
+                    List.of(),
+                    attachmentFilenames == null ? List.of() : attachmentFilenames
+            );
+            activityFeignClient.createEmailLog(logRequest);
+        } catch (Exception e) {
+            log.warn("자동 메일 이력 기록 실패 — subject={}, reason={}", subject, e.getMessage());
         }
     }
 
