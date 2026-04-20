@@ -36,11 +36,19 @@
         WHERE s.shipment_id = #{shipmentId}
     </select>
 
+    <!--
+      Issue #13: shipment_order_id IS NULL 인 행은 PO 가 아직 CONFIRMED 를 거치지 않아
+      generateOnConfirmation 이 실행되기 전 상태 (createInitialViews 가 먼저 stub row 를
+      만들기 때문). 이 stub 은 client_id / 담당자 / 일자 전부 NULL 이라 목록에서 "-"
+      로 보이는 orphan 을 유발. findAll/Page/count 에서 숨겨 사용자 혼란 제거.
+      (findById / findByPoId 는 단건 조회라 제외하지 않는다.)
+    -->
     <select id="findAll" resultMap="shipmentResultMap">
         SELECT <include refid="shipmentBaseColumns"/>
         FROM shipments s
         JOIN purchase_orders po ON s.po_id = po.po_id
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
+        WHERE s.shipment_order_id IS NOT NULL
     </select>
 
     <select id="findPage" resultMap="shipmentResultMap">
@@ -48,6 +56,7 @@
         FROM shipments s
         JOIN purchase_orders po ON s.po_id = po.po_id
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
+        WHERE s.shipment_order_id IS NOT NULL
         ORDER BY s.shipment_id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -57,6 +66,7 @@
         FROM shipments s
         JOIN purchase_orders po ON s.po_id = po.po_id
         LEFT JOIN shipment_orders so ON s.shipment_order_id = so.shipment_order_id
+        WHERE s.shipment_order_id IS NOT NULL
     </select>
 
     <select id="findByPoId" resultMap="shipmentResultMap">
