@@ -107,6 +107,11 @@ public class ProformaInvoice {
     @Column(name = "pi_remarks", columnDefinition = "TEXT")
     private String remarks;
 
+    // 거래처 바이어(PIC) 이름 스냅샷. PIFormModal 의 버이어 드롭다운 선택값을 저장.
+    // PDF·결재 모달·파생 문서(PO/CI/PL) 로 그대로 전이된다 (Issue C).
+    @Column(name = "pi_buyer_name", length = 200)
+    private String buyerName;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -315,6 +320,10 @@ public class ProformaInvoice {
 
     public String getRemarks() {
         return remarks;
+    }
+
+    public String getBuyerName() {
+        return buyerName;
     }
 
     public List<ProformaInvoiceItem> getItems() {

@@ -542,6 +542,7 @@ public class DocumentQueryController {
                 purchaseOrder.getItemsSnapshot(),
                 purchaseOrder.getLinkedDocuments(),
                 purchaseOrder.getRemarks(),
+                purchaseOrder.getBuyerName(),
                 docsRevisionQueryService.getRevisionHistory("PO", purchaseOrder.getPurchaseOrderId()),
                 purchaseOrder.getShipmentStatus(),
                 purchaseOrder.getCreatedAt(),
@@ -590,6 +591,7 @@ public class DocumentQueryController {
                 proformaInvoice.getItemsSnapshot(),
                 proformaInvoice.getLinkedDocuments(),
                 proformaInvoice.getRemarks(),
+                proformaInvoice.getBuyerName(),
                 docsRevisionQueryService.getRevisionHistory("PI", proformaInvoice.getProformaInvoiceId()),
                 proformaInvoice.getItems().stream().map(this::toProformaInvoiceItemResponse).toList()
         );
@@ -801,6 +803,7 @@ public class DocumentQueryController {
             @Schema(description = "품목 스냅샷 (JSON)") String itemsSnapshot,
             @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
             @Schema(description = "특기사항") String remarks,
+            @Schema(description = "바이어 이름 (PIC)") String buyerName,
             @Schema(description = "수정 이력") String revisionHistory,
             @Schema(description = "출하 진행 상태 (null=출하전 / preparing / completed)") String shipmentStatus,
             @Schema(description = "생성일시") LocalDateTime createdAt,
@@ -847,6 +850,7 @@ public class DocumentQueryController {
             @Schema(description = "품목 스냅샷 (JSON)") String itemsSnapshot,
             @Schema(description = "연결 문서 (JSON)") String linkedDocuments,
             @Schema(description = "특기사항") String remarks,
+            @Schema(description = "바이어 이름 (PIC)") String buyerName,
             @Schema(description = "수정 이력") String revisionHistory,
             @Schema(description = "PI 품목 목록") List<ProformaInvoiceItemResponse> items
     ) {

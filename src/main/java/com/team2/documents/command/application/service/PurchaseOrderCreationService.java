@@ -110,6 +110,8 @@ public class PurchaseOrderCreationService {
         purchaseOrder.setCurrencyCode(request.currencyCode());
         purchaseOrder.setManagerName(request.managerName());
         purchaseOrder.setRemarks(request.remarks());
+        // Issue C — PI → PO 로 buyerName 승계. 프론트가 linkedPi.buyerName 을 payload 로 전달.
+        purchaseOrder.setBuyerName(request.buyerName());
         // Step C — 초안 수정에서도 분기/담당자 갱신 가능.
         String draftRoute = request.productionRoute();
         if (draftRoute != null && !draftRoute.isBlank()) {
@@ -179,6 +181,8 @@ public class PurchaseOrderCreationService {
 
         // 생성자 서명에 remarks 를 추가하지 않고 @Setter 로 후설정.
         purchaseOrder.setRemarks(request.remarks());
+        // Issue C — PI → PO 로 buyerName 승계. 프론트가 linkedPi.buyerName 을 payload 로 전달.
+        purchaseOrder.setBuyerName(request.buyerName());
 
         // Step C — PO 등록 시점에 선택한 후속 흐름 분기 및 담당자 저장.
         // productionRoute: PRODUCTION(생산 경유) | DIRECT(직출하). null → DIRECT 로 해석.

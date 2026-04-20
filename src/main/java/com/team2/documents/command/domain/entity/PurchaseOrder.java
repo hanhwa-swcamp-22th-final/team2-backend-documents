@@ -115,6 +115,11 @@ public class PurchaseOrder {
     @Column(name = "po_remarks", columnDefinition = "TEXT")
     private String remarks;
 
+    // 거래처 바이어(PIC) 이름 스냅샷. PI → PO 전이 시 PI.buyerName 을 승계하며,
+    // CI.ci_buyer / PL.pl_buyer 컬럼으로도 복사된다 (Issue C).
+    @Column(name = "po_buyer_name", length = 200)
+    private String buyerName;
+
     // PO 등록 시점에 선택하는 후속 흐름 분기 (Step C).
     // 'PRODUCTION'(생산 경유) | 'DIRECT'(직출하). null=기본 DIRECT 로 해석.
     @Column(name = "po_production_route", length = 20)
@@ -358,6 +363,10 @@ public class PurchaseOrder {
 
     public String getRemarks() {
         return remarks;
+    }
+
+    public String getBuyerName() {
+        return buyerName;
     }
 
     public String getProductionRoute() {

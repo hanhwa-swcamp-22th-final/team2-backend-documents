@@ -39,5 +39,7 @@ public class ProformaInvoiceView {
     private String itemsSnapshot;
     private String linkedDocuments;
     private String remarks;
+    /** 거래처 바이어(PIC) 이름 스냅샷. PI 등록 시 buyer 드롭다운 선택값 (Issue C). */
+    private String buyerName;
     private List<ProformaInvoiceItemView> items = new ArrayList<>();
 }

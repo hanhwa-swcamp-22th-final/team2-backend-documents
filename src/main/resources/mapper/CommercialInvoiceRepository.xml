@@ -7,7 +7,7 @@
         INSERT INTO commercial_invoices (
             ci_code, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status,
             ci_client_name, ci_client_address, ci_country, ci_currency_code,
-            ci_items_snapshot, ci_linked_documents
+            ci_buyer, ci_items_snapshot, ci_linked_documents
         )
         SELECT
             #{ciId},
@@ -21,6 +21,7 @@
             po_client_address,
             po_country,
             po_currency_code,
+            po_buyer_name,
             po_items_snapshot,
             po_linked_documents
         FROM purchase_orders

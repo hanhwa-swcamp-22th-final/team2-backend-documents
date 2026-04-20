@@ -7,7 +7,7 @@
         INSERT INTO packing_lists (
             pl_code, po_id, pl_invoice_date, client_id, pl_gross_weight, pl_status,
             pl_client_name, pl_client_address, pl_country,
-            pl_items_snapshot, pl_linked_documents
+            pl_buyer, pl_items_snapshot, pl_linked_documents
         )
         SELECT
             #{plId},
@@ -19,6 +19,7 @@
             po_client_name,
             po_client_address,
             po_country,
+            po_buyer_name,
             po_items_snapshot,
             po_linked_documents
         FROM purchase_orders

@@ -41,6 +41,8 @@ public record ProformaInvoiceCreateRequest(
         Long userId,
         @Schema(description = "특기사항 (자유 텍스트)", example = "원단 두께 주의")
         String remarks,
+        @Schema(description = "바이어 이름 (거래처의 PIC)", example = "John Smith")
+        String buyerName,
         @Schema(description = "PI 품목 목록")
         List<ProformaInvoiceItemCreateRequest> items
 ) {

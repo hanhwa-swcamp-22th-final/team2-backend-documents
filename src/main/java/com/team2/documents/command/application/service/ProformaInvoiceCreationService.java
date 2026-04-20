@@ -90,6 +90,7 @@ public class ProformaInvoiceCreationService {
         proformaInvoice.setCurrencyCode(currencyCode);
         proformaInvoice.setManagerName(request.managerName());
         proformaInvoice.setRemarks(request.remarks());
+        proformaInvoice.setBuyerName(request.buyerName());
         proformaInvoice.setItemsSnapshot(serializeItemsSnapshot(newItems));
 
         // orphanRemoval 이 동작하려면 리스트 참조를 바꾸지 말고 내부를 갈아끼워야 한다.
@@ -148,6 +149,8 @@ public class ProformaInvoiceCreationService {
 
         // 생성자 서명에 remarks 를 추가하지 않고 @Setter 로 후설정 (기존 constructor 호출부 보존).
         proformaInvoice.setRemarks(request.remarks());
+        // Issue C — buyerName 도 동일 패턴으로 후설정. PIFormModal 에서 바이어 드롭다운 선택값 전달.
+        proformaInvoice.setBuyerName(request.buyerName());
 
         ProformaInvoice saved = proformaInvoiceCommandService.save(proformaInvoice);
         docsSnapshotService.saveProformaInvoiceSnapshot(saved);

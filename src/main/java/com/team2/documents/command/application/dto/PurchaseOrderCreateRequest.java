@@ -45,6 +45,8 @@ public record PurchaseOrderCreateRequest(
         Long userId,
         @Schema(description = "특기사항 (자유 텍스트)", example = "포장 재확인")
         String remarks,
+        @Schema(description = "바이어 이름 (거래처의 PIC)", example = "John Smith")
+        String buyerName,
         @Schema(description = "후속 흐름 분기 — PRODUCTION(생산 경유) | DIRECT(직출하)", example = "PRODUCTION")
         String productionRoute,
         @Schema(description = "생산 담당자 userId (PRODUCTION 선택 시)", example = "7")
@@ -56,6 +58,6 @@ public record PurchaseOrderCreateRequest(
 ) {
     public PurchaseOrderCreateRequest(Long userId) {
         this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                userId, null, null, null, null, List.of());
+                userId, null, null, null, null, null, List.of());
     }
 }
