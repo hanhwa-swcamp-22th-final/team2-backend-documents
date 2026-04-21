@@ -6,6 +6,7 @@ import com.team2.documents.command.infrastructure.client.MasterBuyerResponse;
 import com.team2.documents.command.infrastructure.client.MasterFeignClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -47,14 +48,7 @@ public class AutoEmailRecipientResolver {
      * 특정 거래처의 바이어 이메일 목록 (중복 제거, blank 제외, buyerId 오름차순).
      */
     public List<String> findBuyerEmailsByClientId(Integer clientId) {
-        List<MasterBuyerResponse> buyers = safeList(masterFeignClient.getBuyersByClient(clientId));
-        return buyers.stream()
-                .sorted(Comparator.comparing(MasterBuyerResponse::getId,
-                        Comparator.nullsLast(Comparator.naturalOrder())))
-                .map(MasterBuyerResponse::getBuyerEmail)
-                .filter(AutoEmailRecipientResolver::isNotBlank)
-                .distinct()
-                .toList();
+        return loadBuyerRecipientsByClientId(clientId).emails();
     }
 
     /**
@@ -62,22 +56,41 @@ public class AutoEmailRecipientResolver {
      * 결과가 없으면 placeholder "Buyer" 반환 (기존 동작 유지).
      */
     public String findPrimaryBuyerNameByClientId(Integer clientId) {
+        return loadBuyerRecipientsByClientId(clientId).primaryName();
+    }
+
+    @Cacheable(cacheNames = "autoMailBuyerRecipients", key = "#clientId")
+    public BuyerRecipients findBuyerRecipientsByClientId(Integer clientId) {
+        return loadBuyerRecipientsByClientId(clientId);
+    }
+
+    private BuyerRecipients loadBuyerRecipientsByClientId(Integer clientId) {
         List<MasterBuyerResponse> buyers = safeList(masterFeignClient.getBuyersByClient(clientId));
-        return buyers.stream()
+        List<MasterBuyerResponse> sortedBuyers = buyers.stream()
                 .sorted(Comparator.comparing(MasterBuyerResponse::getId,
                         Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        List<String> emails = sortedBuyers.stream()
+                .map(MasterBuyerResponse::getBuyerEmail)
+                .filter(AutoEmailRecipientResolver::isNotBlank)
+                .distinct()
+                .toList();
+        String primaryName = sortedBuyers.stream()
                 .map(MasterBuyerResponse::getBuyerName)
                 .filter(AutoEmailRecipientResolver::isNotBlank)
                 .findFirst()
                 .orElse("Buyer");
+        return new BuyerRecipients(emails, primaryName);
     }
 
     /** 생산팀(production 역할) 재직 사용자의 이메일 목록. */
+    @Cacheable(cacheNames = "autoMailProductionTeamEmails")
     public List<String> findProductionTeamEmails() {
         return findTeamEmailsByRole(ROLE_PRODUCTION);
     }
 
     /** 출하팀(shipping 역할) 재직 사용자의 이메일 목록. */
+    @Cacheable(cacheNames = "autoMailShippingTeamEmails")
     public List<String> findShippingTeamEmails() {
         return findTeamEmailsByRole(ROLE_SHIPPING);
     }
@@ -100,5 +113,12 @@ public class AutoEmailRecipientResolver {
 
     private static <T> List<T> safeList(List<T> list) {
         return list == null ? List.of() : list;
+    }
+
+    public record BuyerRecipients(List<String> emails, String primaryName) {
+        public BuyerRecipients {
+            emails = emails == null ? List.of() : List.copyOf(emails);
+            primaryName = isNotBlank(primaryName) ? primaryName : "Buyer";
+        }
     }
 }
