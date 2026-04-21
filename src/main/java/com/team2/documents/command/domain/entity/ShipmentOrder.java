@@ -132,6 +132,10 @@ public class ShipmentOrder {
         return dueDate;
     }
 
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
     public String getClientName() {
         return clientName;
     }

@@ -40,6 +40,7 @@ public class PurchaseOrderCreationService {
     private final ProformaInvoiceRepository proformaInvoiceRepository;
     private final ObjectMapper objectMapper;
     private final UserPositionRepository userPositionRepository;
+    private final PurchaseOrderDownstreamSyncService purchaseOrderDownstreamSyncService;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                         DocumentNumberGeneratorService documentNumberGeneratorService,
@@ -50,7 +51,8 @@ public class PurchaseOrderCreationService {
                                         CollectionRepository collectionRepository,
                                         ProformaInvoiceRepository proformaInvoiceRepository,
                                         ObjectMapper objectMapper,
-                                        UserPositionRepository userPositionRepository) {
+                                        UserPositionRepository userPositionRepository,
+                                        PurchaseOrderDownstreamSyncService purchaseOrderDownstreamSyncService) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.documentLinkService = documentLinkService;
@@ -61,6 +63,7 @@ public class PurchaseOrderCreationService {
         this.proformaInvoiceRepository = proformaInvoiceRepository;
         this.objectMapper = objectMapper;
         this.userPositionRepository = userPositionRepository;
+        this.purchaseOrderDownstreamSyncService = purchaseOrderDownstreamSyncService;
     }
 
     public PurchaseOrderStatus determineInitialStatus(Long userId) {
@@ -129,6 +132,7 @@ public class PurchaseOrderCreationService {
         purchaseOrder.getItems().addAll(newItems);
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
+        purchaseOrderDownstreamSyncService.syncDueDates(saved);
         docsSnapshotService.savePurchaseOrderSnapshot(saved);
         documentRevisionHistoryService.recordPurchaseOrderEvent(
                 saved.getPoId(),
@@ -188,6 +192,9 @@ public class PurchaseOrderCreationService {
         purchaseOrder.getItems().addAll(newItems);
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
+        if (PurchaseOrderStatus.CONFIRMED.equals(saved.getStatus())) {
+            purchaseOrderDownstreamSyncService.syncDueDates(saved);
+        }
         docsSnapshotService.savePurchaseOrderSnapshot(saved);
         documentRevisionHistoryService.recordPurchaseOrderEvent(
                 saved.getPoId(),
