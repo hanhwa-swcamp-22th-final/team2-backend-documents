@@ -133,6 +133,15 @@ public class PurchaseOrder {
     @Column(name = "po_shipping_assignee_id")
     private Long shippingAssigneeId;
 
+    // PO 생성 시 master Feign 으로 조회한 거래처의 결제조건 이름 스냅샷.
+    // CI/PL INSERT 시 ci_payment_terms / pl_payment_terms 컬럼으로 복사된다.
+    @Column(name = "po_payment_terms", length = 100)
+    private String paymentTerms;
+
+    // 거래처에 등록된 도착항 이름 스냅샷. CI/PL 의 port_of_discharge 로 복사.
+    @Column(name = "po_port_of_discharge", length = 200)
+    private String portOfDischarge;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -25,6 +25,8 @@ import com.team2.documents.command.domain.repository.CollectionRepository;
 import com.team2.documents.command.domain.repository.ProformaInvoiceRepository;
 import com.team2.documents.command.domain.repository.ShipmentRepository;
 import com.team2.documents.command.domain.repository.UserPositionRepository;
+import com.team2.documents.command.infrastructure.client.MasterClientResponse;
+import com.team2.documents.command.infrastructure.client.MasterFeignClient;
 
 @Service
 @Transactional
@@ -40,6 +42,7 @@ public class PurchaseOrderCreationService {
     private final ProformaInvoiceRepository proformaInvoiceRepository;
     private final ObjectMapper objectMapper;
     private final UserPositionRepository userPositionRepository;
+    private final MasterFeignClient masterFeignClient;
 
     public PurchaseOrderCreationService(PurchaseOrderCommandService purchaseOrderCommandService,
                                         DocumentNumberGeneratorService documentNumberGeneratorService,
@@ -50,7 +53,8 @@ public class PurchaseOrderCreationService {
                                         CollectionRepository collectionRepository,
                                         ProformaInvoiceRepository proformaInvoiceRepository,
                                         ObjectMapper objectMapper,
-                                        UserPositionRepository userPositionRepository) {
+                                        UserPositionRepository userPositionRepository,
+                                        MasterFeignClient masterFeignClient) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.documentNumberGeneratorService = documentNumberGeneratorService;
         this.documentLinkService = documentLinkService;
@@ -61,6 +65,26 @@ public class PurchaseOrderCreationService {
         this.proformaInvoiceRepository = proformaInvoiceRepository;
         this.objectMapper = objectMapper;
         this.userPositionRepository = userPositionRepository;
+        this.masterFeignClient = masterFeignClient;
+    }
+
+    /**
+     * PO 생성/수정 시 해당 거래처의 결제조건·도착항을 Master 에서 Feign 으로 조회해
+     * PO 엔티티에 스냅샷한다. CI/PL INSERT 가 po.* 스냅샷을 그대로 복사하기 때문에
+     * 여기서 놓치면 CI/PL 의 해당 필드가 영구 null. Feign 실패 시 fallback 이 null
+     * 응답이라 PO 에도 null 이 저장되지만 best-effort 로 원본 데이터 덮어쓰지 않도록
+     * null 값은 setter 호출을 생략한다.
+     */
+    private void snapshotClientSideFields(PurchaseOrder po, Integer clientId) {
+        if (clientId == null || clientId == 0) return;
+        try {
+            MasterClientResponse client = masterFeignClient.getClientById(clientId);
+            if (client == null) return;
+            if (client.paymentTermName() != null) po.setPaymentTerms(client.paymentTermName());
+            if (client.portName() != null) po.setPortOfDischarge(client.portName());
+        } catch (Exception e) {
+            // Resilience4j circuit breaker 발동 시 FallbackFactory 가 삼킴. 이 catch 는 예외적 상황.
+        }
     }
 
     public PurchaseOrderStatus determineInitialStatus(Long userId) {
@@ -124,6 +148,9 @@ public class PurchaseOrderCreationService {
             purchaseOrder.setShippingAssigneeId(request.shippingAssigneeId());
         }
         purchaseOrder.setItemsSnapshot(serializeItemsSnapshot(newItems));
+
+        // 업데이트 경로에서도 거래처 변경 가능성 고려해 동일 스냅샷 수행.
+        snapshotClientSideFields(purchaseOrder, request.clientId());
 
         purchaseOrder.getItems().clear();
         purchaseOrder.getItems().addAll(newItems);
@@ -194,6 +221,9 @@ public class PurchaseOrderCreationService {
         }
         purchaseOrder.setProductionAssigneeId(request.productionAssigneeId());
         purchaseOrder.setShippingAssigneeId(request.shippingAssigneeId());
+
+        // Master Feign 으로 거래처 결제조건 / 도착항 스냅샷 주입 (CI/PL 에 전파됨).
+        snapshotClientSideFields(purchaseOrder, request.clientId());
 
         PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
         createInitialViews(saved);
