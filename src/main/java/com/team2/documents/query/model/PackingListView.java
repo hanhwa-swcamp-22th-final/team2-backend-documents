@@ -28,4 +28,8 @@ public class PackingListView {
     private String itemsSnapshot;
     private String linkedDocuments;
     private LocalDateTime createdAt;
+    // purchase_orders JOIN 으로 주입되는 발행 메타
+    private String incotermsCode;
+    private String namedPlace;
+    private LocalDate deliveryDate;
 }

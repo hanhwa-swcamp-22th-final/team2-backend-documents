@@ -22,31 +22,43 @@
         <result property="itemsSnapshot" column="ci_items_snapshot"/>
         <result property="linkedDocuments" column="ci_linked_documents"/>
         <result property="createdAt" column="created_at"/>
+        <!-- PO 에서 query-time JOIN 으로 가져오는 발행 메타. CI INSERT 시점에 스냅샷
+             컬럼이 없어 PO 와 같은 스키마(team2_docs) 안에서 JOIN 으로 해소한다. -->
+        <result property="incotermsCode" column="po_incoterms_code"/>
+        <result property="namedPlace" column="po_named_place"/>
+        <result property="deliveryDate" column="po_delivery_date"/>
     </resultMap>
 
     <sql id="ciColumns">
-        ci_id, ci_code, po_id, ci_invoice_date, client_id, currency_id, ci_total_amount, ci_status,
-        ci_client_name, ci_client_address, ci_country, ci_currency_code,
-        ci_payment_terms, ci_port_of_discharge, ci_buyer,
-        ci_items_snapshot, ci_linked_documents, created_at
+        ci.ci_id, ci.ci_code, ci.po_id, ci.ci_invoice_date, ci.client_id, ci.currency_id,
+        ci.ci_total_amount, ci.ci_status,
+        ci.ci_client_name, ci.ci_client_address, ci.ci_country, ci.ci_currency_code,
+        ci.ci_payment_terms, ci.ci_port_of_discharge, ci.ci_buyer,
+        ci.ci_items_snapshot, ci.ci_linked_documents, ci.created_at,
+        po.po_incoterms_code, po.po_named_place, po.po_delivery_date
+    </sql>
+
+    <sql id="ciFromJoin">
+        FROM commercial_invoices ci
+        LEFT JOIN purchase_orders po ON ci.po_id = po.po_id
     </sql>
 
     <select id="findById" resultMap="commercialInvoiceResultMap">
         SELECT <include refid="ciColumns"/>
-        FROM commercial_invoices
-        WHERE ci_code = #{ciId}
+        <include refid="ciFromJoin"/>
+        WHERE ci.ci_code = #{ciId}
     </select>
 
     <select id="findAll" resultMap="commercialInvoiceResultMap">
         SELECT <include refid="ciColumns"/>
-        FROM commercial_invoices
-        ORDER BY ci_invoice_date DESC, ci_id DESC
+        <include refid="ciFromJoin"/>
+        ORDER BY ci.ci_invoice_date DESC, ci.ci_id DESC
     </select>
 
     <select id="findPage" resultMap="commercialInvoiceResultMap">
         SELECT <include refid="ciColumns"/>
-        FROM commercial_invoices
-        ORDER BY ci_invoice_date DESC, ci_id DESC
+        <include refid="ciFromJoin"/>
+        ORDER BY ci.ci_invoice_date DESC, ci.ci_id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 

@@ -20,31 +20,41 @@
         <result property="itemsSnapshot" column="pl_items_snapshot"/>
         <result property="linkedDocuments" column="pl_linked_documents"/>
         <result property="createdAt" column="created_at"/>
+        <!-- purchase_orders JOIN 으로 가져오는 발행 메타. 같은 스키마(team2_docs) 이므로 JOIN OK. -->
+        <result property="incotermsCode" column="po_incoterms_code"/>
+        <result property="namedPlace" column="po_named_place"/>
+        <result property="deliveryDate" column="po_delivery_date"/>
     </resultMap>
 
     <sql id="plColumns">
-        pl_id, pl_code, po_id, pl_invoice_date, client_id, pl_gross_weight, pl_status,
-        pl_client_name, pl_client_address, pl_country,
-        pl_payment_terms, pl_port_of_discharge, pl_buyer,
-        pl_items_snapshot, pl_linked_documents, created_at
+        pl.pl_id, pl.pl_code, pl.po_id, pl.pl_invoice_date, pl.client_id, pl.pl_gross_weight, pl.pl_status,
+        pl.pl_client_name, pl.pl_client_address, pl.pl_country,
+        pl.pl_payment_terms, pl.pl_port_of_discharge, pl.pl_buyer,
+        pl.pl_items_snapshot, pl.pl_linked_documents, pl.created_at,
+        po.po_incoterms_code, po.po_named_place, po.po_delivery_date
+    </sql>
+
+    <sql id="plFromJoin">
+        FROM packing_lists pl
+        LEFT JOIN purchase_orders po ON pl.po_id = po.po_id
     </sql>
 
     <select id="findById" resultMap="packingListResultMap">
         SELECT <include refid="plColumns"/>
-        FROM packing_lists
-        WHERE pl_code = #{plId}
+        <include refid="plFromJoin"/>
+        WHERE pl.pl_code = #{plId}
     </select>
 
     <select id="findAll" resultMap="packingListResultMap">
         SELECT <include refid="plColumns"/>
-        FROM packing_lists
-        ORDER BY pl_invoice_date DESC, pl_id DESC
+        <include refid="plFromJoin"/>
+        ORDER BY pl.pl_invoice_date DESC, pl.pl_id DESC
     </select>
 
     <select id="findPage" resultMap="packingListResultMap">
         SELECT <include refid="plColumns"/>
-        FROM packing_lists
-        ORDER BY pl_invoice_date DESC, pl_id DESC
+        <include refid="plFromJoin"/>
+        ORDER BY pl.pl_invoice_date DESC, pl.pl_id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 

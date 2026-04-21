@@ -627,6 +627,9 @@ public class DocumentQueryController {
                 ci.getPaymentTerms(),
                 ci.getPortOfDischarge(),
                 ci.getBuyer(),
+                ci.getIncotermsCode(),
+                ci.getNamedPlace(),
+                ci.getDeliveryDate(),
                 ci.getItemsSnapshot(),
                 ci.getLinkedDocuments(),
                 ci.getCreatedAt()
@@ -648,6 +651,9 @@ public class DocumentQueryController {
                 pl.getPaymentTerms(),
                 pl.getPortOfDischarge(),
                 pl.getBuyer(),
+                pl.getIncotermsCode(),
+                pl.getNamedPlace(),
+                pl.getDeliveryDate(),
                 pl.getItemsSnapshot(),
                 pl.getLinkedDocuments(),
                 pl.getCreatedAt()
@@ -875,6 +881,9 @@ public class DocumentQueryController {
             @Schema(description = "결제조건") String paymentTerms,
             @Schema(description = "도착항") String portOfDischarge,
             @Schema(description = "바이어") String buyer,
+            @Schema(description = "인코텀즈 코드") String incotermsCode,
+            @Schema(description = "지정 장소") String namedPlace,
+            @Schema(description = "납기일 (sailing)") LocalDate deliveryDate,
             @Schema(description = "품목 스냅샷 JSON") String itemsSnapshot,
             @Schema(description = "연결 문서 JSON") String linkedDocuments,
             @Schema(description = "생성일시") LocalDateTime createdAt
@@ -896,6 +905,9 @@ public class DocumentQueryController {
             @Schema(description = "결제조건") String paymentTerms,
             @Schema(description = "도착항") String portOfDischarge,
             @Schema(description = "바이어") String buyer,
+            @Schema(description = "인코텀즈 코드") String incotermsCode,
+            @Schema(description = "지정 장소") String namedPlace,
+            @Schema(description = "납기일 (sailing)") LocalDate deliveryDate,
             @Schema(description = "품목 스냅샷 JSON") String itemsSnapshot,
             @Schema(description = "연결 문서 JSON") String linkedDocuments,
             @Schema(description = "생성일시") LocalDateTime createdAt

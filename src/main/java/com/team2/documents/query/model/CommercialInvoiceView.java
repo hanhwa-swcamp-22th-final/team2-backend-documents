@@ -30,4 +30,8 @@ public class CommercialInvoiceView {
     private String itemsSnapshot;
     private String linkedDocuments;
     private LocalDateTime createdAt;
+    // purchase_orders JOIN 으로 가져오는 발행 메타 (스키마 동일: team2_docs)
+    private String incotermsCode;
+    private String namedPlace;
+    private LocalDate deliveryDate;
 }
