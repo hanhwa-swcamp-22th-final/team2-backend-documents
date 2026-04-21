@@ -3,6 +3,10 @@ package com.team2.documents.command.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.team2.documents.command.application.dto.ProformaInvoiceCreateRequest;
+import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
 import com.team2.documents.command.domain.entity.ApprovalRequest;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
@@ -22,6 +26,9 @@ public class ApprovalRequestDocumentWorkflowService {
     private final DocumentAutoMailService documentAutoMailService;
     private final PurchaseOrderModificationService purchaseOrderModificationService;
     private final ProformaInvoiceModificationService proformaInvoiceModificationService;
+    private final PurchaseOrderCreationService purchaseOrderCreationService;
+    private final ProformaInvoiceCreationService proformaInvoiceCreationService;
+    private final ObjectMapper objectMapper;
 
     public ApprovalRequestDocumentWorkflowService(
             PurchaseOrderCommandService purchaseOrderCommandService,
@@ -29,20 +36,43 @@ public class ApprovalRequestDocumentWorkflowService {
             PurchaseOrderDocumentGenerationService purchaseOrderDocumentGenerationService,
             DocumentAutoMailService documentAutoMailService,
             PurchaseOrderModificationService purchaseOrderModificationService,
-            ProformaInvoiceModificationService proformaInvoiceModificationService) {
+            ProformaInvoiceModificationService proformaInvoiceModificationService,
+            PurchaseOrderCreationService purchaseOrderCreationService,
+            ProformaInvoiceCreationService proformaInvoiceCreationService,
+            ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.purchaseOrderDocumentGenerationService = purchaseOrderDocumentGenerationService;
         this.documentAutoMailService = documentAutoMailService;
         this.purchaseOrderModificationService = purchaseOrderModificationService;
         this.proformaInvoiceModificationService = proformaInvoiceModificationService;
+        this.purchaseOrderCreationService = purchaseOrderCreationService;
+        this.proformaInvoiceCreationService = proformaInvoiceCreationService;
+        this.objectMapper = objectMapper;
     }
 
-    public void approveDocument(ApprovalDocumentType documentType, String documentId) {
+    public void approveDocument(ApprovalRequest approvalRequest) {
+        ApprovalDocumentType documentType = approvalRequest.getDocumentType();
+        String documentId = approvalRequest.getDocumentId();
+        boolean modificationRequest = ApprovalRequestType.MODIFICATION.equals(approvalRequest.getRequestType());
+
         if (ApprovalDocumentType.PO.equals(documentType)) {
             PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(documentId);
             if (!PurchaseOrderStatus.APPROVAL_PENDING.equals(purchaseOrder.getStatus())) {
                 throw new IllegalStateException("결재대기 상태의 PO만 승인할 수 있습니다.");
+            }
+            if (modificationRequest) {
+                PurchaseOrderCreateRequest revisedRequest = readPayload(
+                        approvalRequest.getReviewSnapshot(),
+                        PurchaseOrderCreateRequest.class,
+                        "PO 수정 요청 payload를 읽을 수 없습니다.");
+                if (revisedRequest != null) {
+                    purchaseOrderCreationService.applyApprovedModification(documentId, revisedRequest);
+                    purchaseOrder = purchaseOrderCommandService.findById(documentId);
+                }
+                purchaseOrder.setStatus(PurchaseOrderStatus.CONFIRMED);
+                purchaseOrderCommandService.save(purchaseOrder);
+                return;
             }
             purchaseOrder.setStatus(PurchaseOrderStatus.CONFIRMED);
             purchaseOrderCommandService.save(purchaseOrder);
@@ -54,9 +84,33 @@ public class ApprovalRequestDocumentWorkflowService {
         if (!ProformaInvoiceStatus.APPROVAL_PENDING.equals(proformaInvoice.getStatus())) {
             throw new IllegalStateException("결재대기 상태의 PI만 승인할 수 있습니다.");
         }
+        if (modificationRequest) {
+            ProformaInvoiceCreateRequest revisedRequest = readPayload(
+                    approvalRequest.getReviewSnapshot(),
+                    ProformaInvoiceCreateRequest.class,
+                    "PI 수정 요청 payload를 읽을 수 없습니다.");
+            if (revisedRequest != null) {
+                proformaInvoiceCreationService.applyApprovedModification(documentId, revisedRequest);
+                proformaInvoice = proformaInvoiceCommandService.findById(documentId);
+            }
+            proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
+            proformaInvoiceCommandService.save(proformaInvoice);
+            return;
+        }
         proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
         proformaInvoiceCommandService.save(proformaInvoice);
         documentAutoMailService.sendApprovedPiToBuyer(proformaInvoice);
+    }
+
+    private <T> T readPayload(String json, Class<T> type, String errorMessage) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(json, type);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(errorMessage, e);
+        }
     }
 
     /**
@@ -131,6 +185,22 @@ public class ApprovalRequestDocumentWorkflowService {
             throw new IllegalStateException("결재대기 상태의 PI만 반려할 수 있습니다.");
         }
         proformaInvoice.setStatus(ProformaInvoiceStatus.REJECTED);
+        proformaInvoiceCommandService.save(proformaInvoice);
+    }
+
+    /**
+     * Handles MODIFICATION rejection: restores the confirmed source document.
+     */
+    public void rejectModification(ApprovalDocumentType documentType, String documentId) {
+        if (ApprovalDocumentType.PO.equals(documentType)) {
+            PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(documentId);
+            purchaseOrder.setStatus(PurchaseOrderStatus.CONFIRMED);
+            purchaseOrderCommandService.save(purchaseOrder);
+            return;
+        }
+
+        ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(documentId);
+        proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
         proformaInvoiceCommandService.save(proformaInvoice);
     }
 

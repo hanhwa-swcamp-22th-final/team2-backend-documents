@@ -123,8 +123,10 @@ public class ApprovalRequestCommandService {
                 return approvalRequest;
             }
 
-            // REGISTRATION / MODIFICATION approval (existing flow)
-            approvalRequestDocumentWorkflowService.approveDocument(approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
+            // REGISTRATION / MODIFICATION approval. MODIFICATION may carry a
+            // pending revised payload in reviewSnapshot and must apply it
+            // before the document is restored to CONFIRMED.
+            approvalRequestDocumentWorkflowService.approveDocument(approvalRequest);
             approvalRequest.setStatus(ApprovalStatus.APPROVED);
             approvalRequest.setReviewedAt(java.time.LocalDateTime.now());
             approvalRequest.setReviewSnapshot(comment);
@@ -138,10 +140,15 @@ public class ApprovalRequestCommandService {
         if (ApprovalStatus.REJECTED.equals(targetApprovalStatus)) {
             java.util.Map<String, Object> beforeSnapshot = approvalRequestRevisionService.captureBeforeSnapshot(approvalRequest);
 
-            // DELETION rejection: restore document to CONFIRMED
+            // DELETION / MODIFICATION rejection: restore confirmed source
+            // document. REGISTRATION rejection keeps the legacy rejected state.
             if (com.team2.documents.command.domain.entity.enums.ApprovalRequestType.DELETION
                     .equals(approvalRequest.getRequestType())) {
                 approvalRequestDocumentWorkflowService.rejectDeletion(
+                        approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
+            } else if (com.team2.documents.command.domain.entity.enums.ApprovalRequestType.MODIFICATION
+                    .equals(approvalRequest.getRequestType())) {
+                approvalRequestDocumentWorkflowService.rejectModification(
                         approvalRequest.getDocumentType(), approvalRequest.getDocumentId());
             } else {
                 approvalRequestDocumentWorkflowService.rejectDocument(

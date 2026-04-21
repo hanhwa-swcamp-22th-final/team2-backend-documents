@@ -3,6 +3,9 @@ package com.team2.documents.command.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.team2.documents.command.application.dto.PurchaseOrderCreateRequest;
 import com.team2.documents.command.domain.entity.ApprovalRequest;
 import com.team2.documents.command.domain.entity.enums.PositionLevel;
 import com.team2.documents.command.domain.entity.PurchaseOrder;
@@ -23,6 +26,7 @@ public class PurchaseOrderModificationRequestService {
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ApproverResolver approverResolver;
     private final DocumentOwnershipGuard documentOwnershipGuard;
+    private final ObjectMapper objectMapper;
 
     public PurchaseOrderModificationRequestService(PurchaseOrderCommandService purchaseOrderCommandService,
                                                    PurchaseOrderModificationService purchaseOrderModificationService,
@@ -30,7 +34,8 @@ public class PurchaseOrderModificationRequestService {
                                                    ApprovalRequestCommandService approvalRequestCommandService,
                                                    DocumentRevisionHistoryService documentRevisionHistoryService,
                                                    ApproverResolver approverResolver,
-                                                   DocumentOwnershipGuard documentOwnershipGuard) {
+                                                   DocumentOwnershipGuard documentOwnershipGuard,
+                                                   ObjectMapper objectMapper) {
         this.purchaseOrderCommandService = purchaseOrderCommandService;
         this.purchaseOrderModificationService = purchaseOrderModificationService;
         this.userPositionRepository = userPositionRepository;
@@ -38,9 +43,10 @@ public class PurchaseOrderModificationRequestService {
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.approverResolver = approverResolver;
         this.documentOwnershipGuard = documentOwnershipGuard;
+        this.objectMapper = objectMapper;
     }
 
-    public void requestModification(String poId, Long userId) {
+    public void requestModification(String poId, Long userId, PurchaseOrderCreateRequest revisedRequest) {
         PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
         documentOwnershipGuard.assertCanMutate(userId, purchaseOrder.getManagerId());
 
@@ -60,11 +66,14 @@ public class PurchaseOrderModificationRequestService {
             purchaseOrderCommandService.save(purchaseOrder);
             Long approverId = approverResolver.resolveApproverId(userId);
             approvalRequestCommandService.save(new ApprovalRequest(
+                    null,
                     ApprovalDocumentType.PO,
                     poId,
                     ApprovalRequestType.MODIFICATION,
                     userId,
-                    approverId
+                    approverId,
+                    null,
+                    serializeRevisedRequest(revisedRequest)
             ));
             return;
         }
@@ -81,5 +90,16 @@ public class PurchaseOrderModificationRequestService {
                 "팀장이 PO 를 직접 수정했습니다.",
                 beforeSnapshot
         );
+    }
+
+    private String serializeRevisedRequest(PurchaseOrderCreateRequest revisedRequest) {
+        if (revisedRequest == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(revisedRequest);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("PO 수정 요청 payload 직렬화에 실패했습니다.", e);
+        }
     }
 }

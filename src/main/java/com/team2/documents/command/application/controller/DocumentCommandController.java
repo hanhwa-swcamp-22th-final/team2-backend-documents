@@ -329,7 +329,7 @@ public class DocumentCommandController {
     @PostMapping("/purchase-orders/request-modification")
     public ResponseEntity<EntityModel<PurchaseOrderModificationResponse>> requestPurchaseOrderModification(
             @RequestBody PurchaseOrderModificationRequest request) {
-        purchaseOrderModificationRequestService.requestModification(request.poId(), request.userId());
+        purchaseOrderModificationRequestService.requestModification(request.poId(), request.userId(), request.revisedRequest());
         PurchaseOrderModificationResponse response = new PurchaseOrderModificationResponse("PO 수정 요청이 처리되었습니다.");
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getPurchaseOrder(request.poId())).withRel("purchase-order")));
@@ -476,7 +476,7 @@ public class DocumentCommandController {
     @PostMapping("/proforma-invoices/request-modification")
     public ResponseEntity<EntityModel<ProformaInvoiceModificationResponse>> requestProformaInvoiceModification(
             @RequestBody ProformaInvoiceModificationRequest request) {
-        proformaInvoiceModificationRequestService.requestModification(request.piId(), request.userId());
+        proformaInvoiceModificationRequestService.requestModification(request.piId(), request.userId(), request.revisedRequest());
         ProformaInvoiceModificationResponse response = new ProformaInvoiceModificationResponse("PI 수정 요청이 처리되었습니다.");
         return ResponseEntity.ok(EntityModel.of(response,
                 linkTo(methodOn(DocumentQueryController.class).getProformaInvoice(request.piId())).withRel("proforma-invoice")));

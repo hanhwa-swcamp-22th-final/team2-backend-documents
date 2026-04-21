@@ -7,5 +7,7 @@ public record PurchaseOrderModificationRequest(
         @Schema(description = "PO 문서 ID", example = "PO-2026-0001")
         String poId,
         @Schema(description = "요청 사용자 ID", example = "1")
-        Long userId) {
+        Long userId,
+        @Schema(description = "승인 시 반영할 수정 후 PO payload")
+        PurchaseOrderCreateRequest revisedRequest) {
 }

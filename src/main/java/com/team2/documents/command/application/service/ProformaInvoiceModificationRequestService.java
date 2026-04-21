@@ -3,6 +3,9 @@ package com.team2.documents.command.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.team2.documents.command.application.dto.ProformaInvoiceCreateRequest;
 import com.team2.documents.command.domain.entity.ApprovalRequest;
 import com.team2.documents.command.domain.entity.ProformaInvoice;
 import com.team2.documents.command.domain.entity.enums.ApprovalDocumentType;
@@ -33,22 +36,25 @@ public class ProformaInvoiceModificationRequestService {
     private final DocumentRevisionHistoryService documentRevisionHistoryService;
     private final ApproverResolver approverResolver;
     private final DocumentOwnershipGuard documentOwnershipGuard;
+    private final ObjectMapper objectMapper;
 
     public ProformaInvoiceModificationRequestService(ProformaInvoiceCommandService proformaInvoiceCommandService,
                                                      UserPositionRepository userPositionRepository,
                                                      ApprovalRequestCommandService approvalRequestCommandService,
                                                      DocumentRevisionHistoryService documentRevisionHistoryService,
                                                      ApproverResolver approverResolver,
-                                                     DocumentOwnershipGuard documentOwnershipGuard) {
+                                                     DocumentOwnershipGuard documentOwnershipGuard,
+                                                     ObjectMapper objectMapper) {
         this.proformaInvoiceCommandService = proformaInvoiceCommandService;
         this.userPositionRepository = userPositionRepository;
         this.approvalRequestCommandService = approvalRequestCommandService;
         this.documentRevisionHistoryService = documentRevisionHistoryService;
         this.approverResolver = approverResolver;
         this.documentOwnershipGuard = documentOwnershipGuard;
+        this.objectMapper = objectMapper;
     }
 
-    public void requestModification(String piId, Long userId) {
+    public void requestModification(String piId, Long userId, ProformaInvoiceCreateRequest revisedRequest) {
         ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
 
         documentOwnershipGuard.assertCanMutate(userId, proformaInvoice.getManagerId());
@@ -69,11 +75,14 @@ public class ProformaInvoiceModificationRequestService {
             proformaInvoiceCommandService.save(proformaInvoice);
             Long approverId = approverResolver.resolveApproverId(userId);
             approvalRequestCommandService.save(new ApprovalRequest(
+                    null,
                     ApprovalDocumentType.PI,
                     piId,
                     ApprovalRequestType.MODIFICATION,
                     userId,
-                    approverId
+                    approverId,
+                    null,
+                    serializeRevisedRequest(revisedRequest)
             ));
             return;
         }
@@ -89,5 +98,16 @@ public class ProformaInvoiceModificationRequestService {
                 "팀장이 PI 를 직접 수정했습니다.",
                 beforeSnapshot
         );
+    }
+
+    private String serializeRevisedRequest(ProformaInvoiceCreateRequest revisedRequest) {
+        if (revisedRequest == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(revisedRequest);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("PI 수정 요청 payload 직렬화에 실패했습니다.", e);
+        }
     }
 }

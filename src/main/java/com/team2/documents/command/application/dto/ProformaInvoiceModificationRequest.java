@@ -7,5 +7,7 @@ public record ProformaInvoiceModificationRequest(
         @Schema(description = "PI 문서 ID", example = "PI-2026-0001")
         String piId,
         @Schema(description = "요청 사용자 ID", example = "1")
-        Long userId) {
+        Long userId,
+        @Schema(description = "승인 시 반영할 수정 후 PI payload")
+        ProformaInvoiceCreateRequest revisedRequest) {
 }

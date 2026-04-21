@@ -140,6 +140,65 @@ public class PurchaseOrderCreationService {
         return saved;
     }
 
+    public PurchaseOrder applyApprovedModification(String poId, PurchaseOrderCreateRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("승인된 PO 수정 payload가 없습니다.");
+        }
+        PurchaseOrder purchaseOrder = purchaseOrderCommandService.findById(poId);
+        if (!PurchaseOrderStatus.APPROVAL_PENDING.equals(purchaseOrder.getStatus())) {
+            throw new IllegalStateException("결재대기 상태의 PO만 수정 승인 내용을 반영할 수 있습니다.");
+        }
+        validateLinkedProformaInvoice(request.piId());
+
+        List<PurchaseOrderItem> newItems = toEntities(request.items());
+        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), newItems);
+
+        purchaseOrder.setPiId(request.piId());
+        purchaseOrder.setIssueDate(request.issueDate() == null ? LocalDate.now() : request.issueDate());
+        if (request.clientId() != null) purchaseOrder.setClientId(request.clientId());
+        if (request.currencyId() != null) purchaseOrder.setCurrencyId(request.currencyId());
+        purchaseOrder.setManagerId(resolveManagerId(request));
+        purchaseOrder.setDeliveryDate(request.deliveryDate());
+        purchaseOrder.setIncotermsCode(request.incotermsCode());
+        purchaseOrder.setNamedPlace(request.namedPlace());
+        purchaseOrder.setSourceDeliveryDate(request.sourceDeliveryDate());
+        purchaseOrder.setDeliveryDateOverride(Boolean.TRUE.equals(request.deliveryDateOverride()));
+        purchaseOrder.setTotalAmount(totalAmount);
+        purchaseOrder.setClientName(request.clientName());
+        purchaseOrder.setClientAddress(request.clientAddress());
+        purchaseOrder.setCountry(request.country());
+        purchaseOrder.setCurrencyCode(request.currencyCode());
+        purchaseOrder.setManagerName(request.managerName());
+        purchaseOrder.setRemarks(request.remarks());
+        purchaseOrder.setBuyerName(request.buyerName());
+        String route = request.productionRoute();
+        if (route != null && !route.isBlank()) {
+            purchaseOrder.setProductionRoute(route.trim().toUpperCase());
+        }
+        if (request.productionAssigneeId() != null) {
+            purchaseOrder.setProductionAssigneeId(request.productionAssigneeId());
+        }
+        if (request.shippingAssigneeId() != null) {
+            purchaseOrder.setShippingAssigneeId(request.shippingAssigneeId());
+        }
+        purchaseOrder.setItemsSnapshot(serializeItemsSnapshot(newItems));
+        purchaseOrder.setStatus(PurchaseOrderStatus.CONFIRMED);
+
+        purchaseOrder.getItems().clear();
+        purchaseOrder.getItems().addAll(newItems);
+
+        PurchaseOrder saved = purchaseOrderCommandService.save(purchaseOrder);
+        docsSnapshotService.savePurchaseOrderSnapshot(saved);
+        documentRevisionHistoryService.recordPurchaseOrderEvent(
+                saved.getPoId(),
+                "APPROVED_MODIFICATION_APPLY",
+                request.userId(),
+                saved.getStatus().name(),
+                "승인된 PO 수정 요청 내용을 반영했습니다."
+        );
+        return saved;
+    }
+
     public PurchaseOrder create(PurchaseOrderCreateRequest request) {
         validateLinkedProformaInvoice(request.piId());
         PurchaseOrderStatus initialStatus = PurchaseOrderStatus.DRAFT;

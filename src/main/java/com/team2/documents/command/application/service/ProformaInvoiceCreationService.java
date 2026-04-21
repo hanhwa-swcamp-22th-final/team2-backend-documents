@@ -109,6 +109,55 @@ public class ProformaInvoiceCreationService {
         return saved;
     }
 
+    public ProformaInvoice applyApprovedModification(String piId, ProformaInvoiceCreateRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("승인된 PI 수정 payload가 없습니다.");
+        }
+        ProformaInvoice proformaInvoice = proformaInvoiceCommandService.findById(piId);
+        if (!ProformaInvoiceStatus.APPROVAL_PENDING.equals(proformaInvoice.getStatus())) {
+            throw new IllegalStateException("결재대기 상태의 PI만 수정 승인 내용을 반영할 수 있습니다.");
+        }
+
+        LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();
+        String currencyCode = request.currencyCode();
+        BigDecimal exchangeRate = request.exchangeRate();
+        validateExchangeRate(currencyCode, exchangeRate);
+        List<ProformaInvoiceItem> newItems = toEntities(request.items(), currencyCode, exchangeRate);
+        BigDecimal totalAmount = calculateTotalAmount(request.totalAmount(), newItems, currencyCode, exchangeRate);
+
+        proformaInvoice.setIssueDate(issueDate);
+        if (request.clientId() != null) proformaInvoice.setClientId(request.clientId());
+        if (request.currencyId() != null) proformaInvoice.setCurrencyId(request.currencyId());
+        if (request.managerId() != null) proformaInvoice.setManagerId(request.managerId());
+        proformaInvoice.setDeliveryDate(request.deliveryDate());
+        proformaInvoice.setIncotermsCode(request.incotermsCode());
+        proformaInvoice.setNamedPlace(request.namedPlace());
+        proformaInvoice.setTotalAmount(totalAmount);
+        proformaInvoice.setClientName(request.clientName());
+        proformaInvoice.setClientAddress(request.clientAddress());
+        proformaInvoice.setCountry(request.country());
+        proformaInvoice.setCurrencyCode(currencyCode);
+        proformaInvoice.setManagerName(request.managerName());
+        proformaInvoice.setRemarks(request.remarks());
+        proformaInvoice.setBuyerName(request.buyerName());
+        proformaInvoice.setItemsSnapshot(serializeItemsSnapshot(newItems));
+        proformaInvoice.setStatus(ProformaInvoiceStatus.CONFIRMED);
+
+        proformaInvoice.getItems().clear();
+        proformaInvoice.getItems().addAll(newItems);
+
+        ProformaInvoice saved = proformaInvoiceCommandService.save(proformaInvoice);
+        docsSnapshotService.saveProformaInvoiceSnapshot(saved);
+        documentRevisionHistoryService.recordProformaInvoiceEvent(
+                saved.getPiId(),
+                "APPROVED_MODIFICATION_APPLY",
+                request.userId(),
+                saved.getStatus().name(),
+                "승인된 PI 수정 요청 내용을 반영했습니다."
+        );
+        return saved;
+    }
+
     public ProformaInvoice create(ProformaInvoiceCreateRequest request) {
         LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();
         String currencyCode = request.currencyCode();
