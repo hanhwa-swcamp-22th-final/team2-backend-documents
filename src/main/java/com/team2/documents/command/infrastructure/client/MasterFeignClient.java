@@ -23,11 +23,4 @@ public interface MasterFeignClient {
      */
     @GetMapping("/api/buyers/internal/by-client/{clientId}")
     List<MasterBuyerResponse> getBuyersByClient(@PathVariable("clientId") Integer clientId);
-
-    /**
-     * 거래처 단건 상세 조회 (payment_term_name / port_name / currency_name 포함).
-     * PO 생성 시 해당 거래처의 결제조건·도착항을 PO 스냅샷으로 저장하기 위해 사용.
-     */
-    @GetMapping("/api/clients/internal/{clientId}")
-    MasterClientResponse getClientById(@PathVariable("clientId") Integer clientId);
 }

@@ -15,20 +15,10 @@ public class MasterFeignFallbackFactory implements FallbackFactory<MasterFeignCl
 
     @Override
     public MasterFeignClient create(Throwable cause) {
-        final String reason = cause != null ? cause.getMessage() : "unknown";
-        return new MasterFeignClient() {
-            @Override
-            public List<MasterBuyerResponse> getBuyersByClient(Integer clientId) {
-                log.warn("[fallback] master getBuyersByClient({}) unavailable: {}", clientId, reason);
-                return Collections.emptyList();
-            }
-
-            @Override
-            public MasterClientResponse getClientById(Integer clientId) {
-                log.warn("[fallback] master getClientById({}) unavailable: {}", clientId, reason);
-                // paymentTerm / port 스냅샷을 못 넣은 채로 PO 생성이 진행되도록 null 필드 응답.
-                return new MasterClientResponse(clientId, clientId, null, null, null, null, null, null, null, null, null);
-            }
+        return clientId -> {
+            log.warn("[fallback] master-service getBuyersByClient({}) unavailable: {}",
+                    clientId, cause != null ? cause.getMessage() : "unknown");
+            return Collections.emptyList();
         };
     }
 }
