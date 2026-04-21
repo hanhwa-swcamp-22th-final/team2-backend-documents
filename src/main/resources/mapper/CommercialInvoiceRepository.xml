@@ -16,7 +16,7 @@
             client_id,
             currency_id,
             po_total_amount,
-            '발행대기',
+            '발행완료',
             po_client_name,
             po_client_address,
             po_country,

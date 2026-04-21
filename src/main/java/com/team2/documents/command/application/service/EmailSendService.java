@@ -82,9 +82,28 @@ public class EmailSendService {
 
         String poId = request.poId();
 
+        // 프런트가 po 식별자로 두 종류 중 하나를 보낼 수 있다:
+        //   (a) po_code 문자열 ("PO260015") — EmailSendModal 의 po-id prop 으로 올 때
+        //   (b) purchase_orders.po_id 숫자 FK ("18") — CI/PL DetailPage 에서 detail.poId 를
+        //       numeric 으로 그대로 전달할 때 (CommercialInvoiceResponse.poId 가 Long FK 필드)
+        // findByPoCode 만 쓰면 (b) 케이스가 null 로 떨어져 PDF 생성 skip → FAILED 로 기록됨
+        // (2026-04-21 시연 CI260015 발송 실패 근본 원인). po_code 가 숫자일 리 없는 운영 환경이라
+        // 두 경로를 fallback 으로 엮어 해결.
         PurchaseOrder po = null;
         if (poId != null && !poId.isBlank()) {
             po = purchaseOrderRepository.findByPoCode(poId).orElse(null);
+            if (po == null) {
+                try {
+                    Long poDbId = Long.parseLong(poId.trim());
+                    po = purchaseOrderRepository.findById(poDbId).orElse(null);
+                    if (po != null) {
+                        log.info("EmailSend: poId='{}' resolved via numeric FK path (po_code={})",
+                                poId, po.getPoId());
+                    }
+                } catch (NumberFormatException ignored) {
+                    // 순수 문자열인데 po_code 도 없는 케이스 — null 유지, PDF 생성 단계에서 처리.
+                }
+            }
         }
 
         for (String docType : request.docTypes()) {
