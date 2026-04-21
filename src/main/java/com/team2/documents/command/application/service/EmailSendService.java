@@ -1,6 +1,7 @@
 package com.team2.documents.command.application.service;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +9,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.team2.documents.command.application.dto.EmailAttachmentRequest;
 import com.team2.documents.command.application.dto.EmailLogInternalRequest;
 import com.team2.documents.command.application.dto.EmailSendRequest;
 import com.team2.documents.command.application.dto.EmailSendResponse;
@@ -37,6 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EmailSendService {
 
+    private static final int MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
+    private static final int MAX_TOTAL_ATTACHMENT_BYTES = 16 * 1024 * 1024;
+
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final ProformaInvoiceRepository proformaInvoiceRepository;
     private final CommercialInvoiceJpaRepository commercialInvoiceJpaRepository;
@@ -46,6 +51,7 @@ public class EmailSendService {
     private final PdfGenerationService pdfGenerationService;
     private final JavaMailSender javaMailSender;
     private final ActivityFeignClient activityFeignClient;
+    private final EmailTemplateService emailTemplateService;
     @Value("${spring.mail.username:}")
     private String mailUsername;
 
@@ -80,46 +86,18 @@ public class EmailSendService {
         List<String> attachmentFilenames = new ArrayList<>();
         List<byte[]> pdfDataList = new ArrayList<>();
 
-        String poId = request.poId();
-
-        // 프런트가 po 식별자로 두 종류 중 하나를 보낼 수 있다:
-        //   (a) po_code 문자열 ("PO260015") — EmailSendModal 의 po-id prop 으로 올 때
-        //   (b) purchase_orders.po_id 숫자 FK ("18") — CI/PL DetailPage 에서 detail.poId 를
-        //       numeric 으로 그대로 전달할 때 (CommercialInvoiceResponse.poId 가 Long FK 필드)
-        // findByPoCode 만 쓰면 (b) 케이스가 null 로 떨어져 PDF 생성 skip → FAILED 로 기록됨
-        // (2026-04-21 시연 CI260015 발송 실패 근본 원인). po_code 가 숫자일 리 없는 운영 환경이라
-        // 두 경로를 fallback 으로 엮어 해결.
-        PurchaseOrder po = null;
-        if (poId != null && !poId.isBlank()) {
-            po = purchaseOrderRepository.findByPoCode(poId).orElse(null);
-            if (po == null) {
-                try {
-                    Long poDbId = Long.parseLong(poId.trim());
-                    po = purchaseOrderRepository.findById(poDbId).orElse(null);
-                    if (po != null) {
-                        log.info("EmailSend: poId='{}' resolved via numeric FK path (po_code={})",
-                                poId, po.getPoId());
-                    }
-                } catch (NumberFormatException ignored) {
-                    // 순수 문자열인데 po_code 도 없는 케이스 — null 유지, PDF 생성 단계에서 처리.
-                }
+        try {
+            if (hasClientRenderedAttachments(request)) {
+                addClientRenderedAttachments(request.attachments(), attachmentFilenames, pdfDataList);
+            } else {
+                addServerGeneratedAttachments(request, attachmentFilenames, pdfDataList);
             }
-        }
-
-        for (String docType : request.docTypes()) {
-            try {
-                byte[] pdfData = generatePdfForDocType(docType, po, poId);
-                if (pdfData == null) {
-                    log.warn("Could not generate PDF for docType={}, poId={}", docType, poId);
-                    continue;
-                }
-
-                String filename = docType + ".pdf";
-                attachmentFilenames.add(filename);
-                pdfDataList.add(pdfData);
-            } catch (Exception e) {
-                log.error("Failed to generate PDF for docType={}", docType, e);
+        } catch (Exception e) {
+            log.error("Failed to prepare email attachments", e);
+            if (shouldLog) {
+                logToActivity(request, userId, "FAILED", attachmentFilenames);
             }
+            return new EmailSendResponse("FAILED", "Failed to prepare attachments: " + e.getMessage(), attachmentFilenames);
         }
 
         if (attachmentFilenames.isEmpty()) {
@@ -203,10 +181,17 @@ public class EmailSendService {
         helper.setTo(request.emailRecipientEmail());
         helper.setSubject(request.emailTitle());
 
-        String body = "Dear " + (request.emailRecipientName() != null ? request.emailRecipientName() : "") + ",\n\n"
-                + "Please find the attached trade documents.\n\n"
-                + "Best regards";
-        helper.setText(body);
+        String body = emailTemplateService.renderDocumentEmail(new EmailTemplateService.DocumentEmailModel(
+                request.emailTitle(),
+                request.emailRecipientName(),
+                "Trade documents are attached",
+                "Please find the attached trade document PDF generated from the SalesBoost document preview.",
+                request.poId(),
+                request.docTypes(),
+                attachmentFilenames,
+                "This email was sent from SalesBoost Documents."
+        ));
+        helper.setText(body, true);
 
         for (int i = 0; i < attachmentFilenames.size(); i++) {
             DataSource dataSource = new ByteArrayDataSource(pdfDataList.get(i), "application/pdf");
@@ -215,6 +200,102 @@ public class EmailSendService {
 
         javaMailSender.send(message);
         log.info("Email sent to {} with {} attachments", request.emailRecipientEmail(), attachmentFilenames.size());
+    }
+
+    private boolean hasClientRenderedAttachments(EmailSendRequest request) {
+        return request.attachments() != null && !request.attachments().isEmpty();
+    }
+
+    private void addClientRenderedAttachments(List<EmailAttachmentRequest> attachments,
+                                              List<String> attachmentFilenames,
+                                              List<byte[]> pdfDataList) {
+        int totalBytes = 0;
+        for (EmailAttachmentRequest attachment : attachments) {
+            String filename = normalizeAttachmentFilename(attachment.filename());
+            String contentType = attachment.contentType() == null ? "application/pdf" : attachment.contentType();
+            if (!"application/pdf".equalsIgnoreCase(contentType)) {
+                throw new IllegalArgumentException("Only PDF attachments are supported.");
+            }
+
+            String contentBase64 = attachment.contentBase64();
+            if (contentBase64 == null || contentBase64.isBlank()) {
+                throw new IllegalArgumentException("Attachment data is empty: " + filename);
+            }
+
+            byte[] data = Base64.getDecoder().decode(stripDataUrlPrefix(contentBase64).replaceAll("\\s", ""));
+            if (data.length == 0) {
+                throw new IllegalArgumentException("Attachment data is empty: " + filename);
+            }
+            if (data.length > MAX_ATTACHMENT_BYTES) {
+                throw new IllegalArgumentException("Attachment is too large: " + filename);
+            }
+            totalBytes += data.length;
+            if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+                throw new IllegalArgumentException("Total attachment size is too large.");
+            }
+
+            attachmentFilenames.add(filename);
+            pdfDataList.add(data);
+        }
+    }
+
+    private void addServerGeneratedAttachments(EmailSendRequest request,
+                                               List<String> attachmentFilenames,
+                                               List<byte[]> pdfDataList) {
+        String poId = request.poId();
+
+        // 프런트가 po 식별자로 두 종류 중 하나를 보낼 수 있다:
+        //   (a) po_code 문자열 ("PO260015") — EmailSendModal 의 po-id prop 으로 올 때
+        //   (b) purchase_orders.po_id 숫자 FK ("18") — CI/PL DetailPage 에서 detail.poId 를
+        //       numeric 으로 그대로 전달할 때 (CommercialInvoiceResponse.poId 가 Long FK 필드)
+        // findByPoCode 만 쓰면 (b) 케이스가 null 로 떨어져 PDF 생성 skip → FAILED 로 기록됨
+        // (2026-04-21 시연 CI260015 발송 실패 근본 원인). po_code 가 숫자일 리 없는 운영 환경이라
+        // 두 경로를 fallback 으로 엮어 해결.
+        PurchaseOrder po = null;
+        if (poId != null && !poId.isBlank()) {
+            po = purchaseOrderRepository.findByPoCode(poId).orElse(null);
+            if (po == null) {
+                try {
+                    Long poDbId = Long.parseLong(poId.trim());
+                    po = purchaseOrderRepository.findById(poDbId).orElse(null);
+                    if (po != null) {
+                        log.info("EmailSend: poId='{}' resolved via numeric FK path (po_code={})",
+                                poId, po.getPoId());
+                    }
+                } catch (NumberFormatException ignored) {
+                    // 순수 문자열인데 po_code 도 없는 케이스 — null 유지, PDF 생성 단계에서 처리.
+                }
+            }
+        }
+
+        for (String docType : request.docTypes()) {
+            try {
+                byte[] pdfData = generatePdfForDocType(docType, po, poId);
+                if (pdfData == null) {
+                    log.warn("Could not generate PDF for docType={}, poId={}", docType, poId);
+                    continue;
+                }
+
+                String filename = docType + ".pdf";
+                attachmentFilenames.add(filename);
+                pdfDataList.add(pdfData);
+            } catch (Exception e) {
+                log.error("Failed to generate PDF for docType={}", docType, e);
+            }
+        }
+    }
+
+    private String normalizeAttachmentFilename(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return "document.pdf";
+        }
+        String sanitized = filename.replace("\\", "_").replace("/", "_").trim();
+        return sanitized.toLowerCase().endsWith(".pdf") ? sanitized : sanitized + ".pdf";
+    }
+
+    private String stripDataUrlPrefix(String contentBase64) {
+        int commaIndex = contentBase64.indexOf(',');
+        return commaIndex >= 0 ? contentBase64.substring(commaIndex + 1) : contentBase64;
     }
 
     private void logToActivity(EmailSendRequest request, Long userId, String status,

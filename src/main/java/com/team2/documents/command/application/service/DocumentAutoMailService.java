@@ -28,6 +28,7 @@ public class DocumentAutoMailService {
     private final PdfGenerationService pdfGenerationService;
     private final JavaMailSender javaMailSender;
     private final ActivityFeignClient activityFeignClient;
+    private final EmailTemplateService emailTemplateService;
 
     @Value("${MAIL_USERNAME:}")
     private String mailUsername;
@@ -35,11 +36,13 @@ public class DocumentAutoMailService {
     public DocumentAutoMailService(AutoEmailRecipientResolver autoEmailRecipientResolver,
                                    PdfGenerationService pdfGenerationService,
                                    JavaMailSender javaMailSender,
-                                   ActivityFeignClient activityFeignClient) {
+                                   ActivityFeignClient activityFeignClient,
+                                   EmailTemplateService emailTemplateService) {
         this.autoEmailRecipientResolver = autoEmailRecipientResolver;
         this.pdfGenerationService = pdfGenerationService;
         this.javaMailSender = javaMailSender;
         this.activityFeignClient = activityFeignClient;
+        this.emailTemplateService = emailTemplateService;
     }
 
     public void sendApprovedPiToBuyer(ProformaInvoice proformaInvoice) {
@@ -56,7 +59,16 @@ public class DocumentAutoMailService {
         boolean sent = sendEmail(
                 recipients,
                 subject,
-                buildBuyerBody(recipientName, proformaInvoice.getPiId()),
+                emailTemplateService.renderDocumentEmail(new EmailTemplateService.DocumentEmailModel(
+                        subject,
+                        recipientName,
+                        "Approved Proforma Invoice is attached",
+                        "The approved Proforma Invoice PDF is attached for your review.",
+                        proformaInvoice.getPiId(),
+                        List.of("PI"),
+                        List.of("PI.pdf"),
+                        "This email was automatically sent after PI approval."
+                )),
                 "PI.pdf",
                 pdf
         );
@@ -85,7 +97,16 @@ public class DocumentAutoMailService {
         sendEmail(
                 recipients,
                 "[자동발송] 출하지시서 생성 완료 - " + shipmentOrder.getShipmentOrderId(),
-                buildTeamBody("출하팀", purchaseOrder.getPoId(), shipmentOrder.getShipmentOrderId()),
+                emailTemplateService.renderDocumentEmail(new EmailTemplateService.DocumentEmailModel(
+                        "[자동발송] 출하지시서 생성 완료 - " + shipmentOrder.getShipmentOrderId(),
+                        "출하팀",
+                        "출하지시서가 생성되었습니다",
+                        "PO 기준 출하지시서가 생성되어 확인용 PDF를 첨부합니다.",
+                        shipmentOrder.getShipmentOrderId(),
+                        List.of("SHIPPING_ORDER"),
+                        List.of("SHIPPING_ORDER.pdf"),
+                        "이 메일은 SalesBoost 문서 서비스에서 자동 발송되었습니다."
+                )),
                 "SHIPPING_ORDER.pdf",
                 pdf
         );
@@ -102,7 +123,16 @@ public class DocumentAutoMailService {
         sendEmail(
                 recipients,
                 "[자동발송] 생산지시서 생성 완료 - " + productionOrder.getProductionOrderId(),
-                buildTeamBody("생산팀", purchaseOrder.getPoId(), productionOrder.getProductionOrderId()),
+                emailTemplateService.renderDocumentEmail(new EmailTemplateService.DocumentEmailModel(
+                        "[자동발송] 생산지시서 생성 완료 - " + productionOrder.getProductionOrderId(),
+                        "생산팀",
+                        "생산지시서가 생성되었습니다",
+                        "PO 기준 생산지시서가 생성되어 확인용 PDF를 첨부합니다.",
+                        productionOrder.getProductionOrderId(),
+                        List.of("PRODUCTION_ORDER"),
+                        List.of("PRODUCTION_ORDER.pdf"),
+                        "이 메일은 SalesBoost 문서 서비스에서 자동 발송되었습니다."
+                )),
                 "PRODUCTION_ORDER.pdf",
                 pdf
         );
@@ -121,7 +151,7 @@ public class DocumentAutoMailService {
             }
             helper.setTo(recipients.toArray(String[]::new));
             helper.setSubject(subject);
-            helper.setText(body);
+            helper.setText(body, true);
             DataSource dataSource = new ByteArrayDataSource(attachmentData, "application/pdf");
             helper.addAttachment(attachmentFilename, dataSource);
             javaMailSender.send(message);
@@ -168,17 +198,4 @@ public class DocumentAutoMailService {
         }
     }
 
-    private String buildBuyerBody(String recipientName, String piId) {
-        return "Dear " + recipientName + ",\n\n"
-                + "The approved PI document is attached.\n"
-                + "PI No: " + piId + "\n\n"
-                + "Best regards";
-    }
-
-    private String buildTeamBody(String teamName, String poId, String documentId) {
-        return teamName + " 확인용 자동 발송 메일입니다.\n\n"
-                + "PO No: " + poId + "\n"
-                + "Document No: " + documentId + "\n\n"
-                + "확인 부탁드립니다.";
-    }
 }

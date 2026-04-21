@@ -14,5 +14,7 @@ public record EmailSendRequest(
         @Schema(description = "수신자 이름") String emailRecipientName,
         @Schema(description = "수신자 이메일") @NotBlank String emailRecipientEmail,
         @Schema(description = "첨부할 문서 유형 목록 (PI, PO, CI, PL, SHIPPING_ORDER, PRODUCTION_ORDER)")
-        @NotNull List<String> docTypes
+        @NotNull List<String> docTypes,
+        @Schema(description = "클라이언트에서 미리보기 HTML 기반으로 렌더링한 PDF 첨부. 비어 있으면 서버가 기존 방식으로 생성")
+        List<EmailAttachmentRequest> attachments
 ) {}
